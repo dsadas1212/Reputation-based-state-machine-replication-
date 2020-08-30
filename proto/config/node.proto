@@ -1,0 +1,20 @@
+syntax = "proto3" ;
+package config ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+
+import "cryptoconf.proto" ;
+import "config/protocol.proto" ;
+import "network.proto" ;
+
+// All configuration aggregated here
+message NodeDataConfig {
+	// Protocol specific configuration
+	SyncHSConfig ProtConfig = 1 ;
+	// Network configuration for nodes
+	NetConfig NetConfig = 2 ;
+	// Network configuration for clients
+	NetConfig ClientNetConfig = 3 ;
+	// Cryptographic configuration
+	CryptoConfig CryptoCon = 4 ;
+}

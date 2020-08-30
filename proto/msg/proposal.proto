@@ -1,0 +1,16 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+
+import "chain/block.proto" ;
+import "msg/vote.proto" ;
+
+// All configuration aggregated here
+message Proposal {
+	// A proposal contains the following
+	chain.Block ProposedBlock = 1 ;
+	uint64 View = 2 ;
+	msg.BlockCertificate Cert = 3 ;
+}
+

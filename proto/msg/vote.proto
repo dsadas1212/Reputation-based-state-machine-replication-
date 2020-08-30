@@ -1,0 +1,23 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+
+import "chain/block.proto" ;
+import "msg/cert.proto" ;
+
+message Vote {
+    VoteData Data = 1 ;
+    uint64 Origin = 2 ;
+    bytes Signature = 3 ;
+}
+
+message VoteData {
+    chain.Block Block = 1 ; // Bk
+    uint64 View = 2 ; // v
+}
+
+message BlockCertificate {
+	msg.Certificate BCert = 1 ;
+    VoteData Data = 2 ;
+}

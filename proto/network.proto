@@ -1,0 +1,14 @@
+syntax = "proto3" ;
+package config ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+
+message Address {
+    string IP = 1 ;
+    string Port = 2 ;
+}
+
+message NetConfig {
+    // Map how to contact each Node
+    map < uint64 , Address > NodeAddressMap = 1 ;
+}

@@ -1,0 +1,10 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+
+message CommitAck {
+    uint64 id = 1 ; // the replica's ID
+    bytes signature = 2 ; // the replica's signature
+    bytes cmdHash = 3 ; // The hash of the command that is being acknowledged
+}

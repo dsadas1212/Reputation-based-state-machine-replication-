@@ -1,0 +1,9 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+
+message Certificate {
+	repeated bytes signatures = 1;
+	repeated uint64 ids = 2 ;
+}

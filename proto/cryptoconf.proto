@@ -1,0 +1,13 @@
+syntax = "proto3" ;
+package config ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+
+message CryptoConfig {
+    // A string defining what key type is being stored. Eg. Secp256k1.Type()
+    string KeyType = 1 ;
+    // Private Keys
+    bytes PvtKey = 2 ;
+    // Mapping between a node and its public key
+	map <uint64, bytes> NodeKeyMap = 3 ;
+}

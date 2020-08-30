@@ -1,0 +1,16 @@
+syntax = "proto3" ;
+package config ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+
+message ProtoInfo {
+    uint64 NodeSize = 1 ;  // Number of nodes in the system
+    uint64 Faults = 2 ;    // Number of Faults in the system
+    uint64 BlockSize = 3 ; // Number of commands in a block
+}
+
+message SyncHSConfig {
+    uint64 Id  = 1 ;       // Replica ID
+    ProtoInfo Info = 2 ;
+    double Delta = 3 ;     // In seconds
+}

@@ -1,0 +1,22 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+
+import "msg/proposal.proto" ;
+import "msg/blame.proto" ;
+import "msg/clientAck.proto" ;
+import "msg/vote.proto" ;
+import "chain/command.proto" ;
+
+message SyncHSMsg {
+    oneof Msg {
+        msg.Proposal Prop = 1 ;
+        msg.NoProgressBlame Npblame = 2 ;
+        msg.EquivocationBlame Eqblame = 3 ;
+        msg.CommitAck Ack = 4 ;
+        chain.Command Cmd = 5 ;
+        msg.QuitView QV = 6 ;
+        msg.Vote Vote = 7 ;
+    }
+}
