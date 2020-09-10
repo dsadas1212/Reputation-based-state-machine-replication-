@@ -11,20 +11,44 @@ import (
 )
 
 // ClientConfig is an aggregation of all configs for the client in one place
+// We overload the protobuf Client Config Here
 type ClientConfig struct {
-	// All Configs
-	Config *ClientDataConfig
+	// Client Config Protocol Buffer - Read Only
+	*ProtoInfo
+	*NetConfig
+	*CryptoConfig
 	// PKI Algorithm
 	alg crypto.PKIAlgo
 	// My private key
-	PvtKey crypto.PrivKey
+	pvtKey crypto.PrivKey
 	// Mapping between nodes and their Public keys
-	NodeKeyMap map[uint64]crypto.PubKey
+	nodeKeyMap map[uint64]crypto.PubKey
+	// cache of client data config
+	proto *ClientDataConfig
+}
+
+// ToProto converts this into a Protocol Buffer Data Structure
+func (cc *ClientConfig) ToProto() *ClientDataConfig {
+	if cc.proto == nil {
+		cc.proto = &ClientDataConfig{
+			Info:      cc.ProtoInfo,
+			NetConfig: cc.NetConfig,
+			CryptoCon: cc.CryptoConfig,
+		}
+	}
+	return cc.proto
+}
+
+// FromProto updates the current ClientConfig from the protocol buffer data
+func (cc *ClientConfig) FromProto(data *ClientDataConfig) {
+	cc.ProtoInfo = data.Info
+	cc.NetConfig = data.NetConfig
+	cc.CryptoConfig = data.CryptoCon
 }
 
 // MarshalBinary implements Serializable interface
 func (cc ClientConfig) MarshalBinary() ([]byte, error) {
-	return pb.Marshal(cc.Config)
+	return pb.Marshal(cc.ToProto())
 }
 
 // UnmarshalBinary implements Deserializable interface
@@ -34,7 +58,7 @@ func (cc *ClientConfig) UnmarshalBinary(inpBytes []byte) error {
 	if err != nil {
 		return nil
 	}
-	cc.Config = data
+	cc.FromProto(data)
 	cc.init()
 	return err
 }
@@ -42,13 +66,13 @@ func (cc *ClientConfig) UnmarshalBinary(inpBytes []byte) error {
 // MarshalJSON implements JSON Marshaller interface
 // https://talks.golang.org/2015/json.slide#19
 func (cc ClientConfig) MarshalJSON() ([]byte, error) {
-	return jsonpb.Marshal(cc.Config)
+	return jsonpb.Marshal(cc.ToProto())
 }
 
 // UnmarshalJSON implements Unmarshaller JSON interface
 // https://talks.golang.org/2015/json.slide#19
 func (cc *ClientConfig) UnmarshalJSON(bytes []byte) error {
-	err := jsonpb.Unmarshal(bytes, cc.Config)
+	err := jsonpb.Unmarshal(bytes, cc.ToProto())
 	if err != nil {
 		return err
 	}
@@ -58,22 +82,23 @@ func (cc *ClientConfig) UnmarshalJSON(bytes []byte) error {
 
 // init function initializes the structure assuming the config has been set
 func (cc *ClientConfig) init() {
-	alg, exists := crypto.GetAlgo(cc.Config.CryptoCon.KeyType)
+	// alg, exists := crypto.GetAlgo(cc.Config.CryptoCon.KeyType)
+	alg, exists := crypto.GetAlgo(cc.GetKeyType())
 	if exists == false {
 		panic("Unknown key type")
 	}
 	cc.alg = alg
-	cc.PvtKey = alg.PrivKeyFromBytes(cc.Config.CryptoCon.PvtKey)
-	cc.NodeKeyMap = make(map[uint64]crypto.PubKey)
-	for idx, pubkeyBytes := range cc.Config.CryptoCon.NodeKeyMap {
-		cc.NodeKeyMap[idx] = alg.PubKeyFromBytes(pubkeyBytes)
+	cc.pvtKey = alg.PrivKeyFromBytes(cc.GetPvtKey())
+	cc.nodeKeyMap = make(map[uint64]crypto.PubKey)
+	for idx, pubkeyBytes := range cc.GetNodeKeyMap() {
+		cc.nodeKeyMap[idx] = alg.PubKeyFromBytes(pubkeyBytes)
 	}
 }
 
 // NewClientConfig creates a ClientConfig object from ClientDataConfig
 func NewClientConfig(con *ClientDataConfig) *ClientConfig {
 	cc := &ClientConfig{}
-	cc.Config = con
+	cc.FromProto(con)
 	cc.init()
 	return cc
 }
@@ -97,22 +122,22 @@ func (cc *ClientConfig) GetPeerFromID(nid uint64) peerstore.AddrInfo {
 
 // GetNumNodes returns the protocol size
 func (cc *ClientConfig) GetNumNodes() uint64 {
-	return cc.Config.Info.NodeSize
+	return cc.GetNodeSize()
 }
 
 // GetP2PAddrFromID gets the P2P address of the node rid
 func (cc *ClientConfig) GetP2PAddrFromID(rid uint64) string {
-	address := cc.Config.NetConfig.NodeAddressMap[rid]
+	address := cc.GetNodeAddressMap()[rid]
 	addr := fmt.Sprintf("/ip4/%s/tcp/%s", address.IP, address.Port)
 	return addr
 }
 
 // GetMyKey returns the private key of this instance
 func (cc *ClientConfig) GetMyKey() crypto.PrivKey {
-	return cc.PvtKey
+	return cc.pvtKey
 }
 
 // GetPubKeyFromID returns the Public key of node whose ID is nid
 func (cc *ClientConfig) GetPubKeyFromID(nid uint64) crypto.PubKey {
-	return cc.NodeKeyMap[nid]
+	return cc.nodeKeyMap[nid]
 }

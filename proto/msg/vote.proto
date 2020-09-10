@@ -3,21 +3,25 @@ package msg ;
 
 option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
 
-import "chain/block.proto" ;
-import "msg/cert.proto" ;
+// import "msg/cert.proto" ;
 
-message Vote {
-    VoteData Data = 1 ;
-    uint64 Origin = 2 ;
-    bytes Signature = 3 ;
+message ProtoVoteBody {
+    uint64 Voter = 1 ;
+    bytes Signature = 2 ;
 }
 
-message VoteData {
-    chain.Block Block = 1 ; // Bk
+message ProtoVote {
+    ProtoVoteData Data = 1 ;
+    ProtoVoteBody Body = 2 ;
+}
+
+// VoteData are the parts that are independent of the voter
+message ProtoVoteData {
+    bytes BlockHash = 1 ; // Bk
     uint64 View = 2 ; // v
 }
 
-message BlockCertificate {
-	msg.Certificate BCert = 1 ;
-    VoteData Data = 2 ;
-}
+// message BlockCertificate {
+// 	msg.Certificate BCert = 1 ;
+//     VoteData Data = 2 ;
+// }

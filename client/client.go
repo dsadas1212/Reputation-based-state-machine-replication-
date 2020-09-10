@@ -21,7 +21,6 @@ import (
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
 	e2cio "github.com/adithyabhatkajake/libchatter/io"
-	"github.com/adithyabhatkajake/libsynchs/chain"
 	"github.com/adithyabhatkajake/libsynchs/consensus"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
 
@@ -54,7 +53,7 @@ var (
 
 func sendCommandToServer(cmd *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer) {
 	log.Trace("Processing Command")
-	cmdHash := cmd.GetCmd().GetHash()
+	cmdHash := crypto.DoHash(cmd.GetTx())
 	data, err := pb.Marshal(cmd)
 	if err != nil {
 		log.Error("Marshaling error", err)
@@ -100,39 +99,43 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer)
 	commitMap := make(map[crypto.Hash]bool)
 	for {
 		// Get Acknowledgements from nodes after consensus
-		v, ok := <-voteChannel
+		ack, ok := <-voteChannel
+		timeReceived := time.Now()
 		log.Trace("Received an acknowledgement")
 		if !ok {
 			log.Error("vote channel closed")
 			return
 		}
-		if v == nil {
+		if ack == nil {
 			continue
 		}
-		// Deal with the vote
-		// We received a vote. Now add this to the conformation map
-		cmdHash := crypto.ToHash(v.CmdHash)
-		_, exists := voteMap[cmdHash]
-		if !exists {
-			voteMap[cmdHash] = 1       // 1 means we have seen one vote so far.
-			commitMap[cmdHash] = false // To say that we have not yet committed this value
-		} else {
-			voteMap[cmdHash]++ // Add another vote
-		}
-		// To ensure this is executed only once, check old committed state
-		old := commitMap[cmdHash]
-		if voteMap[cmdHash] > f {
-			condLock.Lock()
-			commitTimeMetric[cmdHash] = time.Since(timeMap[cmdHash])
-			condLock.Unlock()
-			commitMap[cmdHash] = true
-		}
-		new := commitMap[cmdHash]
-		// If we commit the block for the first time, then ship off a new command to the server
-		if old != new {
-			cmd := <-cmdChannel
-			// log.Info("Sending command ", cmd, " to the servers")
-			go sendCommandToServer(cmd, rwMap)
+		txs := ack.GetBlock().GetBody().GetTxs()
+		for _, tx := range txs {
+			// Deal with the vote
+			// We received a vote. Now add this to the conformation map
+			cmdHash := crypto.DoHash(tx)
+			_, exists := voteMap[cmdHash]
+			if !exists {
+				voteMap[cmdHash] = 1       // 1 means we have seen one vote so far.
+				commitMap[cmdHash] = false // To say that we have not yet committed this value
+			} else {
+				voteMap[cmdHash]++ // Add another vote
+			}
+			// To ensure this is executed only once, check old committed state
+			old := commitMap[cmdHash]
+			if voteMap[cmdHash] > f {
+				condLock.Lock()
+				commitTimeMetric[cmdHash] = time.Since(timeReceived)
+				condLock.Unlock()
+				commitMap[cmdHash] = true
+			}
+			new := commitMap[cmdHash]
+			// If we commit the block for the first time, then ship off a new command to the server
+			if old != new { // will be triggered once when commitMap value changes
+				cmd := <-cmdChannel
+				// log.Info("Sending command ", cmd, " to the servers")
+				go sendCommandToServer(cmd, rwMap)
+			}
 		}
 	}
 }
@@ -179,7 +182,7 @@ func main() {
 	confData := &synchs.ClientConfig{}
 	e2cio.ReadFromFile(confData, *confFile)
 
-	f = confData.Config.Info.Faults
+	f = confData.GetFaults()
 	// Start networking stack
 	node, err := p2p.New(ctx,
 		libp2p.Identity(confData.GetMyKey()),
@@ -239,23 +242,13 @@ func main() {
 
 	// Then, run a goroutine that sends the first BufferCommands requests to the nodes
 	for ; idx < BufferCommands; idx++ {
-		// Send via stream a command
-		cmdStr := fmt.Sprintf("Do my bidding #%d my servant!", idx)
-
 		// Build a command
-		cmd := &chain.Command{}
-		// Set command
-		cmd.Cmd = []byte(cmdStr)
-		// Sign the command
-		cmd.Clientsig, err = confData.GetMyKey().Sign(cmd.Cmd)
-		if err != nil {
-			panic(err)
-		}
+		cmd := make([]byte, 100)
 
 		// Build a protocol message
 		cmdMsg := &msg.SyncHSMsg{}
-		cmdMsg.Msg = &msg.SyncHSMsg_Cmd{
-			Cmd: cmd,
+		cmdMsg.Msg = &msg.SyncHSMsg_Tx{
+			Tx: cmd,
 		}
 
 		// log.Info("Sending command ", idx, " to the servers")
@@ -266,23 +259,13 @@ func main() {
 
 	// Make sure we always fill the channel with commands
 	for {
-		// Send via stream a command
-		cmdStr := fmt.Sprintf("Do my bidding #%d my servant!", idx)
-
 		// Build a command
-		cmd := &chain.Command{}
-		// Set command
-		cmd.Cmd = []byte(cmdStr)
-		// Sign the command
-		cmd.Clientsig, err = confData.GetMyKey().Sign(cmd.Cmd)
-		if err != nil {
-			panic(err)
-		}
+		cmd := make([]byte, 100)
 
 		// Build a protocol message
 		cmdMsg := &msg.SyncHSMsg{}
-		cmdMsg.Msg = &msg.SyncHSMsg_Cmd{
-			Cmd: cmd,
+		cmdMsg.Msg = &msg.SyncHSMsg_Tx{
+			Tx: cmd,
 		}
 
 		// Dispatch E2C message for processing

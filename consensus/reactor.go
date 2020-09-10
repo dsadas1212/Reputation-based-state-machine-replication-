@@ -29,7 +29,7 @@ func (n *SyncHS) protocol() {
 		switch x := msgIn.Msg.(type) {
 		case *msg.SyncHSMsg_Prop:
 			prop := msgIn.GetProp()
-			log.Debug("Received a proposal from ", prop.ProposedBlock.Proposer)
+			log.Debug("Received a proposal from ", prop.GetMiner())
 			// Send proposal to propose handler
 			go n.proposeHandler(prop)
 		case *msg.SyncHSMsg_Npblame:
@@ -39,7 +39,9 @@ func (n *SyncHS) protocol() {
 			_ = msgIn.GetEqblame()
 			// TODO
 		case *msg.SyncHSMsg_Vote:
-			vote := msgIn.GetVote()
+			pvote := msgIn.GetVote()
+			vote := &msg.Vote{}
+			vote.FromProto(pvote)
 			go func() {
 				n.voteChannel <- vote
 			}()

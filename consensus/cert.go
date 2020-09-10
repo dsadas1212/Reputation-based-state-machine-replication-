@@ -1,47 +1,43 @@
 package consensus
 
 import (
+	"github.com/adithyabhatkajake/libchatter/crypto"
 	"github.com/adithyabhatkajake/libchatter/log"
+	"github.com/adithyabhatkajake/libsynchs/chain"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
 )
 
 // How to create and validate certificates
 
 // NewCert creates a certificate
-func NewCert(certMap map[uint64]*msg.Vote) *msg.Certificate {
-	sigs := make([][]byte, len(certMap))
-	ids := make([]uint64, len(certMap))
-	idx := 0
+func NewCert(certMap map[uint64]*msg.Vote, blockhash crypto.Hash, view uint64) *msg.BlockCertificate {
+	bc := &msg.BlockCertificate{}
+	bc.SetBlockInfo(blockhash, view)
+	bc.Init()
 	for _, v := range certMap {
-		sigs[idx] = v.Signature
-		ids[idx] = v.Origin
-		idx++
+		bc.AddVote(*v)
 	}
-	return &msg.Certificate{Signatures: sigs, Ids: ids}
+	return bc
 }
 
 // IsCertValid checks if the certificate is valid for the data
-func (n *SyncHS) IsCertValid(bcert *msg.BlockCertificate) bool {
+func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
+	log.Debug("Received a block certificate -")
 	// Certificate for genesis is always correct
-	if bcert.Data.Block.Data.Index == 0 {
+	if h, _ := bc.GetBlockInfo(); h == chain.EmptyHash {
 		return true
 	}
-	if len(bcert.BCert.Ids) != len(bcert.BCert.Signatures) {
-		log.Error("In the certificate, number of signers != number of signatures")
+	if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {
+		log.Error("The certificate has <= f signatures")
 		return false
 	}
-	if uint64(len(bcert.BCert.Ids)) < n.config.GetNumberOfFaultyNodes() {
-		log.Error("The certificate has < f signatures")
-		return false
-	}
-	data, err := pb.Marshal(bcert.Data)
-	if err != nil {
-		log.Error("Marshalling failed during Certificate verification")
-		return false
-	}
-	for idx, id := range bcert.BCert.Ids {
-		sigOk, err := n.config.GetPubKeyFromID(id).Verify(data, bcert.BCert.Signatures[idx])
+	for idx, id := range bc.GetSigners() {
+		sig := bc.GetSignatureFromID(id)
+		if sig == nil {
+			log.Error("Signature for ID not found")
+			return false
+		}
+		sigOk, err := n.GetPubKeyFromID(id).Verify(bc.GetData(), sig)
 		if err != nil {
 			log.Error("Certificate signature verification error")
 			return false
@@ -54,10 +50,10 @@ func (n *SyncHS) IsCertValid(bcert *msg.BlockCertificate) bool {
 	return true
 }
 
-func (n *SyncHS) addCert(bc *msg.BlockCertificate) {
-	log.Debug("Adding certificate to block ", bc.Data.Block.Data.Index)
+func (n *SyncHS) addCert(bc *msg.BlockCertificate, blockNum uint64) {
+	log.Debug("Adding certificate to block ", blockNum)
 	n.certMapLock.Lock()
-	n.certMap[bc.Data.Block.Data.Index] = bc
+	n.certMap[blockNum] = bc
 	n.certMapLock.Unlock()
 }
 

@@ -16,24 +16,24 @@ import (
 
 // GetID returns the Id of this instance
 func (shs *NodeConfig) GetID() uint64 {
-	return shs.Config.ProtConfig.Id
+	return shs.GetId()
 }
 
 // GetP2PAddrFromID gets the P2P address of the node rid
 func (shs *NodeConfig) GetP2PAddrFromID(rid uint64) string {
-	address := shs.Config.NetConfig.NodeAddressMap[rid]
+	address := shs.GetNodeAddressMap()[rid]
 	addr := fmt.Sprintf("/ip4/%s/tcp/%s", address.IP, address.Port)
 	return addr
 }
 
 // GetMyKey returns the private key of this instance
 func (shs *NodeConfig) GetMyKey() crypto.PrivKey {
-	return shs.PvtKey
+	return shs.pvtKey
 }
 
 // GetPubKeyFromID returns the Public key of node whose ID is nid
 func (shs *NodeConfig) GetPubKeyFromID(nid uint64) crypto.PubKey {
-	return shs.NodeKeyMap[nid]
+	return shs.nodeKeyMap[nid]
 }
 
 // GetPeerFromID returns libp2p peerInfo from the config
@@ -55,25 +55,25 @@ func (shs *NodeConfig) GetPeerFromID(nid uint64) peerstore.AddrInfo {
 
 // GetNumNodes returns the protocol size
 func (shs *NodeConfig) GetNumNodes() uint64 {
-	return shs.Config.ProtConfig.Info.NodeSize
+	return shs.GetInfo().GetNodeSize()
 }
 
 // GetClientListenAddr returns the address where to talk to/from clients
 func (shs *NodeConfig) GetClientListenAddr() string {
 	id := shs.GetID()
-	address := shs.Config.ClientNetConfig.NodeAddressMap[id]
+	address := shs.GetNodeAddressMap()[id]
 	addr := fmt.Sprintf("/ip4/%s/tcp/%s", address.IP, address.Port)
 	return addr
 }
 
 // GetBlockSize returns the number of commands that can be inserted in one block
 func (shs *NodeConfig) GetBlockSize() uint64 {
-	return shs.Config.GetProtConfig().GetInfo().GetBlockSize()
+	return shs.GetInfo().GetBlockSize()
 }
 
 // GetDelta returns the synchronous wait time
 func (shs *NodeConfig) GetDelta() time.Duration {
-	timeInSeconds := shs.Config.ProtConfig.GetDelta()
+	timeInSeconds := shs.SyncHSConfig.GetDelta()
 	return time.Duration(int(timeInSeconds*1000)) * time.Millisecond
 }
 
@@ -87,7 +87,8 @@ func (shs *NodeConfig) GetNPBlameWaitTime() time.Duration {
 	return shs.GetDelta() * 3
 }
 
-// GetNumberOfFaultyNodes computes f for this protocol as f = (n-1)/2
+// GetNumberOfFaultyNodes returns f
+// We do this because f can be less than floor(n-1)/2
 func (shs *NodeConfig) GetNumberOfFaultyNodes() uint64 {
-	return shs.Config.ProtConfig.Info.Faults
+	return shs.GetInfo().GetFaults()
 }

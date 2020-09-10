@@ -19,6 +19,7 @@ func TestProposal(t *testing.T) {
 	cmds[0].Cmd = []byte("Test Command")
 	prop := &msg.Proposal{}
 	prop.Cert = &msg.BlockCertificate{}
+	prop.Cert.Init()
 	prop.ProposedBlock = &chain.Block{}
 	prop.ProposedBlock.Proposer = 1
 	prop.ProposedBlock.Data = &chain.BlockData{}

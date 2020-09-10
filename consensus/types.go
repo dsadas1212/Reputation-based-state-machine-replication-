@@ -30,7 +30,7 @@ type SyncHS struct {
 	// A map of node ID to its corresponding RW stream
 	streamMap map[uint64]*bufio.ReadWriter
 	// A map of hash to pending commands
-	pendingCommands []*chain.Command
+	pendingCommands [][]byte
 	// A mapping between the block number to its commit timer
 	timerMaps map[uint64]*util.Timer
 	// Certificate map
@@ -50,7 +50,7 @@ type SyncHS struct {
 
 	// Channels
 	msgChannel     chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel     chan *chain.Command // All commands are re-directed here
+	cmdChannel     chan []byte         // All commands are re-directed here
 	voteChannel    chan *msg.Vote      // All votes are sent here
 	proposeChannel chan *msg.Proposal  // All proposals are sent here
 	errCh          chan error          // All errors are sent here
@@ -61,6 +61,8 @@ type SyncHS struct {
 	// Protocol information
 	leader  uint64
 	view    uint64
-	config  *config.NodeConfig
 	blTimer *util.Timer
+
+	// Embed the config
+	*config.NodeConfig
 }

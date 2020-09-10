@@ -4,13 +4,22 @@ package msg ;
 option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
 
 import "chain/block.proto" ;
-import "msg/vote.proto" ;
 
 // All configuration aggregated here
 message Proposal {
 	// A proposal contains the following
-	chain.Block ProposedBlock = 1 ;
-	uint64 View = 2 ;
-	msg.BlockCertificate Cert = 3 ;
+	// The block being proposed
+	chain.ProtoBlock Block = 1 ;
+	// The miner of the block
+	uint64 Miner = 2 ;
+	// The signature for the block
+	bytes MiningProof = 3 ;
+	// The view number
+	uint64 View = 4 ;
+	// Propose Evidence - Evidence why this node should propose this block
+	// Can be a plain signature for closed world systems
+	// Can be certificate for previous block as in Sync HotStuff/HotStuff
+    // Can be a nonce in PoW systems
+    bytes ProposeEvidence = 5 ;
 }
 

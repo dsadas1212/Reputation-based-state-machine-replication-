@@ -20,6 +20,7 @@ func (n *SyncHS) Broadcast(m *msg.SyncHSMsg) error {
 		if err != nil {
 			log.Error("Error while sending to node", idx)
 			log.Error("Error:", err)
+			continue
 		}
 		err = s.Flush()
 		if err != nil {

@@ -78,9 +78,6 @@ func main() {
 		nodeMap[i].NetConfig = &config.NetConfig{}
 		nodeMap[i].NetConfig.NodeAddressMap = addrMap
 
-		nodeMap[i].ClientNetConfig = &config.NetConfig{}
-		nodeMap[i].ClientNetConfig.NodeAddressMap = cliMap
-
 		nodeMap[i].CryptoCon.NodeKeyMap = pubKeyMap
 	}
 
@@ -107,7 +104,7 @@ func main() {
 
 	// Setup networking configurations for the client
 	clientConfig.NetConfig = &config.NetConfig{}
-	clientConfig.NetConfig.NodeAddressMap = cliMap
+	clientConfig.NetConfig.NodeAddressMap = addrMap
 
 	// Setup Protocol Configurations
 	clientConfig.Info = &synchsconfig.ProtoInfo{}

@@ -4,7 +4,6 @@ import (
 	"bufio"
 
 	"github.com/adithyabhatkajake/libchatter/log"
-	"github.com/adithyabhatkajake/libsynchs/chain"
 	"github.com/adithyabhatkajake/libsynchs/msg"
 	pb "github.com/golang/protobuf/proto"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -53,8 +52,8 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 			log.Error(err)
 			continue
 		}
-		var cmd *chain.Command
-		if cmd = inMsg.GetCmd(); cmd == nil {
+		var cmd []byte
+		if cmd = inMsg.GetTx(); cmd == nil {
 			log.Error("Invalid command received from client")
 			continue
 		}

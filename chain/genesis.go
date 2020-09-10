@@ -2,26 +2,15 @@ package chain
 
 import (
 	"github.com/adithyabhatkajake/libchatter/crypto"
+	ethcore "github.com/ethereum/go-ethereum/core"
+	ethdb "github.com/ethereum/go-ethereum/ethdb"
 )
+
+// SetupGenesis creates a default genesis on the db
+func SetupGenesis(db ethdb.Database) {
+	ethcore.SetupGenesisBlock(db, nil)
+}
 
 var (
-	genesisBlock = &Block{
-		Data: &BlockData{
-			Index:    0,
-			PrevHash: make([]byte, crypto.HashLen),
-			Cmds:     nil,
-		},
-		Decision: true,
-		Proposer: 1,
-	}
+	GenesisHash = crypto.Hash{}
 )
-
-// GetGenesis returns the genesis block for the chain
-func GetGenesis() *Block {
-	return genesisBlock
-}
-
-// Ensure that the blockhash is computed
-func init() {
-	genesisBlock.BlockHash = genesisBlock.GetHash().GetBytes()
-}

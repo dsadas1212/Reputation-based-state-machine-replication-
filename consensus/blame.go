@@ -19,7 +19,7 @@ func (shs *SyncHS) startBlameTimer() {
 	shs.blTimer = util.NewTimer(func() {
 		shs.sendNPBlame()
 	})
-	shs.blTimer.SetTime(shs.config.GetNPBlameWaitTime())
+	shs.blTimer.SetTime(shs.GetNPBlameWaitTime())
 	shs.blTimer.Start()
 	log.Debug("Finished starting a blame timer")
 }
@@ -52,13 +52,13 @@ func (shs *SyncHS) sendNPBlame() {
 	blame.Blame.BlData = &msg.BlameData{}
 	blame.Blame.BlData.BlameTarget = shs.leader
 	blame.Blame.BlData.View = shs.view
-	blame.Blame.BlOrigin = shs.config.GetID()
+	blame.Blame.BlOrigin = shs.GetID()
 	data, err := pb.Marshal(blame.Blame.BlData)
 	if err != nil {
 		log.Errorln("Error marshalling blame message", err)
 		return
 	}
-	blame.Blame.Signature, err = shs.config.GetMyKey().Sign(data)
+	blame.Blame.Signature, err = shs.GetMyKey().Sign(data)
 	if err != nil {
 		log.Errorln("Error Signing the blame message", err)
 	}
@@ -91,7 +91,7 @@ func (shs *SyncHS) handleNoProgressBlame(bl *msg.NoProgressBlame) {
 	// Check if the blame map has sufficient blames
 	// If there are more than f blames, then initiate quit view
 	numBlames := uint64(len(shs.blameMap[view]))
-	if numBlames > shs.config.GetNumberOfFaultyNodes() {
+	if numBlames > shs.GetNumberOfFaultyNodes() {
 		// Quit the View
 		go shs.QuitView()
 	}
@@ -119,7 +119,7 @@ func (shs *SyncHS) isNPBlameValid(bl *msg.NoProgressBlame) bool {
 		return false
 	}
 	// Check if the signature is correct
-	isSigValid, err := shs.config.GetPubKeyFromID(
+	isSigValid, err := shs.GetPubKeyFromID(
 		bl.Blame.BlOrigin).Verify(data, bl.Blame.Signature)
 	if !isSigValid || err != nil {
 		log.Debug("Invalid signature for blame message")

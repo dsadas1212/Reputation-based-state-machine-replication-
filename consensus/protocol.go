@@ -30,11 +30,11 @@ const (
 
 // Init implements the Protocol interface
 func (shs *SyncHS) Init(c *config.NodeConfig) {
-	shs.config = c
+	shs.NodeConfig = c
 	shs.leader = DefaultLeaderID
 	shs.view = 1 // View Number starts from 1
 	shs.blTimer = nil
-	shs.pendingCommands = make([]*chain.Command, 1000)
+	shs.pendingCommands = make([][]byte, 1000)
 
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter)
@@ -46,18 +46,12 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 
 	// Setup channels
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
-	shs.cmdChannel = make(chan *chain.Command, ProtocolMsgBuffer)
+	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
 
 	shs.certMap = make(map[uint64]*msg.BlockCertificate)
 	// Setup certificate for the first block
-	genesisCert := &msg.BlockCertificate{
-		BCert: &msg.Certificate{},
-		Data:  &msg.VoteData{},
-	}
-	genesisCert.Data.View = shs.view
-	genesisCert.Data.Block = chain.GetGenesis()
-	shs.certMap[0] = genesisCert
+	shs.certMap[0] = &msg.GenesisCert
 }
 
 // Setup sets up the network components
@@ -65,8 +59,8 @@ func (shs *SyncHS) Setup(n *net.Network) error {
 	shs.host = n.H
 	host, err := libp2p.New(
 		context.Background(),
-		libp2p.ListenAddrStrings(shs.config.GetClientListenAddr()),
-		libp2p.Identity(shs.config.GetMyKey()),
+		libp2p.ListenAddrStrings(shs.GetClientListenAddr()),
+		libp2p.Identity(shs.GetMyKey()),
 	)
 	if err != nil {
 		panic(err)

@@ -1,11 +1,9 @@
 package consensus
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
-
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libchatter/util"
 	"github.com/adithyabhatkajake/libsynchs/chain"
@@ -17,8 +15,8 @@ import (
 func (n *SyncHS) propose() {
 	log.Debug("Starting a propose step")
 	// Do we have a certificate?
-	n.bc.ChainLock.Lock()
-	defer n.bc.ChainLock.Unlock()
+	n.bc.Mu.Lock()
+	defer n.bc.Mu.Unlock()
 	head := n.bc.Head
 	cert, exists := n.getCertForBlockIndex(head)
 	if !exists {
@@ -32,33 +30,13 @@ func (n *SyncHS) propose() {
 		return
 	}
 	n.bc.Head++
-	prop := &msg.Proposal{}
-	prop.Cert = cert
-	prop.ProposedBlock = &chain.Block{}
-	prop.ProposedBlock.Proposer = n.config.GetID()
-	prop.ProposedBlock.Data = &chain.BlockData{}
-	prop.ProposedBlock.Data.Index = head + 1
-	prop.ProposedBlock.Data.Cmds = cmds
-	// Set previous hash to the current head
-	prop.ProposedBlock.Data.PrevHash = n.bc.HeightBlockMap[head].GetHash().GetBytes()
-	// Set Hash
-	bhash := prop.ProposedBlock.GetHash()
-	prop.ProposedBlock.BlockHash = bhash.GetBytes()
-	log.Debug("PrevHash:",
-		util.HashToString(crypto.ToHash(prop.ProposedBlock.Data.PrevHash)))
-	log.Debug("Computed Proposal ", head+1,
-		" with hash ", util.HashToString(bhash))
-	// Set unconfirmed Blocks
-	n.bc.HeightBlockMap[head+1] = prop.ProposedBlock
-	n.bc.UnconfirmedBlocks[bhash] = prop.ProposedBlock
-	// Sign
-	sig, err := prop.ProposedBlock.Sign(n.config.GetMyKey())
-	if err != nil {
-		log.Error("Error in signing a block during proposal")
-		panic(err)
-	}
-	prop.ProposedBlock.Signature = sig
-	prop.View = n.view
+	newHeight := n.bc.Head
+	prop := n.NewCandidateProposal(cmds, cert, newHeight, nil)
+	block := &chain.ExtBlock{}
+	block.FromProto(prop.Block)
+	// Add this block to the chain, for future proposals
+	n.bc.BlocksByHeight[newHeight] = block
+	n.bc.BlocksByHash[block.GetBlockHash()] = block
 	log.Trace("Finished Proposing")
 	// Ship proposal to processing
 	relayMsg := &msg.SyncHSMsg{}
@@ -68,47 +46,48 @@ func (n *SyncHS) propose() {
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
 		// Leader should also vote
-		n.voteForBlock(prop.ProposedBlock)
+		n.voteForBlock(block)
 		// Start 2\delta timer
-		n.startBlockTimer(prop.ProposedBlock)
+		n.startBlockTimer(block)
 	}()
 }
 
 // Deal with the proposal
 func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
-	log.Trace("Handling proposal ", prop.ProposedBlock.Data.Index)
-	if !prop.ProposedBlock.IsValid() {
+	if prop.Miner != n.leader {
+		log.Info("Proposal received from invalid node, not leader")
+		return
+	}
+	ht := prop.Block.GetHeader().GetHeight()
+	log.Trace("Handling proposal ", ht)
+	ep := &msg.ExtProposal{}
+	ep.FromProto(prop)
+	if crypto.ToHash(ep.Block.BlockHash) != ep.GetBlockHash() {
 		log.Warn("Invalid block. Computed Hash and the Obtained hash does not match")
 		return
 	}
-	data, err := pb.Marshal(prop.ProposedBlock.Data)
-	if err != nil {
-		log.Error("Proposal error:", err)
-		return
-	}
-	correct, err := n.config.GetPubKeyFromID(n.leader).Verify(data,
-		prop.ProposedBlock.Signature)
-	if !correct {
-		log.Error("Incorrect signature for proposal", prop)
+	data, _ := pb.Marshal(prop.GetBlock().GetHeader())
+	correct, err := n.GetPubKeyFromID(n.leader).Verify(data, ep.GetMiningProof())
+	if !correct || err != nil {
+		log.Error("Incorrect signature for proposal ", ht)
 		return
 	}
 	// Check block certificate for non-genesis blocks
-	if !n.IsCertValid(prop.Cert) {
-		log.Error("Invalid certificate received for block", prop.ProposedBlock.Data.Index)
+	if !n.IsCertValid(&ep.BlockCertificate) {
+		log.Error("Invalid certificate received for block", ht)
 		return
 	}
-	var blk *chain.Block
+	var blk *chain.ExtBlock
 	var exists bool
 	{
 		// First check for equivocation
-		n.bc.ChainLock.RLock()
-		blk, exists = n.bc.HeightBlockMap[prop.ProposedBlock.Data.Index]
-		n.bc.ChainLock.RUnlock()
+		n.bc.Mu.RLock()
+		blk, exists = n.bc.BlocksByHeight[ht]
+		n.bc.Mu.RUnlock()
 	}
-	if exists &&
-		!bytes.Equal(prop.ProposedBlock.GetBlockHash(), blk.GetBlockHash()) {
+	if exists && ep.GetBlockHash() != blk.GetBlockHash() {
 		// Equivocation
-		log.Warn("Equivocation detected.", blk, prop.ProposedBlock)
+		log.Warn("Equivocation detected.", ep.GetBlockHash(), blk.GetBlockHash())
 		// TODO trigger view change
 		return
 	}
@@ -117,55 +96,44 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		// we have already committed this block, IGNORE
 		return
 	}
-	{
-		n.bc.ChainLock.RLock()
-		_, exists = n.bc.UnconfirmedBlocks[prop.ProposedBlock.GetHashBytes()]
-		n.bc.ChainLock.RUnlock()
-	}
-	if exists {
-		// Duplicate block received,
-		// We have already received this proposal, IGNORE
-		return
-	}
-	n.addNewBlock(prop.ProposedBlock)
-	n.ensureBlockIsDelivered(prop.ProposedBlock)
+	n.addNewBlock(&ep.ExtBlock)
+	n.ensureBlockIsDelivered(&ep.ExtBlock)
 
 	// Vote for the proposal
-	go n.voteForBlock(prop.ProposedBlock)
-	// Start 2\delta timer
-	go n.startBlockTimer(prop.ProposedBlock)
-	// Stop blame timer, since we got a valid proposal
-	// During commit, if pending commands is empty, we will restart the blame timer
-	go n.stopBlameTimer()
+	go func() {
+		n.voteForBlock(&ep.ExtBlock)
+		// Start 2\delta timer
+		n.startBlockTimer(&ep.ExtBlock)
+		// Stop blame timer, since we got a valid proposal
+		// During commit, if pending commands is empty, we will restart the blame timer
+		n.stopBlameTimer()
+	}()
 
 }
 
-// NewBlock creates a new block from the commands received.
-func NewBlock(cmds []*chain.Command) *chain.Block {
-	b := &chain.Block{}
-	b.Data = &chain.BlockData{}
-	b.Data.Cmds = cmds
-	b.Decision = false
-	return b
+// NewBlockBody creates a new block body from the commands received.
+func NewBlockBody(cmds [][]byte) *chain.ExtBody {
+	bd := &chain.ExtBody{}
+	bd.Txs = cmds
+	return bd
 }
 
-func (n *SyncHS) ensureBlockIsDelivered(blk *chain.Block) {
+func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 	var exists bool
-	var parentblk *chain.Block
+	var parentblk *chain.ExtBlock
 	// Ensure that all the parents are delivered first.
-	parentIdx := blk.Data.Index - 1
+	parentIdx := blk.GetHeight() - 1
 	// Wait for parents to be delivered first
 	for tries := 30; tries > 0; tries-- {
-		<-time.After(time.Second)
-		n.bc.ChainLock.RLock()
-		parentblk, exists = n.bc.HeightBlockMap[parentIdx]
-		n.bc.ChainLock.RUnlock()
-		if exists &&
-			!bytes.Equal(parentblk.BlockHash, blk.Data.PrevHash) {
+		<-time.After(time.Millisecond)
+		n.bc.Mu.RLock()
+		parentblk, exists = n.bc.BlocksByHeight[parentIdx]
+		n.bc.Mu.RUnlock()
+		if exists && parentblk.GetBlockHash() != blk.GetParentHash() {
 			// This block is delivered.
-			log.Warn("Block  ", blk.Data.Index, " extending wrong parent.\n",
-				"Wanted Parent Block:", util.BytesToHexString(parentblk.BlockHash),
-				"Found Parent Block:", util.BytesToHexString(blk.Data.PrevHash))
+			log.Warn("Block  ", blk.GetHeight(), " extending wrong parent.\n",
+				"Wanted Parent Block:", util.HashToString(parentblk.GetBlockHash()),
+				"Found Parent Block:", util.HashToString(blk.GetParentHash()))
 			return
 		}
 		if exists {
@@ -183,52 +151,82 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.Block) {
 	log.Trace("All parents are delivered")
 }
 
-func (n *SyncHS) startBlockTimer(blk *chain.Block) {
-	var err error
+func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
 	// Start 2delta timer
 	timer := util.NewTimer(func() {
-		log.Info("Committing block-", blk.Data.Index)
+		log.Info("Committing block-", blk.GetHeight())
 		// We have committed this block
-		blk.Decision = true
 		// Let the client know that we committed this block
-		for _, cmd := range blk.Data.Cmds {
-			ack := &msg.CommitAck{}
-			cmdHash := cmd.GetHash()
-			ack.CmdHash = cmdHash.GetBytes()
-			ack.Id = n.config.GetID()
-			ack.Signature, err = n.config.GetMyKey().Sign(ack.CmdHash)
-			log.Trace("Sending ack ", ack.CmdHash, " to clients")
-			if err != nil {
-				log.Error("Error sending ack ", ack.CmdHash, " to clients")
-				continue
-			}
-			synchsmsg := &msg.SyncHSMsg{}
-			synchsmsg.Msg = &msg.SyncHSMsg_Ack{Ack: ack}
-			// Tell all the clients, that I have committed this block
-			n.ClientBroadcast(synchsmsg)
-			// Now remove this block from unconfirmed blocks
-			n.bc.ChainLock.Lock()
-			delete(n.bc.UnconfirmedBlocks, blk.GetHashBytes())
-			n.bc.ChainLock.Unlock()
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		ack.Ack = &msg.CommitAck{
+			Block: blk.ToProto(),
 		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		// }
 	})
-	log.Info("Started timer for block-", blk.Data.Index)
-	timer.SetTime(n.config.GetCommitWaitTime())
-	n.addNewTimer(blk.Data.Index, timer)
+	log.Info("Started timer for block-", blk.GetHeight())
+	timer.SetTime(n.GetCommitWaitTime())
+	n.addNewTimer(blk.GetHeight(), timer)
 	timer.Start()
 }
 
-func (n *SyncHS) addNewBlock(blk *chain.Block) {
+func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 	// Otherwise, add the current block to map
-	n.bc.ChainLock.Lock()
-	n.bc.HeightBlockMap[blk.Data.Index] = blk
-	n.bc.UnconfirmedBlocks[blk.GetHashBytes()] =
-		blk
-	n.bc.ChainLock.Unlock()
+	n.bc.Mu.Lock()
+	n.bc.BlocksByHeight[blk.GetHeight()] = blk
+	n.bc.BlocksByHash[blk.GetBlockHash()] = blk
+	n.bc.Mu.Unlock()
 }
 
 func (n *SyncHS) addNewTimer(pos uint64, timer *util.Timer) {
 	n.timerLock.Lock()
 	n.timerMaps[pos] = timer
 	n.timerLock.Unlock()
+}
+
+// NewCandidateProposal returns a proposal message built using commands
+func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
+	cert *msg.BlockCertificate, newHeight uint64, extra []byte) *msg.Proposal {
+	bhash, view := cert.GetBlockInfo()
+	// Start setting block fields
+	pbody := &chain.ProtoBody{
+		Txs: cmds,
+	}
+	pheader := &chain.ProtoHeader{
+		Extra:      extra,
+		Height:     newHeight,
+		ParentHash: bhash.GetBytes(),
+		TxHash:     nil, // Compute merkle tree out of transactions in the block body
+	}
+	// Set Hash
+	log.Debug("PrevHash:",
+		util.HashToString(crypto.ToHash(pheader.GetParentHash())))
+	log.Debug("Computed Proposal ", newHeight,
+		" with hash ", util.HashToString(bhash))
+	// Sign
+	data, _ := pb.Marshal(pheader)
+	newBlockHash := crypto.DoHash(data)
+	sig, err := n.GetMyKey().Sign(data)
+	if err != nil {
+		log.Error("Error in signing a block during proposal")
+		panic(err)
+	}
+	blk := &chain.ProtoBlock{
+		Header:    pheader,
+		Body:      pbody,
+		BlockHash: newBlockHash.GetBytes(),
+	}
+	// Build Propose Evidence
+	pevidence, _ := pb.Marshal(cert.ToProto())
+	prop := &msg.Proposal{
+		Miner:           n.GetId(),
+		View:            view,
+		Block:           blk,
+		MiningProof:     sig,       // Signature from the leader in the current view
+		ProposeEvidence: pevidence, // Certificate for parent block
+	}
+	return prop
 }

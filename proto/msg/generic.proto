@@ -7,7 +7,6 @@ import "msg/proposal.proto" ;
 import "msg/blame.proto" ;
 import "msg/clientAck.proto" ;
 import "msg/vote.proto" ;
-import "chain/command.proto" ;
 
 message SyncHSMsg {
     oneof Msg {
@@ -15,8 +14,8 @@ message SyncHSMsg {
         msg.NoProgressBlame Npblame = 2 ;
         msg.EquivocationBlame Eqblame = 3 ;
         msg.CommitAck Ack = 4 ;
-        chain.Command Cmd = 5 ;
+        bytes Tx = 5 ;
         msg.QuitView QV = 6 ;
-        msg.Vote Vote = 7 ;
+        msg.ProtoVote Vote = 7 ;
     }
 }

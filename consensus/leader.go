@@ -6,5 +6,5 @@ var (
 )
 
 func (shs *SyncHS) changeLeader() {
-	shs.leader = (shs.leader + 1) % shs.config.GetNumNodes()
+	shs.leader = (shs.leader + 1) % shs.GetNumNodes()
 }

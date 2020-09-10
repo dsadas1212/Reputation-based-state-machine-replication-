@@ -3,25 +3,24 @@ package chain ;
 
 option go_package = "github.com/adithyabhatkajake/libsynchs/chain" ;
 
-import "chain/command.proto" ;
-
-message BlockData {
-    // Index of the block
-    uint64 Index = 1 ;
+message ProtoHeader {
     // Hash Pointer
-    bytes PrevHash = 2 ;
-    // commands
-    repeated chain.Command Cmds = 3 ;
+    bytes ParentHash = 1 ;
+    // Hash of all the transactions in this block
+    bytes TxHash = 2 ;
+    // Block Height
+    uint64 Height = 3 ;
+    // Any extra data
+    bytes extra = 4 ;
 }
 
-message Block {
-    chain.BlockData Data = 1 ;
+message ProtoBlock {
+    chain.ProtoHeader Header = 1 ;
+    chain.ProtoBody Body = 2 ;
     // Block hash
-    bytes BlockHash = 2 ;
-    // Decision: Has it been accepted yet?
-    bool Decision = 3 ;
-    // Proposer 
-    uint64 Proposer = 4 ;
-    // Proposer signature
-    bytes Signature = 5 ;
+    bytes BlockHash = 3 ;
+}
+
+message ProtoBody {
+    repeated bytes Txs = 1 ;
 }

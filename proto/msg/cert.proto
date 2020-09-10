@@ -4,6 +4,10 @@ package msg ;
 option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
 
 message Certificate {
-	repeated bytes signatures = 1;
-	repeated uint64 ids = 2 ;
+	// The data on which we need signatures
+	bytes data = 1 ;
+	// The raw signatures
+	repeated bytes signatures = 2;
+	// The IDs of the signers
+	repeated uint64 ids = 3 ;
 }

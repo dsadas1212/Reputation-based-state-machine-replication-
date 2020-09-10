@@ -7,7 +7,6 @@
 package msg
 
 import (
-	chain "github.com/adithyabhatkajake/libsynchs/chain"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -26,18 +25,17 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type Vote struct {
+type ProtoVoteBody struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Data      *VoteData `protobuf:"bytes,1,opt,name=Data,proto3" json:"Data,omitempty"`
-	Origin    uint64    `protobuf:"varint,2,opt,name=Origin,proto3" json:"Origin,omitempty"`
-	Signature []byte    `protobuf:"bytes,3,opt,name=Signature,proto3" json:"Signature,omitempty"`
+	Voter     uint64 `protobuf:"varint,1,opt,name=Voter,proto3" json:"Voter,omitempty"`
+	Signature []byte `protobuf:"bytes,2,opt,name=Signature,proto3" json:"Signature,omitempty"`
 }
 
-func (x *Vote) Reset() {
-	*x = Vote{}
+func (x *ProtoVoteBody) Reset() {
+	*x = ProtoVoteBody{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_msg_vote_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -45,13 +43,13 @@ func (x *Vote) Reset() {
 	}
 }
 
-func (x *Vote) String() string {
+func (x *ProtoVoteBody) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Vote) ProtoMessage() {}
+func (*ProtoVoteBody) ProtoMessage() {}
 
-func (x *Vote) ProtoReflect() protoreflect.Message {
+func (x *ProtoVoteBody) ProtoReflect() protoreflect.Message {
 	mi := &file_msg_vote_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -63,43 +61,36 @@ func (x *Vote) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Vote.ProtoReflect.Descriptor instead.
-func (*Vote) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProtoVoteBody.ProtoReflect.Descriptor instead.
+func (*ProtoVoteBody) Descriptor() ([]byte, []int) {
 	return file_msg_vote_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Vote) GetData() *VoteData {
+func (x *ProtoVoteBody) GetVoter() uint64 {
 	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-func (x *Vote) GetOrigin() uint64 {
-	if x != nil {
-		return x.Origin
+		return x.Voter
 	}
 	return 0
 }
 
-func (x *Vote) GetSignature() []byte {
+func (x *ProtoVoteBody) GetSignature() []byte {
 	if x != nil {
 		return x.Signature
 	}
 	return nil
 }
 
-type VoteData struct {
+type ProtoVote struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Block *chain.Block `protobuf:"bytes,1,opt,name=Block,proto3" json:"Block,omitempty"` // Bk
-	View  uint64       `protobuf:"varint,2,opt,name=View,proto3" json:"View,omitempty"`  // v
+	Data *ProtoVoteData `protobuf:"bytes,1,opt,name=Data,proto3" json:"Data,omitempty"`
+	Body *ProtoVoteBody `protobuf:"bytes,2,opt,name=Body,proto3" json:"Body,omitempty"`
 }
 
-func (x *VoteData) Reset() {
-	*x = VoteData{}
+func (x *ProtoVote) Reset() {
+	*x = ProtoVote{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_msg_vote_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -107,13 +98,13 @@ func (x *VoteData) Reset() {
 	}
 }
 
-func (x *VoteData) String() string {
+func (x *ProtoVote) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*VoteData) ProtoMessage() {}
+func (*ProtoVote) ProtoMessage() {}
 
-func (x *VoteData) ProtoReflect() protoreflect.Message {
+func (x *ProtoVote) ProtoReflect() protoreflect.Message {
 	mi := &file_msg_vote_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -125,36 +116,37 @@ func (x *VoteData) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use VoteData.ProtoReflect.Descriptor instead.
-func (*VoteData) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProtoVote.ProtoReflect.Descriptor instead.
+func (*ProtoVote) Descriptor() ([]byte, []int) {
 	return file_msg_vote_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *VoteData) GetBlock() *chain.Block {
+func (x *ProtoVote) GetData() *ProtoVoteData {
 	if x != nil {
-		return x.Block
+		return x.Data
 	}
 	return nil
 }
 
-func (x *VoteData) GetView() uint64 {
+func (x *ProtoVote) GetBody() *ProtoVoteBody {
 	if x != nil {
-		return x.View
+		return x.Body
 	}
-	return 0
+	return nil
 }
 
-type BlockCertificate struct {
+// VoteData are the parts that are independent of the voter
+type ProtoVoteData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BCert *Certificate `protobuf:"bytes,1,opt,name=BCert,proto3" json:"BCert,omitempty"`
-	Data  *VoteData    `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
+	BlockHash []byte `protobuf:"bytes,1,opt,name=BlockHash,proto3" json:"BlockHash,omitempty"` // Bk
+	View      uint64 `protobuf:"varint,2,opt,name=View,proto3" json:"View,omitempty"`          // v
 }
 
-func (x *BlockCertificate) Reset() {
-	*x = BlockCertificate{}
+func (x *ProtoVoteData) Reset() {
+	*x = ProtoVoteData{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_msg_vote_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -162,13 +154,13 @@ func (x *BlockCertificate) Reset() {
 	}
 }
 
-func (x *BlockCertificate) String() string {
+func (x *ProtoVoteData) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BlockCertificate) ProtoMessage() {}
+func (*ProtoVoteData) ProtoMessage() {}
 
-func (x *BlockCertificate) ProtoReflect() protoreflect.Message {
+func (x *ProtoVoteData) ProtoReflect() protoreflect.Message {
 	mi := &file_msg_vote_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -180,52 +172,47 @@ func (x *BlockCertificate) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BlockCertificate.ProtoReflect.Descriptor instead.
-func (*BlockCertificate) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProtoVoteData.ProtoReflect.Descriptor instead.
+func (*ProtoVoteData) Descriptor() ([]byte, []int) {
 	return file_msg_vote_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *BlockCertificate) GetBCert() *Certificate {
+func (x *ProtoVoteData) GetBlockHash() []byte {
 	if x != nil {
-		return x.BCert
+		return x.BlockHash
 	}
 	return nil
 }
 
-func (x *BlockCertificate) GetData() *VoteData {
+func (x *ProtoVoteData) GetView() uint64 {
 	if x != nil {
-		return x.Data
+		return x.View
 	}
-	return nil
+	return 0
 }
 
 var File_msg_vote_proto protoreflect.FileDescriptor
 
 var file_msg_vote_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x6d, 0x73, 0x67, 0x2f, 0x76, 0x6f, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x03, 0x6d, 0x73, 0x67, 0x1a, 0x11, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x2f, 0x62, 0x6c, 0x6f,
-	0x63, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0e, 0x6d, 0x73, 0x67, 0x2f, 0x63, 0x65,
-	0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x5f, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65,
-	0x12, 0x21, 0x0a, 0x04, 0x44, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d,
-	0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x44,
-	0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x06, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x12, 0x1c, 0x0a, 0x09, 0x53,
-	0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09,
-	0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x22, 0x42, 0x0a, 0x08, 0x56, 0x6f, 0x74,
-	0x65, 0x44, 0x61, 0x74, 0x61, 0x12, 0x22, 0x0a, 0x05, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x2e, 0x42, 0x6c, 0x6f,
-	0x63, 0x6b, 0x52, 0x05, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x12, 0x0a, 0x04, 0x56, 0x69, 0x65,
-	0x77, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x56, 0x69, 0x65, 0x77, 0x22, 0x5d, 0x0a,
-	0x10, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74,
-	0x65, 0x12, 0x26, 0x0a, 0x05, 0x42, 0x43, 0x65, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x10, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61,
-	0x74, 0x65, 0x52, 0x05, 0x42, 0x43, 0x65, 0x72, 0x74, 0x12, 0x21, 0x0a, 0x04, 0x44, 0x61, 0x74,
-	0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x56, 0x6f,
-	0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x44, 0x61, 0x74, 0x61, 0x42, 0x2c, 0x5a, 0x2a,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x64, 0x69, 0x74, 0x68,
-	0x79, 0x61, 0x62, 0x68, 0x61, 0x74, 0x6b, 0x61, 0x6a, 0x61, 0x6b, 0x65, 0x2f, 0x6c, 0x69, 0x62,
-	0x73, 0x79, 0x6e, 0x63, 0x68, 0x73, 0x2f, 0x6d, 0x73, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x12, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x43, 0x0a, 0x0d, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x56, 0x6f,
+	0x74, 0x65, 0x42, 0x6f, 0x64, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x1c, 0x0a, 0x09,
+	0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x09, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x22, 0x5b, 0x0a, 0x09, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x26, 0x0a, 0x04, 0x44, 0x61, 0x74, 0x61, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x56, 0x6f, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x44, 0x61, 0x74, 0x61, 0x12,
+	0x26, 0x0a, 0x04, 0x42, 0x6f, 0x64, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e,
+	0x6d, 0x73, 0x67, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x56, 0x6f, 0x74, 0x65, 0x42, 0x6f, 0x64,
+	0x79, 0x52, 0x04, 0x42, 0x6f, 0x64, 0x79, 0x22, 0x41, 0x0a, 0x0d, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x56, 0x6f, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x12, 0x1c, 0x0a, 0x09, 0x42, 0x6c, 0x6f, 0x63,
+	0x6b, 0x48, 0x61, 0x73, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x42, 0x6c, 0x6f,
+	0x63, 0x6b, 0x48, 0x61, 0x73, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x56, 0x69, 0x65, 0x77, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x56, 0x69, 0x65, 0x77, 0x42, 0x2c, 0x5a, 0x2a, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x64, 0x69, 0x74, 0x68, 0x79, 0x61,
+	0x62, 0x68, 0x61, 0x74, 0x6b, 0x61, 0x6a, 0x61, 0x6b, 0x65, 0x2f, 0x6c, 0x69, 0x62, 0x73, 0x79,
+	0x6e, 0x63, 0x68, 0x73, 0x2f, 0x6d, 0x73, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -242,22 +229,18 @@ func file_msg_vote_proto_rawDescGZIP() []byte {
 
 var file_msg_vote_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_msg_vote_proto_goTypes = []interface{}{
-	(*Vote)(nil),             // 0: msg.Vote
-	(*VoteData)(nil),         // 1: msg.VoteData
-	(*BlockCertificate)(nil), // 2: msg.BlockCertificate
-	(*chain.Block)(nil),      // 3: chain.Block
-	(*Certificate)(nil),      // 4: msg.Certificate
+	(*ProtoVoteBody)(nil), // 0: msg.ProtoVoteBody
+	(*ProtoVote)(nil),     // 1: msg.ProtoVote
+	(*ProtoVoteData)(nil), // 2: msg.ProtoVoteData
 }
 var file_msg_vote_proto_depIdxs = []int32{
-	1, // 0: msg.Vote.Data:type_name -> msg.VoteData
-	3, // 1: msg.VoteData.Block:type_name -> chain.Block
-	4, // 2: msg.BlockCertificate.BCert:type_name -> msg.Certificate
-	1, // 3: msg.BlockCertificate.Data:type_name -> msg.VoteData
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	2, // 0: msg.ProtoVote.Data:type_name -> msg.ProtoVoteData
+	0, // 1: msg.ProtoVote.Body:type_name -> msg.ProtoVoteBody
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_msg_vote_proto_init() }
@@ -265,10 +248,9 @@ func file_msg_vote_proto_init() {
 	if File_msg_vote_proto != nil {
 		return
 	}
-	file_msg_cert_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_msg_vote_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Vote); i {
+			switch v := v.(*ProtoVoteBody); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -280,7 +262,7 @@ func file_msg_vote_proto_init() {
 			}
 		}
 		file_msg_vote_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*VoteData); i {
+			switch v := v.(*ProtoVote); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -292,7 +274,7 @@ func file_msg_vote_proto_init() {
 			}
 		}
 		file_msg_vote_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BlockCertificate); i {
+			switch v := v.(*ProtoVoteData); i {
 			case 0:
 				return &v.state
 			case 1:

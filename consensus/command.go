@@ -1,30 +1,25 @@
 package consensus
 
-import (
-	"github.com/adithyabhatkajake/libsynchs/chain"
-)
-
-func (n *SyncHS) addCmdsAndProposeIfSufficientCommands(cmd *chain.Command) {
+func (n *SyncHS) addCmdsAndProposeIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
+	defer n.cmdMutex.Unlock()
 	n.pendingCommands = append(n.pendingCommands, cmd)
 	// n.pendingCommands.PushBack(cmd)
-	if uint64(len(n.pendingCommands)) >= n.config.GetBlockSize() &&
-		// Sufficient Commands
-		n.config.GetID() == n.leader { // And I am the leader
+	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() && // Sufficient Commands
+		n.GetID() == n.leader { // And I am the leader
 		go n.propose()
 	}
-	n.cmdMutex.Unlock()
 }
 
-func (n *SyncHS) getCmdsIfSufficient() ([]*chain.Command, bool) {
-	blkSize := n.config.GetBlockSize()
+func (n *SyncHS) getCmdsIfSufficient() ([][]byte, bool) {
+	blkSize := n.GetBlockSize()
 	n.cmdMutex.Lock()
 	defer n.cmdMutex.Unlock()
 	numCmds := uint64(len(n.pendingCommands))
 	if numCmds < blkSize {
 		return nil, false
 	}
-	cmds := make([]*chain.Command, blkSize)
+	cmds := make([][]byte, blkSize)
 	// Copy slice blkSize commands from pending Commands
 	copy(cmds, n.pendingCommands[numCmds-blkSize:])
 	// Update old slice
