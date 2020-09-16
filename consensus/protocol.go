@@ -23,7 +23,7 @@ import (
 
 const (
 	// ProtocolID is the ID for E2C Protocol
-	ProtocolID = "synchs/synchs/0.0.1"
+	ProtocolID = "synchs/proto/0.0.1"
 	// ProtocolMsgBuffer defines how many protocol messages can be buffered
 	ProtocolMsgBuffer = 100
 )
@@ -91,7 +91,7 @@ func (shs *SyncHS) Setup(n *net.Network) error {
 				if err != nil {
 					log.Error("Error connecting to peers:", err)
 					log.Info("Retry attempt ", retries-i+1, " to connect to node ", idx, " in a second")
-					<-time.After(time.Second)
+					<-time.After(10 * time.Millisecond)
 					continue
 				}
 				shs.netMutex.Lock()

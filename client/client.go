@@ -10,6 +10,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"os"
@@ -28,6 +29,7 @@ import (
 	"github.com/libp2p/go-libp2p"
 	p2p "github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/libp2p/go-libp2p-core/peer"
 	peerstore "github.com/libp2p/go-libp2p-core/peer"
 )
 
@@ -109,29 +111,36 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer)
 		if ack == nil {
 			continue
 		}
+		bhash := crypto.ToHash(ack.GetBlock().GetBlockHash())
+		_, exists := voteMap[bhash]
+		if !exists {
+			voteMap[bhash] = 1       // 1 means we have seen one vote so far.
+			commitMap[bhash] = false // To say that we have not yet committed this value
+		} else {
+			voteMap[bhash]++ // Add another vote
+		}
+		// To ensure this is executed only once, check old committed state
+		old := commitMap[bhash]
+		if voteMap[bhash] <= f {
+			// Not enough votes for this block
+			// So this is not yet committed
+			// Deal with it later
+			return
+		}
+		commitMap[bhash] = true
+		new := commitMap[bhash]
+		log.Trace("Committed block. Processing block",
+			ack.GetBlock().GetHeader().GetHeight())
+		sendNewCommands := old != new
 		txs := ack.GetBlock().GetBody().GetTxs()
 		for _, tx := range txs {
-			// Deal with the vote
-			// We received a vote. Now add this to the conformation map
 			cmdHash := crypto.DoHash(tx)
-			_, exists := voteMap[cmdHash]
-			if !exists {
-				voteMap[cmdHash] = 1       // 1 means we have seen one vote so far.
-				commitMap[cmdHash] = false // To say that we have not yet committed this value
-			} else {
-				voteMap[cmdHash]++ // Add another vote
-			}
-			// To ensure this is executed only once, check old committed state
-			old := commitMap[cmdHash]
-			if voteMap[cmdHash] > f {
-				condLock.Lock()
-				commitTimeMetric[cmdHash] = time.Since(timeReceived)
-				condLock.Unlock()
-				commitMap[cmdHash] = true
-			}
-			new := commitMap[cmdHash]
+			condLock.Lock()
+			commitTimeMetric[cmdHash] = timeReceived.Sub(timeMap[cmdHash])
+			// Time from sending to getting back in some block
+			condLock.Unlock()
 			// If we commit the block for the first time, then ship off a new command to the server
-			if old != new { // will be triggered once when commitMap value changes
+			if sendNewCommands { // will be triggered once when commitMap value changes
 				cmd := <-cmdChannel
 				// log.Info("Sending command ", cmd, " to the servers")
 				go sendCommandToServer(cmd, rwMap)
@@ -167,7 +176,7 @@ func main() {
 	batch := flag.Uint64("batch", BufferCommands, "Number of commands to wait for")
 	count := flag.Uint64("metric", metricCount, "Number of metrics to collect before exiting")
 	// Setup Logger
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.TraceLevel)
 
 	log.Info("I am the client")
 	ctx := context.Background()
@@ -202,28 +211,42 @@ func main() {
 	streamMap := make(map[uint64]network.Stream)
 	rwMap := make(map[uint64]*bufio.Writer)
 	connectedNodes := uint64(0)
+	wg := &sync.WaitGroup{}
+	updateLock := &sync.Mutex{}
 
 	for i := uint64(0); i < confData.GetNumNodes(); i++ {
-		// Prepare peerInfo
-		pMap[i] = confData.GetPeerFromID(i)
-		// Connect to node i
-		log.Trace("Attempting connection to node ", pMap[i])
-		err = node.Connect(ctx, pMap[i])
-		if err != nil {
-			log.Error("Connection Error ", err)
-			continue
-		}
-		streamMap[i], err = node.NewStream(ctx, pMap[i].ID,
-			consensus.ClientProtocolID)
-		if err != nil {
-			log.Error("Stream opening Error", err)
-			continue
-		}
-		idMap[streamMap[i].ID()] = i
-		connectedNodes++
-		rwMap[i] = bufio.NewWriter(streamMap[i])
-		go ackMsgHandler(streamMap[i], i)
+		wg.Add(1)
+		go func(i uint64, peer peer.AddrInfo) {
+			defer wg.Done()
+			// Connect to node i
+			log.Trace("Attempting connection to node ", peer)
+			err := node.Connect(ctx, peer)
+			if err != nil {
+				log.Error("Connection Error ", err)
+				return
+			}
+			for {
+				stream, err := node.NewStream(ctx, peer.ID,
+					consensus.ClientProtocolID)
+				if err != nil {
+					log.Trace("Stream opening Error-", err)
+					<-time.After(100 * time.Millisecond)
+					continue
+				}
+				updateLock.Lock()
+				defer updateLock.Unlock()
+				streamMap[i] = stream
+				pMap[i] = peer
+				idMap[stream.ID()] = i
+				connectedNodes++
+				rwMap[i] = bufio.NewWriter(stream)
+				go ackMsgHandler(stream, i)
+				break
+			}
+			log.Debug("Successfully connected to node ", i)
+		}(i, confData.GetPeerFromID(i))
 	}
+	wg.Wait()
 
 	// Ensure we are connected to sufficient nodes
 	if connectedNodes <= f {
@@ -244,6 +267,7 @@ func main() {
 	for ; idx < BufferCommands; idx++ {
 		// Build a command
 		cmd := make([]byte, 100)
+		binary.LittleEndian.PutUint64(cmd, idx)
 
 		// Build a protocol message
 		cmdMsg := &msg.SyncHSMsg{}
@@ -261,6 +285,7 @@ func main() {
 	for {
 		// Build a command
 		cmd := make([]byte, 100)
+		binary.LittleEndian.PutUint64(cmd, idx)
 
 		// Build a protocol message
 		cmdMsg := &msg.SyncHSMsg{}

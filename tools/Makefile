@@ -11,7 +11,7 @@ bin: genConfig.go options.go
 
 test3: bin
 	mkdir -p ../testData/3-node-test/
-	./genConfig -o ../testData/3-node-test/ -n3 -d1000
+	./genConfig -o ../testData/3-node-test/ -n3 -d50
 
 b5: bin
 	mkdir -p ../testData/b5/

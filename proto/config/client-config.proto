@@ -13,5 +13,5 @@ message ClientDataConfig {
     // Network Configuration
     NetConfig NetConfig = 2 ;
     // Cryptographic configuration
-    CryptoConfig CryptoCon = 3 ;
+    CryptoConfig CryptoCon = 4 ;
 }

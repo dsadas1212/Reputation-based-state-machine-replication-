@@ -51,6 +51,7 @@ func main() {
 		cliMap[i] = &config.Address{}
 		cliMap[i].IP = defaultIP
 		cliMap[i].Port = fmt.Sprintf("%d", clientBasePort+uint32(i))
+		nodeMap[i].ClientPort = cliMap[i].Port
 
 		// Generate keypairs
 		pvtKey, pubkey := alg.KeyGen()
@@ -72,6 +73,7 @@ func main() {
 		nodeMap[i].ProtConfig.Info.NodeSize = nReplicas
 		nodeMap[i].ProtConfig.Info.Faults = nFaulty
 		nodeMap[i].ProtConfig.Info.BlockSize = blkSize
+
 	}
 
 	for i := uint64(0); i < nReplicas; i++ {
@@ -104,7 +106,7 @@ func main() {
 
 	// Setup networking configurations for the client
 	clientConfig.NetConfig = &config.NetConfig{}
-	clientConfig.NetConfig.NodeAddressMap = addrMap
+	clientConfig.NetConfig.NodeAddressMap = cliMap
 
 	// Setup Protocol Configurations
 	clientConfig.Info = &synchsconfig.ProtoInfo{}

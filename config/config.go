@@ -38,11 +38,11 @@ func (shs *NodeConfig) GetPubKeyFromID(nid uint64) crypto.PubKey {
 
 // GetPeerFromID returns libp2p peerInfo from the config
 func (shs *NodeConfig) GetPeerFromID(nid uint64) peerstore.AddrInfo {
-	pID, err := peerstore.IDFromPublicKey(shs.GetPubKeyFromID(0))
+	pID, err := peerstore.IDFromPublicKey(shs.GetPubKeyFromID(nid))
 	if err != nil {
 		panic(err)
 	}
-	addr, err := ma.NewMultiaddr(shs.GetP2PAddrFromID(0))
+	addr, err := ma.NewMultiaddr(shs.GetP2PAddrFromID(nid))
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +62,7 @@ func (shs *NodeConfig) GetNumNodes() uint64 {
 func (shs *NodeConfig) GetClientListenAddr() string {
 	id := shs.GetID()
 	address := shs.GetNodeAddressMap()[id]
-	addr := fmt.Sprintf("/ip4/%s/tcp/%s", address.IP, address.Port)
+	addr := fmt.Sprintf("/ip4/%s/tcp/%s", address.IP, shs.ClientPort)
 	return addr
 }
 

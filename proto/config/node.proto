@@ -14,7 +14,7 @@ message NodeDataConfig {
 	// Network configuration for nodes
 	NetConfig NetConfig = 2 ;
 	// Network configuration for clients
-	// NetConfig ClientNetConfig = 3 ;
+	string ClientPort = 3 ;
 	// Cryptographic configuration
 	CryptoConfig CryptoCon = 4 ;
 }

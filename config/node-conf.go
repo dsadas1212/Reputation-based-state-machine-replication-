@@ -12,6 +12,7 @@ type NodeConfig struct {
 	*SyncHSConfig
 	*NetConfig
 	*CryptoConfig
+	ClientPort string
 	// PKI Algorithm
 	alg crypto.PKIAlgo
 	// My private key
@@ -27,7 +28,9 @@ func (nc *NodeConfig) ToProto() *NodeDataConfig {
 		nc.proto = &NodeDataConfig{
 			ProtConfig: nc.SyncHSConfig,
 			NetConfig:  nc.NetConfig,
-			CryptoCon:  nc.CryptoConfig}
+			CryptoCon:  nc.CryptoConfig,
+			ClientPort: nc.ClientPort,
+		}
 	}
 	return nc.proto
 }
@@ -36,6 +39,8 @@ func (nc *NodeConfig) FromProto(data *NodeDataConfig) {
 	nc.SyncHSConfig = data.ProtConfig
 	nc.NetConfig = data.NetConfig
 	nc.CryptoConfig = data.CryptoCon
+	nc.ClientPort = data.ClientPort
+	nc.proto = data
 }
 
 // MarshalBinary implements Serializable interface
