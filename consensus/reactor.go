@@ -11,7 +11,7 @@ func (n *SyncHS) react(m []byte) {
 	inMessage := &msg.SyncHSMsg{}
 	err := pb.Unmarshal(m, inMessage)
 	if err != nil {
-		log.Error("Received an invalid protocol message", err)
+		log.Error("Received an invalid protocol message from client", err)
 		return
 	}
 	n.msgChannel <- inMessage

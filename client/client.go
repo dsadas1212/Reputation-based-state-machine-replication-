@@ -18,19 +18,18 @@ import (
 	"time"
 
 	"github.com/adithyabhatkajake/libchatter/log"
-	synchs "github.com/adithyabhatkajake/libsynchs/config"
+	"github.com/adithyabhatkajake/libsynchs/config"
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
-	e2cio "github.com/adithyabhatkajake/libchatter/io"
+	"github.com/adithyabhatkajake/libchatter/io"
 	"github.com/adithyabhatkajake/libsynchs/consensus"
-	msg "github.com/adithyabhatkajake/libsynchs/msg"
+	"github.com/adithyabhatkajake/libsynchs/msg"
 
 	pb "github.com/golang/protobuf/proto"
 	"github.com/libp2p/go-libp2p"
 	p2p "github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
-	peerstore "github.com/libp2p/go-libp2p-core/peer"
 )
 
 var (
@@ -51,9 +50,10 @@ var (
 	commitTimeMetric = make(map[crypto.Hash]time.Duration)
 	f                uint64
 	metricCount      = uint64(5)
+	rwMap            = make(map[uint64]*bufio.Writer)
 )
 
-func sendCommandToServer(cmd *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer) {
+func sendCommandToServer(cmd *msg.SyncHSMsg) {
 	log.Trace("Processing Command")
 	cmdHash := crypto.DoHash(cmd.GetTx())
 	data, err := pb.Marshal(cmd)
@@ -65,13 +65,13 @@ func sendCommandToServer(cmd *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer) {
 	timeMap[cmdHash] = time.Now()
 	condLock.Unlock()
 	// Ship command off to the nodes
+	streamMutex.Lock()
 	for idx, rw := range rwMap {
-		streamMutex.Lock()
 		rw.Write(data)
 		rw.Flush()
-		streamMutex.Unlock()
 		log.Trace("Sending command to node", idx)
 	}
+	streamMutex.Unlock()
 }
 
 func ackMsgHandler(s network.Stream, serverID uint64) {
@@ -87,7 +87,9 @@ func ackMsgHandler(s network.Stream, serverID uint64) {
 		}
 		log.Trace("Received a message from the server.", serverID)
 		msg := &msg.SyncHSMsg{}
-		err = pb.Unmarshal(msgBuf[0:len], msg)
+		protoMsg := make([]byte, len)
+		copy(protoMsg, msgBuf[0:len])
+		err = pb.Unmarshal(protoMsg, msg)
 		if err != nil {
 			log.Error("Unmarshalling error", serverID, err)
 			continue
@@ -96,7 +98,7 @@ func ackMsgHandler(s network.Stream, serverID uint64) {
 	}
 }
 
-func handleVotes(cmdChannel chan *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer) {
+func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 	voteMap := make(map[crypto.Hash]uint64)
 	commitMap := make(map[crypto.Hash]bool)
 	for {
@@ -143,7 +145,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg, rwMap map[uint64]*bufio.Writer)
 			if sendNewCommands { // will be triggered once when commitMap value changes
 				cmd := <-cmdChannel
 				// log.Info("Sending command ", cmd, " to the servers")
-				go sendCommandToServer(cmd, rwMap)
+				go sendCommandToServer(cmd)
 			}
 		}
 	}
@@ -165,6 +167,8 @@ func printMetrics() {
 		}
 		fmt.Println("Metric")
 		fmt.Printf("%d cmds in %d milliseconds\n", num, count)
+		fmt.Printf("Throughput: %f\n", float64(num)/60.0)
+		fmt.Printf("Latency: %f\n", float64(count)/float64(num))
 		condLock.RUnlock()
 	}
 	os.Exit(0)
@@ -174,9 +178,27 @@ func main() {
 
 	confFile := flag.String("conf", "", "Path to client config file")
 	batch := flag.Uint64("batch", BufferCommands, "Number of commands to wait for")
+	payload := flag.Uint64("payload", 2, "Number of bytes to get as response")
 	count := flag.Uint64("metric", metricCount, "Number of metrics to collect before exiting")
+	var logLevelPtr = flag.Uint64("loglevel", uint64(log.InfoLevel),
+		"Loglevels are one of \n0 - PanicLevel\n1 - FatalLevel\n2 - ErrorLevel\n3 - WarnLevel\n4 - InfoLevel\n5 - DebugLevel\n6 - TraceLevel")
 	// Setup Logger
-	log.SetLevel(log.TraceLevel)
+	switch uint32(*logLevelPtr) {
+	case 0:
+		log.SetLevel(log.PanicLevel)
+	case 1:
+		log.SetLevel(log.FatalLevel)
+	case 2:
+		log.SetLevel(log.ErrorLevel)
+	case 3:
+		log.SetLevel(log.WarnLevel)
+	case 4:
+		log.SetLevel(log.InfoLevel)
+	case 5:
+		log.SetLevel(log.DebugLevel)
+	case 6:
+		log.SetLevel(log.TraceLevel)
+	}
 
 	log.Info("I am the client")
 	ctx := context.Background()
@@ -188,8 +210,8 @@ func main() {
 	metricCount = *count
 
 	// Get client config
-	confData := &synchs.ClientConfig{}
-	e2cio.ReadFromFile(confData, *confFile)
+	confData := &config.ClientConfig{}
+	io.ReadFromFile(confData, *confFile)
 
 	f = confData.GetFaults()
 	// Start networking stack
@@ -207,9 +229,8 @@ func main() {
 	// node.SetStreamHandler(e2cconsensus.ClientProtocolID, ackMsgHandler)
 	// Setting stream handler is useless :/
 
-	pMap := make(map[uint64]peerstore.AddrInfo)
+	pMap := make(map[uint64]peer.AddrInfo)
 	streamMap := make(map[uint64]network.Stream)
-	rwMap := make(map[uint64]*bufio.Writer)
 	connectedNodes := uint64(0)
 	wg := &sync.WaitGroup{}
 	updateLock := &sync.Mutex{}
@@ -254,19 +275,21 @@ func main() {
 		return
 	}
 
+	blksize := confData.GetBlockSize()
+
 	cmdChannel := make(chan *msg.SyncHSMsg, BufferCommands)
-	voteChannel = make(chan *msg.CommitAck, BufferCommands)
+	voteChannel = make(chan *msg.CommitAck, blksize)
 
 	// First, spawn a thread that handles acknowledgement received for the
 	// various requests
-	go handleVotes(cmdChannel, rwMap)
+	go handleVotes(cmdChannel)
 
 	idx := uint64(0)
 
-	// Then, run a goroutine that sends the first BufferCommands requests to the nodes
-	for ; idx < BufferCommands; idx++ {
+	// Then, run a goroutine that sends the first Blocksize requests to the nodes
+	for ; idx < blksize; idx++ {
 		// Build a command
-		cmd := make([]byte, 100)
+		cmd := make([]byte, 8+*payload)
 		binary.LittleEndian.PutUint64(cmd, idx)
 
 		// Build a protocol message
@@ -276,7 +299,7 @@ func main() {
 		}
 
 		// log.Info("Sending command ", idx, " to the servers")
-		go sendCommandToServer(cmdMsg, rwMap)
+		go sendCommandToServer(cmdMsg)
 	}
 
 	go printMetrics()
@@ -284,7 +307,9 @@ func main() {
 	// Make sure we always fill the channel with commands
 	for {
 		// Build a command
-		cmd := make([]byte, 100)
+		cmd := make([]byte, 8+*payload)
+
+		// Make every command unique so that the hashes are unique
 		binary.LittleEndian.PutUint64(cmd, idx)
 
 		// Build a protocol message

@@ -10,7 +10,7 @@ node:
 
 testdata:
 	make -C tools
-	make -C tools testdata
+	make -C tools testfiles
 
 clean:
 	make -C client clean

@@ -4,7 +4,7 @@ import "sync/atomic"
 
 const (
 	// MaxMsgSize defines the biggest message to be ever recived in the system
-	MaxMsgSize = 10000
+	MaxMsgSize = 500 * 1024 * 1024 // 500 kB
 )
 
 // PartialCertificate implements PartCert

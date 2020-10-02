@@ -193,7 +193,8 @@ func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 	bhash, view := cert.GetBlockInfo()
 	// Start setting block fields
 	pbody := &chain.ProtoBody{
-		Txs: cmds,
+		Txs:       cmds,
+		Responses: cmds, // For now, the response is the same as the cmd
 	}
 	pheader := &chain.ProtoHeader{
 		Extra:      extra,

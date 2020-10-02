@@ -16,6 +16,5 @@ all: config/*.proto msg/*.proto ./*.proto chain/*.proto
 	protoc $? -I${PROTO_PATH} --go_out=:${GO_OUT_DIR}
 
 clean:
-	@echo "Doing nothing for proto clean"
 	@find .. -name "*.pb.go" -delete
 	@echo "Cleaned all protobuf builds"

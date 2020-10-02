@@ -34,14 +34,14 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 	buf := make([]byte, msg.MaxMsgSize)
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 	// Add client for later contact
-	go n.addClient(rw)
+	n.addClient(rw)
 	// Event Handler
 	for {
 		// Receive a message from a client and process them
 		len, err := rw.Read(buf)
 		if err != nil {
 			log.Error("Error receiving a message from the client-", err)
-			go n.removeClient(rw)
+			n.removeClient(rw)
 			return
 		}
 		// Send a copy for reacting

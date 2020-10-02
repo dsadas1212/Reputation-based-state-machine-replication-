@@ -23,4 +23,5 @@ message ProtoBlock {
 
 message ProtoBody {
     repeated bytes Txs = 1 ;
+    repeated bytes Responses = 2 ;
 }
