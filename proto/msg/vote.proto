@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package msg ;
 
-option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+option go_package = "github.com/Reputation-based-state-machine-replication-/msg" ;
 
 // import "msg/cert.proto" ;
 
@@ -19,6 +19,7 @@ message ProtoVote {
 message ProtoVoteData {
     bytes BlockHash = 1 ; // Bk
     uint64 View = 2 ; // v
+    uint64 Owner = 3; //the owner of this block
 }
 
 // message BlockCertificate {

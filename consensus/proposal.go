@@ -37,27 +37,30 @@ func (n *SyncHS) propose() {
 	// Add this block to the chain, for future proposals
 	n.bc.BlocksByHeight[newHeight] = block
 	n.bc.BlocksByHash[block.GetBlockHash()] = block
+	//Add this Propsal to the Proposal-view map
+	n.proposalByviewMap[n.view] = prop
 	log.Trace("Finished Proposing")
 	// Ship proposal to processing
 	relayMsg := &msg.SyncHSMsg{}
 	relayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
+	ep := &msg.ExtProposal{}
+	ep.FromProto(prop)
 	log.Debug("Proposing block:", prop.String())
+	//Change itself proposal map
+	n.addProposaltoMap(prop)
 	go func() {
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
 		// Leader should also vote
-		n.voteForBlock(block)
-		// Start 2\delta timer
+		n.voteForBlock(ep)
+		// Start 3\delta timer
 		n.startBlockTimer(block)
 	}()
 }
 
 // Deal with the proposal
 func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
-	if prop.Miner != n.leader {
-		log.Info("Proposal received from invalid node, not leader")
-		return
-	}
+
 	ht := prop.Block.GetHeader().GetHeight()
 	log.Trace("Handling proposal ", ht)
 	ep := &msg.ExtProposal{}
@@ -77,18 +80,38 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		log.Error("Invalid certificate received for block", ht)
 		return
 	}
-	var blk *chain.ExtBlock
+	//malicous proposal
+	if prop.Miner != n.leader {
+		log.Info("There is a malicious propsoal behaviour")
+		n.addMaliProposaltoMap(prop)
+		n.sendMaliProEvidence(prop)
+		//TODO send evidence!
+		//We should let current head be the block have certificate although
+	} //miabehaviour ocur(empty block)
 	var exists bool
+	var propOther *msg.Proposal
 	{
 		// First check for equivocation
-		n.bc.Mu.RLock()
-		blk, exists = n.bc.BlocksByHeight[ht]
-		n.bc.Mu.RUnlock()
+		// n.bc.Mu.RLock()
+		// blk, exists = n.bc.BlocksByHeight[ht]
+		// n.bc.Mu.RUnlock()
+		n.propMapLock.RLock()
+		propOther, exists = n.proposalByviewMap[n.view]
+		n.propMapLock.RUnlock()
 	}
-	if exists && ep.GetBlockHash() != blk.GetBlockHash() {
-		// Equivocation
-		log.Warn("Equivocation detected.", ep.GetBlockHash(), blk.GetBlockHash())
-		// TODO trigger view change
+	// if exists && ep.GetBlockHash() != blk.GetBlockHash() {
+	// 	// Equivocation
+	// 	log.Warn("Equivocation detected.", ep.GetBlockHash(), blk.GetBlockHash())
+	// 	// TODO trigger view change
+	// 	n.addEquiProposaltoMap(prop)
+	// 	//TODO send evidence
+	// }
+
+	if exists && ep.Proposal.Block.ComputeHash() != propOther.Block.ComputeHash() {
+		log.Warn("Equivocation detected.", ep.Proposal.Block.ComputeHash(),
+			propOther.Block.ComputeHash())
+		n.addEquiProposaltoMap(prop)
+		n.sendEqProEvidence(prop, propOther)
 		return
 	}
 	if exists {
@@ -96,17 +119,16 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		// we have already committed this block, IGNORE
 		return
 	}
+	n.addProposaltoMap(prop)
 	n.addNewBlock(&ep.ExtBlock)
+	n.addProposaltoViewMap(prop)
 	n.ensureBlockIsDelivered(&ep.ExtBlock)
 
 	// Vote for the proposal
 	go func() {
-		n.voteForBlock(&ep.ExtBlock)
-		// Start 2\delta timer
+		n.voteForBlock(ep)
+		// Start 3\delta timer
 		n.startBlockTimer(&ep.ExtBlock)
-		// Stop blame timer, since we got a valid proposal
-		// During commit, if pending commands is empty, we will restart the blame timer
-		n.stopBlameTimer()
 	}()
 
 }
@@ -152,8 +174,61 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 }
 
 func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
-	// Start 2delta timer
+	// Start 3delta timer
 	timer := util.NewTimer(func() {
+		//check withholding proposal /height = round =view
+		_, exists := n.getCertForBlockIndex(blk.GetHeight())
+		_, exists1 := n.equiproposalMap[n.GetID()][n.view][n.leader]
+		if !exists && !exists1 {
+			log.Info("withholding block detected")
+			//TODO how to handle withholding behaviour
+			//inform to others
+			go func() {
+				n.handleWithholdingProposal()
+				if n.leader == n.GetID() {
+					n.propose()
+				}
+			}()
+			log.Info("Committing block-", blk.GetHeight())
+			// We have committed this block
+			// Let the client know that we committed this block
+			synchsmsg := &msg.SyncHSMsg{}
+			ack := &msg.SyncHSMsg_Ack{}
+			ack.Ack = &msg.CommitAck{
+				Block: blk.ToProto(),
+			}
+			synchsmsg.Msg = ack
+			// Tell all the clients, that I have committed this block
+			n.ClientBroadcast(synchsmsg)
+			return
+		}
+		if !exists && exists1 {
+			log.Info("Equivocation block detected")
+			n.view++
+			n.changeLeader()
+			if n.leader == n.GetID() {
+				go n.propose()
+			}
+
+			log.Info("Committing block-", blk.GetHeight())
+			// We have committed this block
+			// Let the client know that we committed this block
+			synchsmsg := &msg.SyncHSMsg{}
+			ack := &msg.SyncHSMsg_Ack{}
+			ack.Ack = &msg.CommitAck{
+				Block: blk.ToProto(),
+			}
+			synchsmsg.Msg = ack
+			// Tell all the clients, that I have committed this block
+			n.ClientBroadcast(synchsmsg)
+			return
+		}
+		n.view++
+		n.changeLeader()
+		if n.leader == n.GetID() {
+			go n.propose()
+		}
+
 		log.Info("Committing block-", blk.GetHeight())
 		// We have committed this block
 		// Let the client know that we committed this block
@@ -179,6 +254,53 @@ func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 	n.bc.BlocksByHeight[blk.GetHeight()] = blk
 	n.bc.BlocksByHash[blk.GetBlockHash()] = blk
 	n.bc.Mu.Unlock()
+}
+
+func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
+	n.malipropLock.Lock()
+	_, exists := n.maliproposalMap[n.GetID()][n.view][prop.Miner]
+	if !exists {
+		n.maliproposalMap[n.GetID()][n.view][prop.Miner] = 1
+	} else {
+		log.Debug("Malicious proposal of the leader has been recorded")
+	}
+	n.malipropLock.Unlock()
+}
+func (n *SyncHS) addEquiProposaltoMap(prop *msg.Proposal) {
+	n.equipropLock.Lock()
+	_, exists := n.equiproposalMap[n.GetID()][n.view][prop.Miner]
+	if !exists {
+		n.equiproposalMap[n.GetID()][n.view][prop.Miner] = 1
+	} else {
+		log.Debug("equivocation of the leader has been recorded")
+	}
+	n.equipropLock.Unlock()
+}
+
+func (n *SyncHS) addWitholdProposaltoMap() {
+	n.withpropoLock.Lock()
+	_, exists := n.withproposalMap[n.GetID()][n.view][n.leader]
+	if !exists {
+		n.withproposalMap[n.GetID()][n.view][n.leader] = 1
+	} else {
+		log.Debug("withhloding of the leader has been recorded")
+	}
+}
+func (n *SyncHS) addProposaltoMap(prop *msg.Proposal) {
+	n.propMapLock.Lock()
+	_, exists := n.proposalMap[n.view][n.GetID()][prop.Miner]
+	if !exists {
+		n.proposalMap[n.GetID()][n.view][prop.Miner] = 1
+	} else {
+		n.proposalMap[n.GetID()][n.view][prop.Miner]++
+	}
+	n.propMapLock.Unlock()
+}
+
+func (n *SyncHS) addProposaltoViewMap(prop *msg.Proposal) {
+	n.proposalByviewLock.Lock()
+	n.proposalByviewMap[n.view] = prop
+	n.proposalByviewLock.Unlock()
 }
 
 func (n *SyncHS) addNewTimer(pos uint64, timer *util.Timer) {

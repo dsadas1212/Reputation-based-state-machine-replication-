@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package msg ;
 
-option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+option go_package = "github.com/Reputation-based-state-machine-replication-/msg" ;
 
 message Certificate {
 	// The data on which we need signatures

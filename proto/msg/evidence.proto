@@ -1,0 +1,43 @@
+syntax = "proto3" ;
+package msg ;
+
+option go_package = "github.com/Reputation-based-state-machine-replication-/msg" ;
+
+
+import "msg/proposal.proto" ;
+import "msg/vote.proto" ;
+
+message EvidenceData {
+    uint64 MisbehaviourTarget = 1 ; //The misbehaviour target
+    uint64 view = 2 ; // The view number which produce this evidence 
+    
+}
+
+message Evidence {
+    EvidenceData EvidenceData = 1;
+    uint64 EvOrigin = 2 ; // The sender of this evidence
+    bytes OrSignature = 3; //The sigature of this sender
+}
+
+message EquivocationEvidence {
+    Evidence Evidence = 1;
+    msg.Proposal e1 = 2 ; //the content of this evidence is                              
+    msg.Proposal e2 = 3 ;//(two blocks and corresponding signatures and the pubkey of this leader)
+    
+}
+
+message MalicousProposalEvidence{ //Malicous proposal evidence is the node who is not the leader
+    Evidence Evidence = 1;        //but sent the proposal (the content of this )
+    msg.Proposal e = 2; 
+
+}
+
+message MalicousVoteEvidence{// Malicious vote evidence is the node who votes for non-leader block
+    Evidence Evidence = 1 ;
+    msg.ProtoVote e = 2;
+}
+//why don't have withholding block case, because there is no message in network should be transform
+
+
+
+

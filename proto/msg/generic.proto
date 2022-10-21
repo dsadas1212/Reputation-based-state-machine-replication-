@@ -1,21 +1,24 @@
 syntax = "proto3" ;
 package msg ;
 
-option go_package = "github.com/adithyabhatkajake/libsynchs/msg" ;
+option go_package = "github.com/Reputation-based-state-machine-replication-/msg" ;
 
 import "msg/proposal.proto" ;
-import "msg/blame.proto" ;
+import "msg/evidence.proto" ;
 import "msg/clientAck.proto" ;
 import "msg/vote.proto" ;
 
 message SyncHSMsg {
     oneof Msg {
         msg.Proposal Prop = 1 ;
-        msg.NoProgressBlame Npblame = 2 ;
-        msg.EquivocationBlame Eqblame = 3 ;
-        msg.CommitAck Ack = 4 ;
-        bytes Tx = 5 ;
-        msg.QuitView QV = 6 ;
+        // msg.NoProgressBlame Npblame = 2 ;
+        // msg.EquivocationBlame Eqblame = 3 ;
+        msg.EquivocationEvidence Eqevidence = 2;
+        msg.MalicousProposalEvidence Mpevidence = 3;
+        msg.MalicousVoteEvidence Mvevidence = 4;
+        msg.CommitAck Ack = 5;
+        bytes Tx = 6 ;
+        // msg.QuitView QV = 7 ;
         msg.ProtoVote Vote = 7 ;
     }
 }

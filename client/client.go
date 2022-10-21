@@ -38,14 +38,14 @@ var (
 	BufferCommands = uint64(10)
 	// PendingCommands tells how many commands we are waiting
 	// for acknowledgements from replicas
-	PendingCommands  = uint64(0)
-	cmdMutex         = &sync.Mutex{}
-	streamMutex      = &sync.Mutex{}
-	voteMutex        = &sync.Mutex{}
-	condLock         = &sync.RWMutex{}
-	voteChannel      chan *msg.CommitAck
-	idMap            = make(map[string]uint64)
-	votes            = make(map[crypto.Hash]uint64)
+	PendingCommands = uint64(0)
+	//cmdMutex         = &sync.Mutex{}
+	streamMutex = &sync.Mutex{}
+	//voteMutex        = &sync.Mutex{}
+	condLock    = &sync.RWMutex{}
+	voteChannel chan *msg.CommitAck
+	idMap       = make(map[string]uint64)
+	//votes            = make(map[crypto.Hash]uint64)
 	timeMap          = make(map[crypto.Hash]time.Time)
 	commitTimeMetric = make(map[crypto.Hash]time.Duration)
 	f                uint64
@@ -131,6 +131,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 		}
 		commitMap[bhash] = true
 		new := commitMap[bhash]
+		//need change the timereceive!!
 		log.Trace("Committed block. Processing block",
 			ack.GetBlock().GetHeader().GetHeight())
 		sendNewCommands := old != new
@@ -180,7 +181,7 @@ func main() {
 	batch := flag.Uint64("batch", BufferCommands, "Number of commands to wait for")
 	payload := flag.Uint64("payload", 2, "Number of bytes to get as response")
 	count := flag.Uint64("metric", metricCount, "Number of metrics to collect before exiting")
-	var logLevelPtr = flag.Uint64("loglevel", uint64(log.InfoLevel),
+	var logLevelPtr = flag.Uint64("loglevel", uint64(log.DebugLevel),
 		"Loglevels are one of \n0 - PanicLevel\n1 - FatalLevel\n2 - ErrorLevel\n3 - WarnLevel\n4 - InfoLevel\n5 - DebugLevel\n6 - TraceLevel")
 	// Setup Logger
 	switch uint32(*logLevelPtr) {
@@ -230,7 +231,7 @@ func main() {
 	// Setting stream handler is useless :/
 
 	pMap := make(map[uint64]peer.AddrInfo)
-	streamMap := make(map[uint64]network.Stream)
+	streamMap := make(map[uint64]network.Stream) //libp2p!!!
 	connectedNodes := uint64(0)
 	wg := &sync.WaitGroup{}
 	updateLock := &sync.Mutex{}

@@ -8,11 +8,11 @@ import (
 	pb "github.com/golang/protobuf/proto"
 )
 
-// Vote channel
+// Vote channel //TODO malicious vote and equivocation proposal detected!
 func (n *SyncHS) voteHandler() {
 	// Map leader to a map from sender to its vote
 	voteMap := make(map[uint64]map[uint64]*msg.Vote)
-	pendingVotes := make(map[crypto.Hash][]*msg.Vote)
+	// pendingVotes := make(map[crypto.Hash][]*msg.Vote)
 	isCertified := make(map[uint64]bool)
 	myID := n.GetID()
 	Faults := n.GetNumberOfFaultyNodes()
@@ -24,15 +24,15 @@ func (n *SyncHS) voteHandler() {
 		}
 		bhash := crypto.ToHash(v.GetBlockHash())
 		blk := n.getBlock(bhash)
+
 		if blk == nil {
-			log.Warn("Got a vote for a block, which we do not have yet.")
-			pendingVotes[bhash] = append(pendingVotes[bhash], v)
-			// TODO, what to do in this case?
+			log.Warn("Malicious vote have been detected.")
+			// pendingVotes[bhash] = append(pendingVotes[bhash], v)
+			// TODO, what to do in this case? malicious vote!
+			go n.sendMalivoteEvidence(v)
 			continue
-		} else {
-			// Process pending votes (if any)
 		}
-		// Check if this the first vote for this block height
+		// Check if this the first vote for this block height!!
 		height := blk.GetHeight()
 		view := v.GetView()
 		_, exists := voteMap[height]
@@ -40,16 +40,13 @@ func (n *SyncHS) voteHandler() {
 			voteMap[height] = make(map[uint64]*msg.Vote)
 			isCertified[height] = false
 		}
-		isCert, exists := isCertified[height]
-		if exists && isCert {
-			// This vote for this block is already certified, ignore
-			continue
-		}
+
 		_, exists = voteMap[height][v.GetVoter()]
 		if exists {
 			log.Debug("Duplicate vote received")
 			continue
 		}
+
 		// My vote is always valid
 		if v.GetVoter() != myID {
 			isValid := n.isVoteValid(v, blk)
@@ -57,6 +54,14 @@ func (n *SyncHS) voteHandler() {
 				log.Error("Invalid vote message")
 				continue
 			}
+		}
+		//add this vote to votemap
+		n.addVotetoMap(v.ToProto())
+		//only change votemap for reputation
+		isCert, exists := isCertified[height]
+		if exists && isCert {
+			// This vote for this block is already certified, ignore
+			continue
 		}
 		voteMap[height][v.GetVoter()] = v
 		if uint64(len(voteMap[height])) <= Faults {
@@ -69,9 +74,9 @@ func (n *SyncHS) voteHandler() {
 		isCertified[height] = true
 		go func() {
 			n.addCert(bcert, height)
-			if n.leader == myID {
-				n.propose()
-			}
+			// if n.leader == myID {
+			// 	n.propose()
+			// }
 		}()
 	}
 }
@@ -96,10 +101,12 @@ func (n *SyncHS) isVoteValid(v *msg.Vote, blk *chain.ExtBlock) bool {
 	return sigOk
 }
 
-func (n *SyncHS) voteForBlock(blk *chain.ExtBlock) {
+// change it and we can found the miner of the block in vote
+func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 	pvd := &msg.ProtoVoteData{
-		BlockHash: blk.GetBlockHash().GetBytes(),
+		BlockHash: exprop.ExtBlock.GetBlockHash().GetBytes(),
 		View:      n.view,
+		Owner:     exprop.Miner,
 	}
 	data, err := pb.Marshal(pvd)
 	if err != nil {
@@ -125,10 +132,33 @@ func (n *SyncHS) voteForBlock(blk *chain.ExtBlock) {
 	voteMsg.Msg = &msg.SyncHSMsg_Vote{Vote: pv}
 	v := &msg.Vote{}
 	v.FromProto(pv)
+	//the voter change his voteMap by himself
+	n.addVotetoMap(pv)
 	go func() {
 		// Send vote to all the nodes
 		n.Broadcast(voteMsg)
 		// Handle my own vote
 		n.voteChannel <- v
 	}()
+}
+func (n *SyncHS) addMaliVotetoMap(v *msg.ProtoVote) {
+	n.voteMaliLock.Lock()
+	_, exists := n.voteMaliMap[n.GetID()][n.view][v.Body.GetVoter()]
+	if !exists {
+		n.voteMaliMap[n.GetID()][n.view][v.Body.GetVoter()] = 1
+	} else {
+		log.Debug("Malicious vote of this miner in this view has been recorded")
+	}
+	n.voteMaliLock.Unlock()
+}
+
+func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
+	n.voteMapLock.Lock()
+	_, exists := n.voteMap[n.GetID()][n.view][v.Body.GetVoter()]
+	if !exists {
+		n.voteMap[n.GetID()][n.view][v.Body.GetVoter()] = 1
+	} else {
+		log.Debug(" vote of this miner in this view has been recorded")
+	}
+	n.voteMaliLock.Unlock()
 }

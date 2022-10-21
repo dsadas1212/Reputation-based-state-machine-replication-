@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package config ;
 
-option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+option go_package = "github.com/Reputation-based-state-machine-replication-/config" ;
 
 message Address {
     string IP = 1 ;
