@@ -1,13 +1,13 @@
 syntax = "proto3" ;
 package config ;
 
-option go_package = "github.com/adithyabhatkajake/libsynchs/config" ;
+option go_package = "github.com/Reputation-based-state-machine-replication-/config" ;
 
 message CryptoConfig {
     // A string defining what key type is being stored. Eg. Secp256k1.Type()
     string KeyType = 1 ;
     // Private Keys
     bytes PvtKey = 2 ;
-    // Mapping between a node and its public key
+    // Mapping between a node and its publickey
 	map <uint64, bytes> NodeKeyMap = 3 ;
 }

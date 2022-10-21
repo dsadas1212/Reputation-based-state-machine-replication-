@@ -7,7 +7,7 @@ import (
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
 )
 
-// How to create and validate certificates
+// How to create and validate certificates(we need convert it to reputation-based)
 
 // NewCert creates a certificate
 func NewCert(certMap map[uint64]*msg.Vote, blockhash crypto.Hash, view uint64) *msg.BlockCertificate {

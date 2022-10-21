@@ -1,6 +1,7 @@
-PROTO_PATH=/home/haxolotl/go/src/github.com/adithyabhatkajake/libsynchs/proto
-GO_OUT_DIR=/home/haxolotl/go/src/
-
+# PROTO_PATH=/home/haxolotl/go/src/github.com/adithyabhatkajake/libsynchs/proto
+# GO_OUT_DIR=/home/haxolotl/go/src/
+PROTO_PATH=/root/github.com/Reputation-based-state-machine-replication-/proto
+GO_OUT_DIR=/root/
 # Reference on how to use $^, $? and other automatic variables
 # https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
 

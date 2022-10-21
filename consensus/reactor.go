@@ -32,12 +32,19 @@ func (n *SyncHS) protocol() {
 			log.Debug("Received a proposal from ", prop.GetMiner())
 			// Send proposal to propose handler
 			go n.proposeHandler(prop)
-		case *msg.SyncHSMsg_Npblame:
-			blMsg := msgIn.GetNpblame()
-			go n.handleNoProgressBlame(blMsg)
-		case *msg.SyncHSMsg_Eqblame:
-			_ = msgIn.GetEqblame()
-			// TODO
+		case *msg.SyncHSMsg_Eqevidence:
+			eqevidence := msgIn.GetEqevidence()
+			log.Debug("Receive a proposal from", eqevidence.Evidence.EvOrigin)
+			go n.handleMisbehaviourEvidence(msgIn)
+		case *msg.SyncHSMsg_Mpevidence:
+			malipevidence := msgIn.GetMpevidence()
+			log.Debug("Receive a proposal from", malipevidence.Evidence.EvOrigin)
+			go n.handleMisbehaviourEvidence(msgIn)
+		case *msg.SyncHSMsg_Mvevidence:
+			malieevidence := msgIn.GetMvevidence()
+			log.Debug("Receive a proposal from", malieevidence.Evidence.EvOrigin)
+			go n.handleMisbehaviourEvidence(msgIn)
+
 		case *msg.SyncHSMsg_Vote:
 			pvote := msgIn.GetVote()
 			vote := &msg.Vote{}

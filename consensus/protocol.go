@@ -32,17 +32,25 @@ const (
 func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.NodeConfig = c
 	shs.leader = DefaultLeaderID
-	shs.view = 1 // View Number starts from 1
-	shs.blTimer = nil
+	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
 
 	// Setup maps
-	shs.streamMap = make(map[uint64]*bufio.ReadWriter)
-	shs.cliMap = make(map[*bufio.ReadWriter]bool)
+	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
+	shs.cliMap = make(map[*bufio.ReadWriter]bool)      //!!
 	// shs.pendingCommands = make(map[crypto.Hash]*chain.Command)
 	shs.timerMaps = make(map[uint64]*util.Timer)
-	shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
-	// shs.certMap = make(map[uint64]*msg.BlockCertificate)
+	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
+	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
+	//calculate reputation
+	shs.voteMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.proposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.reputationMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
 
 	// Setup channels
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
@@ -118,7 +126,7 @@ func (shs *SyncHS) Start() {
 	shs.protocol()
 }
 
-// ProtoMsgHandler reacts to all protocol messages in the network
+// ProtoMsgHandler reacts to all protocol messages in the network !!
 func (shs *SyncHS) ProtoMsgHandler(s network.Stream) {
 	// A global buffer to collect messages
 	buf := make([]byte, msg.MaxMsgSize)

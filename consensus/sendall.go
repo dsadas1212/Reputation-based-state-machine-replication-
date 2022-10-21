@@ -6,7 +6,7 @@ import (
 	pb "github.com/golang/protobuf/proto"
 )
 
-// Broadcast broadcasts a protocol message to all the nodes
+// Broadcast broadcasts a protocol message to all the nodes!!
 func (n *SyncHS) Broadcast(m *msg.SyncHSMsg) error {
 	n.netMutex.Lock()
 	defer n.netMutex.Unlock()

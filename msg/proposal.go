@@ -9,6 +9,7 @@ type ExtProposal struct {
 	*Proposal
 	chain.ExtBlock
 	BlockCertificate
+	// ProposalByheight map[int64]*Proposal
 }
 
 func (ep *ExtProposal) FromProto(data *Proposal) {

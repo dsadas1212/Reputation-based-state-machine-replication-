@@ -15,7 +15,7 @@ import (
 	peerstore "github.com/libp2p/go-libp2p-core/peer"
 )
 
-// SyncHS implements the consensus protocol
+// SyncHS implements the consensus protocol!!
 type SyncHS struct {
 	// Network data structures
 	host    host.Host
@@ -36,17 +36,38 @@ type SyncHS struct {
 	// Certificate map
 	certMap map[uint64]*msg.BlockCertificate
 	// A mapping between the view and (A mapping between the origin and blames against the leader)
-	blameMap map[uint64]map[uint64]*msg.Blame
-
+	// blameMap map[uint64]map[uint64]*msg.Blame
+	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
+	voteMap map[uint64]map[uint64]map[uint64]uint64
+	// malicous vote map
+	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
+	// correct proposal map
+	proposalMap map[uint64]map[uint64]map[uint64]uint64
+	//equivocate proposal map
+	equiproposalMap map[uint64]map[uint64]map[uint64]uint64
+	//withholding proposal map
+	withproposalMap map[uint64]map[uint64]map[uint64]uint64
+	//malicious proposal map
+	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
+	//Reputation map
+	reputationMap map[uint64]map[uint64]map[uint64]uint64
+	//ProosalByheightMap
+	proposalByviewMap map[uint64]*msg.Proposal
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
-	cliMutex    sync.RWMutex // The lock to modify cliMap
-	netMutex    sync.RWMutex // The lock to modify streamMap: Use mutex when using network streams to talk to other nodes
-	cmdMutex    sync.RWMutex // The lock to modify pendingCommands
-	timerLock   sync.RWMutex // The lock to modify timerMaps
-	blTimerLock sync.RWMutex // The lock to modify blTimer
-	blLock      sync.RWMutex // The lock to modify blameMap
-	certMapLock sync.RWMutex // The lock to modify certMap
+	cliMutex           sync.RWMutex // The lock to modify cliMap
+	netMutex           sync.RWMutex // The lock to modify streamMap: Use mutex when using network streams to talk to other nodes
+	cmdMutex           sync.RWMutex // The lock to modify pendingCommands
+	timerLock          sync.RWMutex // The lock to modify timerMaps
+	certMapLock        sync.RWMutex // The lock to modify certMap
+	repMapLock         sync.RWMutex // The lock to modify reputationMap
+	voteMapLock        sync.RWMutex // The lock to modify reputationMap
+	propMapLock        sync.RWMutex // The lock to modify reputationMap
+	malipropLock       sync.RWMutex //........
+	equipropLock       sync.RWMutex
+	voteMaliLock       sync.RWMutex
+	withpropoLock      sync.RWMutex
+	proposalByviewLock sync.RWMutex
 
 	// Channels
 	msgChannel     chan *msg.SyncHSMsg // All messages come here first
@@ -59,9 +80,8 @@ type SyncHS struct {
 	bc *chain.BlockChain
 
 	// Protocol information
-	leader  uint64
-	view    uint64
-	blTimer *util.Timer
+	leader uint64
+	view   uint64
 
 	// Embed the config
 	*config.NodeConfig
