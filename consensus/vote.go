@@ -29,7 +29,11 @@ func (n *SyncHS) voteHandler() {
 			log.Warn("Malicious vote have been detected.")
 			// pendingVotes[bhash] = append(pendingVotes[bhash], v)
 			// TODO, what to do in this case? malicious vote!
-			go n.sendMalivoteEvidence(v)
+			go func() {
+				n.sendMalivoteEvidence(v)
+				n.addMaliVotetoMap(v)
+			}()
+
 			continue
 		}
 		// Check if this the first vote for this block height!!
@@ -141,24 +145,41 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 		n.voteChannel <- v
 	}()
 }
-func (n *SyncHS) addMaliVotetoMap(v *msg.ProtoVote) {
+func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
 	n.voteMaliLock.Lock()
-	_, exists := n.voteMaliMap[n.GetID()][n.view][v.Body.GetVoter()]
-	if !exists {
-		n.voteMaliMap[n.GetID()][n.view][v.Body.GetVoter()] = 1
-	} else {
-		log.Debug("Malicious vote of this miner in this view has been recorded")
+	value, exists := n.voteMaliMap[n.GetID()][n.view][v.ProtoVoteBody.GetVoter()]
+	if exists && value == 1 {
+		log.Debug("Malicious vote of this voter in this view has been recorded")
 	}
+	malivoterMap := make(map[uint64]uint64)
+	malivoterMap[v.ProtoVoteBody.GetVoter()] = 1
+	malivMapcurrentView := make(map[uint64]map[uint64]uint64)
+	malivMapcurrentView[n.view] = malivoterMap
+	n.voteMaliMap[n.GetID()] = malivMapcurrentView
+
+	// n.voteMaliMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
+	// n.voteMaliMap[n.GetID()][n.view] = make(map[uint64]uint64)
+	// n.voteMaliMap[n.GetID()][n.view] = map[uint64]uint64{
+	// 	v.Body.GetVoter(): 1,
+	// }
+	// if vomali == 0 {
+	// 	vomali++
+	// } else {
+	// 	log.Debug("Malicious vote of this voter in this view has been recorded")
+	// }
 	n.voteMaliLock.Unlock()
 }
 
 func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 	n.voteMapLock.Lock()
-	_, exists := n.voteMap[n.GetID()][n.view][v.Body.GetVoter()]
-	if !exists {
-		n.voteMap[n.GetID()][n.view][v.Body.GetVoter()] = 1
-	} else {
-		log.Debug(" vote of this miner in this view has been recorded")
+	value, exists := n.voteMap[n.GetID()][n.view][v.Body.GetVoter()]
+	if exists && value == 1 {
+		log.Debug(" vote of this voter in this view has been recorded")
 	}
-	n.voteMaliLock.Unlock()
+	voterMap := make(map[uint64]uint64)
+	voterMap[v.Body.GetVoter()] = 1
+	vMapcurrentView := make(map[uint64]map[uint64]uint64)
+	vMapcurrentView[n.view] = voterMap
+	n.voteMaliMap[n.GetID()] = vMapcurrentView
+	n.voteMapLock.Unlock()
 }

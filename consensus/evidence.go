@@ -70,7 +70,7 @@ func (shs *SyncHS) sendMalivoteEvidence(v *msg.Vote) {
 	malivoteEvidence := &msg.MalicousVoteEvidence{}
 	malivoteEvidence.Evidence = &msg.Evidence{}
 	malivoteEvidence.Evidence.EvidenceData = &msg.EvidenceData{}
-	malivoteEvidence.Evidence.EvidenceData.MisbehaviourTarget = v.GetVoter()
+	malivoteEvidence.Evidence.EvidenceData.MisbehaviourTarget = v.ProtoVoteBody.GetVoter()
 	malivoteEvidence.Evidence.EvOrigin = shs.GetID()
 	malivoteEvidence.E = v.ToProto()
 	data, err := pb.Marshal(malivoteEvidence)
@@ -105,36 +105,62 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 			return
 		}
 		//change corresponding map
-		shs.addEquiProposaltoMap(ms.GetEqevidence().E1)
+		shs.addEquiProposaltoMap()
 
 		//we should delete all vote and proposal ocur in this view
 		shs.propMapLock.RLock()
 
-		for _, vp := range shs.proposalMap[shs.GetID()][shs.view] {
-			vp--
-
+		p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
+		if exists && p == 1 {
+			p--
+		} else {
+			log.Info("node", shs.GetID(), "did not change proposalMap in current view")
 		}
 		shs.propMapLock.RUnlock()
 		shs.voteMapLock.RLock()
-		for _, vv := range shs.voteMap[shs.GetID()][shs.view] {
-			vv--
+		votemap, exists := shs.voteMap[shs.GetID()][shs.view]
+		if exists {
+			for _, vnum := range votemap {
+				if vnum == 1 {
+					vnum--
+				}
+			}
+		} else {
+			log.Debug(shs.GetID(), "did not init votemap")
 		}
+		// for voter, v := range shs.voteMap[shs.GetID()][shs.view] {
+		// 	if v == 1 {
+		// 		v--
+		// 	} else {
+		// 		log.Info("node", shs.GetID(), "did not receive ", voter, "'s vote in current view")
+		// 	}
+		// }
 		shs.voteMapLock.RUnlock()
 		//how to commit a empty block with certificate
 		//and we should change all map need this empty block
 		//round = view = height = head
 
-		emptyBlockforEq := &chain.ProtoBlock{}
-		emptyBlockforEq.BlockHash = chain.EmptyHash[:]
-		emptyBlockforEq.Header.Height = shs.view
-		precert, _ := shs.getCertForBlockIndex(shs.view - 1)
-		bhash, _ := precert.GetBlockInfo()
-
-		//why we don't use E1/E2 in proposal,because the certificate in proposal maybe invalid
-		emptyBlockforEq.Header.ParentHash = bhash.GetBytes()
-		exemptyBlockforEq := &chain.ExtBlock{}
-		exemptyBlockforEq.FromProto(emptyBlockforEq)
-		shs.addNewBlock(exemptyBlockforEq)
+		emptyBlockforeq := &chain.ProtoBlock{
+			Header: &chain.ProtoHeader{
+				Height: shs.view,
+			},
+			BlockHash: chain.EmptyHash.GetBytes(),
+		}
+		precert, exists := shs.getCertForBlockIndex(shs.view - 1)
+		if exists {
+			bhash, _ := precert.GetBlockInfo()
+			emptyBlockforeq.Header.ParentHash = bhash.GetBytes()
+		} else {
+			//TODO what can i do in this
+		}
+		//the empty block also needs certificate(is same as genesis block's certificate)
+		//and we should change the certmap
+		emptyCertificate := &msg.BlockCertificate{}
+		emptyCertificate.SetBlockInfo(chain.EmptyHash, shs.view)
+		shs.addCert(emptyCertificate, shs.view)
+		exemptyBlockforeq := &chain.ExtBlock{}
+		exemptyBlockforeq.FromProto(emptyBlockforeq)
+		shs.addNewBlock(exemptyBlockforeq)
 		// shs.view++
 		// shs.changeLeader() timer end do this
 
@@ -154,15 +180,17 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 	case *msg.SyncHSMsg_Mvevidence:
 		log.Warn("Received a Malicious vote evidence!")
 		log.Trace("Received a Malicious vote evidence against",
-			ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget, "from",
-			ms.GetMpevidence().Evidence.EvOrigin)
+			ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget, "from",
+			ms.GetMvevidence().Evidence.EvOrigin)
 		isValid := shs.isMalivEvidenceValid(ms.GetMvevidence())
 		if !isValid {
 			log.Debugln("Received an invalid Malicious vote evidence message",
 				ms.GetMvevidence().String())
 		}
 		//continue best-case ! //TODO add malicious vote to map!
-		shs.addMaliVotetoMap(ms.GetVote())
+		msvote := &msg.Vote{}
+		msvote.FromProto(ms.GetVote())
+		shs.addMaliVotetoMap(msvote)
 
 	case nil:
 		log.Warn("Unspecified msg type ", x)
@@ -173,33 +201,56 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 
 }
 
+// handleEquivocationProposal
+// func (shs *SyncHS) handleEquivocationPropsoal() {
+
+// }
+
 // how to handle WithholdingProposal
 func (shs *SyncHS) handleWithholdingProposal() {
-	shs.addWitholdProposaltoMap()
 	shs.propMapLock.RLock()
 
-	for _, vp := range shs.proposalMap[shs.GetID()][shs.view] {
-		vp--
-
+	p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
+	if p == 1 && exists {
+		p--
+	} else {
+		log.Info("node", shs.GetID(), "did not change proposalMap in current view")
 	}
 	shs.propMapLock.RUnlock()
 	shs.voteMapLock.RLock()
-	for _, vv := range shs.voteMap[shs.GetID()][shs.view] {
-		vv--
+	votemap, exists := shs.voteMap[shs.GetID()][shs.view]
+	if exists {
+		for _, vnum := range votemap {
+			if vnum == 1 {
+				vnum--
+			}
+		}
+	} else {
+		log.Debug(shs.GetID(), "did not init votemap")
 	}
 	shs.voteMapLock.RUnlock()
-	emptyBlockforwh := &chain.ProtoBlock{}
-	emptyBlockforwh.BlockHash = chain.EmptyHash[:]
-	emptyBlockforwh.Header.Height = shs.view
-	precert, _ := shs.getCertForBlockIndex(shs.view - 1)
-	bhash, _ := precert.GetBlockInfo()
-	emptyBlockforwh.Header.ParentHash = bhash.GetBytes()
+	shs.addWitholdProposaltoMap()
+	emptyBlockforwh := &chain.ProtoBlock{
+		Header: &chain.ProtoHeader{
+			Height: shs.view,
+		},
+		BlockHash: chain.EmptyHash.GetBytes(),
+	}
+	precert, exists := shs.getCertForBlockIndex(shs.view - 1)
+	if exists {
+		bhash, _ := precert.GetBlockInfo()
+		emptyBlockforwh.Header.ParentHash = bhash.GetBytes()
+	} else {
+		//TODO what can i do in this
+	}
+	//the empty block also needs certificate(is same as genesis block's certificate)
+	//and we should change the certmap
+	emptyCertificate := &msg.BlockCertificate{}
+	emptyCertificate.SetBlockInfo(chain.EmptyHash, shs.view)
+	shs.addCert(emptyCertificate, shs.view)
 	exemptyBlockforwh := &chain.ExtBlock{}
 	exemptyBlockforwh.FromProto(emptyBlockforwh)
 	shs.addNewBlock(exemptyBlockforwh)
-	shs.view++
-	shs.changeLeader()
-
 }
 
 func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
