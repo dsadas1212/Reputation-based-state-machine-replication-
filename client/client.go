@@ -177,11 +177,11 @@ func printMetrics() {
 
 func main() {
 
-	confFile := flag.String("conf", "", "Path to client config file")
+	confFile := flag.String("conf", "/root/github.com/Reputation-based-state-machine-replication-/testData/3-node-test/client.txt", "Path to client config file")
 	batch := flag.Uint64("batch", BufferCommands, "Number of commands to wait for")
 	payload := flag.Uint64("payload", 2, "Number of bytes to get as response")
 	count := flag.Uint64("metric", metricCount, "Number of metrics to collect before exiting")
-	var logLevelPtr = flag.Uint64("loglevel", uint64(log.DebugLevel),
+	var logLevelPtr = flag.Uint64("loglevel", uint64(log.InfoLevel),
 		"Loglevels are one of \n0 - PanicLevel\n1 - FatalLevel\n2 - ErrorLevel\n3 - WarnLevel\n4 - InfoLevel\n5 - DebugLevel\n6 - TraceLevel")
 	// Setup Logger
 	switch uint32(*logLevelPtr) {

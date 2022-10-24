@@ -49,7 +49,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.reputationMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	// shs.reputationMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
 
 	// Setup channels
@@ -113,7 +113,7 @@ func (shs *SyncHS) Setup(n *net.Network) error {
 		}(idx, p)
 	}
 	wg.Wait()
-	log.Info("Setup Finished. Ready to do SMR:)")
+	log.Info("Setup Finished. Ready to do SMR:)", "The begin time is", time.Now())
 
 	return nil
 }
