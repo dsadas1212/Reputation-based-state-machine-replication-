@@ -49,14 +49,13 @@ func (n *SyncHS) propose() {
 	log.Debug("Proposing block:", prop.String())
 	//Change itself proposal map
 	n.addProposaltoMap()
-	go func() {
-		// Leader sends new block to all the other nodes
-		n.Broadcast(relayMsg)
-		// Leader should also vote
-		n.voteForBlock(ep)
-		// Start 3\delta timer
-		n.startBlockTimer(block)
-	}()
+	// Leader sends new block to all the other nodes
+	n.Broadcast(relayMsg)
+	// Leader should also vote
+	n.voteForBlock(ep)
+	// Start 3\delta timer
+	n.startBlockTimer(block)
+
 }
 
 // Deal with the proposal
@@ -126,11 +125,25 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 	n.ensureBlockIsDelivered(&ep.ExtBlock)
 
 	// Vote for the proposal
-	go func() {
-		n.voteForBlock(ep)
-		// Start 3\delta timer
-		n.startBlockTimer(&ep.ExtBlock)
-	}()
+	n.voteForBlock(ep)
+	// Start 3\delta timer
+	n.startBlockTimer(&ep.ExtBlock)
+
+}
+
+// attack injection!!
+// Leader propose two diferent proposal in this round
+func (n *SyncHS) euivocationpropose() {
+
+}
+
+// leader withholding his proposal
+func (n *SyncHS) withholdingpropose() {
+
+}
+
+// non-leader node propose propsoal
+func (n *SyncHS) maliciousproposalpropose() {
 
 }
 
@@ -244,8 +257,8 @@ func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
 			n.ClientBroadcast(synchsmsg)
 			return
 		}
-		n.ReputationCalculateinCurrentRound(0)
 		n.ReputationCalculateinCurrentRound(1)
+		n.ReputationCalculateinCurrentRound(0)
 		n.ReputationCalculateinCurrentRound(2)
 		n.view++
 		//TODO ADD LOG for this
@@ -254,7 +267,7 @@ func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
 			n.propose()
 		}
 
-		log.Info("Committing an correct block-", blk.GetHeight())
+		log.Info("Committing an correct block-", n.view)
 		log.Info("The block commit time is", time.Now())
 		// We have committed this block
 		// Let the client know that we committed this block
@@ -268,7 +281,7 @@ func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
 		n.ClientBroadcast(synchsmsg)
 		// }
 	})
-	log.Info("Started timer for block-", blk.GetHeight())
+	log.Info("Started timer for block-", n.view)
 	timer.SetTime(n.GetCommitWaitTime())
 	n.addNewTimer(blk.GetHeight(), timer)
 	timer.Start()
