@@ -11,8 +11,8 @@ import (
 const (
 	pEpsilonWith  = 1.5
 	pEpsilonEqui  = 1.5
-	pEpsilonMali  = 0.5
-	vEpisilonMali = 0.5
+	pEpsilonMali  = 1
+	vEpisilonMali = 1
 	gama          = 0.5
 )
 
@@ -57,81 +57,127 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 func (n *SyncHS) proposalNumCalculate(nodeID uint64) uint64 {
 	n.propMapLock.RLock()
 	defer n.propMapLock.RUnlock()
-	for _, senderMap := range n.proposalMap[n.GetID()] {
+	_, exists := n.proposalMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.proposalMap[n.GetID()] {
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				proposalnum++
+			} else {
+				return 0
+			}
 
-		if senderMap[nodeID] == 1 {
-			proposalnum++
 		}
-
+		return proposalnum
+	} else {
+		return 0
 	}
-	return proposalnum
+
 }
 func (n *SyncHS) voteNumCalculate(nodeID uint64) uint64 {
 	n.voteMapLock.RLock()
-
 	defer n.voteMapLock.RUnlock()
-	for _, senderMap := range n.voteMap[n.GetID()] {
-
-		if senderMap[nodeID] == 1 {
-			votenum++
+	_, exists := n.voteMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.voteMap[n.GetID()] {
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				votenum++
+			} else {
+				return 0
+			}
 		}
-
+		return proposalnum
+	} else {
+		return 0
 	}
-	return votenum
+
 }
 
 func (n *SyncHS) maliproposalNumCalculate(nodeID uint64) uint64 {
 	n.malipropLock.RLock()
-
 	defer n.malipropLock.RUnlock()
-	for _, senderMap := range n.maliproposalMap[n.GetID()] {
-
-		if senderMap[nodeID] == 1 {
-			maliproposalnum++
+	_, exists := n.maliproposalMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.maliproposalMap[n.GetID()] {
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				maliproposalnum++
+			} else {
+				return 0
+			}
 		}
-
+		return maliproposalnum
+	} else {
+		return 0
 	}
-	return maliproposalnum
+
 }
 
 func (n *SyncHS) withholdproposalNumCalculate(nodeID uint64) uint64 {
 	n.withpropoLock.RLock()
 	defer n.withpropoLock.RUnlock()
-	for _, senderMap := range n.withproposalMap[n.GetID()] {
-
-		if senderMap[nodeID] == 1 {
-			withpropsoalnum++
+	_, exists := n.withproposalMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.withproposalMap[n.GetID()] {
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				withpropsoalnum++
+			} else {
+				return 0
+			}
 		}
-
+		return withpropsoalnum
+	} else {
+		return 0
 	}
-	return withpropsoalnum
 
 }
 
 func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
 	n.equipropLock.RLock()
 	defer n.equipropLock.RUnlock()
-	for _, senderMap := range n.equiproposalMap[n.GetID()] {
+	_, exists := n.equiproposalMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.equiproposalMap[n.GetID()] {
 
-		if senderMap[nodeID] == 1 {
-			equiprospoalnum++
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				equiprospoalnum++
+			} else {
+				return 0
+			}
+
 		}
+		return equiprospoalnum
 
+	} else {
+		return 0
 	}
-	return equiprospoalnum
+
 }
 
 func (n *SyncHS) malivoteNumCalculate(nodeID uint64) uint64 {
 	n.voteMaliLock.RLock()
 	defer n.voteMaliLock.RUnlock()
-	for _, senderMap := range n.voteMaliMap[n.GetID()] {
+	_, exists := n.maliproposalMap[n.GetID()]
+	if exists {
+		for _, senderMap := range n.voteMaliMap[n.GetID()] {
 
-		if senderMap[nodeID] == 1 {
-			malivotenum++
+			num, exists1 := senderMap[nodeID]
+			if exists1 && num == 1 {
+				malivotenum++
+			} else {
+				return 0
+			}
+
 		}
+		return malivotenum
 
+	} else {
+		return 0
 	}
-	return malivotenum
+
 }
 
 func (n *SyncHS) maxvaluecheck(a float64) float64 {

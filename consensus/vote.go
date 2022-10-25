@@ -22,22 +22,34 @@ func (n *SyncHS) voteHandler() {
 			log.Error("Vote channel error")
 			continue
 		}
+		if v.Owner != n.leader {
+			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
+			go func() {
+				n.addMaliVotetoMap(v)
+				n.sendMalivoteEvidence(v)
+
+			}()
+			continue
+		}
 		bhash := crypto.ToHash(v.GetBlockHash())
 		blk := n.getBlock(bhash)
 
-		if blk == nil {
-			log.Warn("Malicious vote have been detected.")
-			// pendingVotes[bhash] = append(pendingVotes[bhash], v)
-			// TODO, what to do in this case? malicious vote!
-			go func() {
-				n.sendMalivoteEvidence(v)
-				n.addMaliVotetoMap(v)
-			}()
+		// if blk == nil {
+		// 	// log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
+		// 	// pendingVotes[bhash] = append(pendingVotes[bhash], v)
+		// 	// TODO, what to do in this case? malicious vote!
+		// 	// go func() {
+		// 	// 	n.addMaliVotetoMap(v)
+		// 	// 	n.sendMalivoteEvidence(v)
 
-			continue
-		}
-		// Check if this the first vote for this block height!!
-		height := blk.GetHeight()
+		// 	// }()
+
+		// 	continue
+		// }
+
+		//Check if this the first vote for this block height!!
+
+		height := n.view
 		view := v.GetView()
 		_, exists := voteMap[height]
 		if !exists {
@@ -107,6 +119,7 @@ func (n *SyncHS) isVoteValid(v *msg.Vote, blk *chain.ExtBlock) bool {
 
 // change it and we can found the miner of the block in vote
 func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
+	log.Info("NODE", n.GetID(), "is voting for", exprop.Miner, "'s block")
 	pvd := &msg.ProtoVoteData{
 		BlockHash: exprop.ExtBlock.GetBlockHash().GetBytes(),
 		View:      n.view,
