@@ -11,6 +11,21 @@ import (
 	pb "github.com/golang/protobuf/proto"
 )
 
+// In reputation-based SMR all things begin with Timer!
+
+func (n *SyncHS) startConsensusTimer() {
+	n.timer.Start()
+	log.Debug("node", n.GetID(), "start a 4Delta timer!")
+
+	go func() {
+		if n.leader == n.GetID() {
+			n.propose()
+		}
+
+	}()
+
+}
+
 // Monitor pending commands, if there is any change and the current node is the leader, then start proposing blocks
 func (n *SyncHS) propose() {
 	log.Info("node", n.GetID(), "is proposing block")
@@ -54,7 +69,7 @@ func (n *SyncHS) propose() {
 	// Leader should also vote
 	n.voteForBlock(ep)
 	// Start 3\delta timer
-	n.startBlockTimer(block)
+	// n.startBlockTimer(block)
 
 }
 
@@ -127,13 +142,17 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 	// Vote for the proposal
 	n.voteForBlock(ep)
 	// Start 3\delta timer
-	n.startBlockTimer(&ep.ExtBlock)
+	// n.startBlockTimer(&ep.ExtBlock)
 
 }
 
 // attack injection!!
 // Leader propose two diferent proposal in this round
-func (n *SyncHS) euivocationpropose() {
+// note that equivocationpropsoe and withholdingpropose lead nodes this round
+// commit empty block which means if equicocationpropose or withholding propose
+// exists propsose() should be convert
+// But the other two cases(malicious) are just the opposite
+func (n *SyncHS) equivocationpropose() {
 
 }
 
@@ -188,104 +207,6 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 }
 
 //TODO ，need chain.block  to start timer?
-
-func (n *SyncHS) startBlockTimer(blk *chain.ExtBlock) {
-	// Start 3delta timer
-	timer := util.NewTimer(func() {
-		//check withholding proposal /height = round =view
-		_, exists := n.proposalMap[n.GetID()][n.view][n.leader]
-		_, exists1 := n.equiproposalMap[n.GetID()][n.view][n.leader]
-		if !exists && !exists1 {
-			log.Info("withholding block detected")
-			//Handle withholding behaviour
-
-			n.handleWithholdingProposal()
-
-			//calculate myself reputation
-			n.ReputationCalculateinCurrentRound(n.GetID())
-			n.view++
-			n.changeLeader()
-			if n.leader == n.GetID() {
-				n.propose()
-			}
-			// We have committed this empty block
-			log.Info("Committing an withholdemptyblock-", n.view)
-			log.Info("The block commit time is", time.Now())
-
-			// Let the client know that we committed this block
-			emptyBlockforwh := &chain.ProtoBlock{
-				Header: &chain.ProtoHeader{
-					Height: n.view,
-				},
-				BlockHash: chain.EmptyHash.GetBytes(),
-			}
-			synchsmsg := &msg.SyncHSMsg{}
-			ack := &msg.SyncHSMsg_Ack{}
-			ack.Ack = &msg.CommitAck{
-				Block: emptyBlockforwh,
-			}
-			synchsmsg.Msg = ack
-			// Tell all the clients, that I have committed this block
-			n.ClientBroadcast(synchsmsg)
-			return
-		}
-		if exists1 {
-			log.Info("Equivocation block detected")
-			n.ReputationCalculateinCurrentRound(n.GetID())
-			n.view++
-			n.changeLeader()
-			if n.leader == n.GetID() {
-				n.propose()
-			}
-			log.Info("Committing equivocationblock-", n.view)
-			log.Info("The block commit time is", time.Now())
-			// We have committed this block
-			// Let the client know that we committed this block
-			emptyBlockforeq := &chain.ProtoBlock{
-				Header: &chain.ProtoHeader{
-					Height: n.view,
-				},
-				BlockHash: chain.EmptyHash.GetBytes(),
-			}
-			synchsmsg := &msg.SyncHSMsg{}
-			ack := &msg.SyncHSMsg_Ack{}
-			ack.Ack = &msg.CommitAck{
-				Block: emptyBlockforeq,
-			}
-			synchsmsg.Msg = ack
-			// Tell all the clients, that I have committed this block
-			n.ClientBroadcast(synchsmsg)
-			return
-		}
-		n.ReputationCalculateinCurrentRound(1)
-		n.ReputationCalculateinCurrentRound(0)
-		n.ReputationCalculateinCurrentRound(2)
-		n.view++
-		//TODO ADD LOG for this
-		n.changeLeader()
-		if n.leader == n.GetID() {
-			n.propose()
-		}
-
-		log.Info("Committing an correct block-", n.view)
-		log.Info("The block commit time is", time.Now())
-		// We have committed this block
-		// Let the client know that we committed this block
-		synchsmsg := &msg.SyncHSMsg{}
-		ack := &msg.SyncHSMsg_Ack{}
-		ack.Ack = &msg.CommitAck{
-			Block: blk.ToProto(),
-		}
-		synchsmsg.Msg = ack
-		// Tell all the clients, that I have committed this block
-		n.ClientBroadcast(synchsmsg)
-		// }
-	})
-	log.Info("Started timer for block-", n.view)
-	timer.SetTime(n.GetCommitWaitTime())
-	n.addNewTimer(blk.GetHeight(), timer)
-	timer.Start()
-}
 
 func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 	// Otherwise, add the current block to map
@@ -387,11 +308,11 @@ func (n *SyncHS) addProposaltoViewMap(prop *msg.Proposal) {
 	n.proposalByviewLock.Unlock()
 }
 
-func (n *SyncHS) addNewTimer(pos uint64, timer *util.Timer) {
-	n.timerLock.Lock()
-	n.timerMaps[pos] = timer
-	n.timerLock.Unlock()
-}
+// func (n *SyncHS) addNewTimer(pos uint64, timer *util.Timer) {
+// 	n.timerLock.Lock()
+// 	n.timerMaps[pos] = timer
+// 	n.timerLock.Unlock()
+// }
 
 // NewCandidateProposal returns a proposal message built using commands
 func (n *SyncHS) NewCandidateProposal(cmds [][]byte,

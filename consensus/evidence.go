@@ -173,6 +173,7 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 		if !isValid {
 			log.Debugln("Received an invalid Malicious proposal evidence message",
 				ms.GetMpevidence().String())
+			return
 		}
 		shs.addMaliProposaltoMap(ms.GetProp())
 		//continue best-case !
@@ -186,6 +187,7 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 		if !isValid {
 			log.Debugln("Received an invalid Malicious vote evidence message",
 				ms.GetMvevidence().String())
+			return
 		}
 		//continue best-case ! //TODO add malicious vote to map!
 		msvote := &msg.Vote{}
