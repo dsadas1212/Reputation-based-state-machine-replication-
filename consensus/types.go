@@ -85,4 +85,12 @@ type SyncHS struct {
 
 	// Embed the config
 	*config.NodeConfig
+
+	// The varible of attack injection
+	equivocatingProposalInject bool
+	withholdingProposalInject  bool
+	maliciousProposalInject    bool
+	maliciousVoteInject        bool
+	// The timer of every node
+	timer util.Timer
 }

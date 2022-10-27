@@ -1,13 +1,12 @@
 package consensus
 
-func (n *SyncHS) addCmdsAndProposeIfSufficientCommands(cmd []byte) {
+func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
 	defer n.cmdMutex.Unlock()
 	n.pendingCommands = append(n.pendingCommands, cmd)
 	// n.pendingCommands.PushBack(cmd)
-	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() && // Sufficient Commands
-		n.GetID() == n.leader { // And I am the leader
-		go n.propose()
+	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() { //Sufficient Commands start our timer！
+		go n.startConsensusTimer()
 	}
 }
 

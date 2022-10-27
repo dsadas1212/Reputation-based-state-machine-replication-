@@ -79,7 +79,7 @@ func (shs *NodeConfig) GetDelta() time.Duration {
 
 // GetCommitWaitTime returns how long to wait before committing a block
 func (shs *NodeConfig) GetCommitWaitTime() time.Duration {
-	return shs.GetDelta() * 3 //change to 3/delta , the third delta for evidence boradcast
+	return shs.GetDelta() * 4 //change to 3/delta , the third delta for evidence boradcast
 }
 
 // GetNPBlameWaitTime returns how long to wait before sending the NP Blame

@@ -2,8 +2,10 @@ package consensus
 
 import (
 	"bufio"
+	"time"
 
 	"github.com/adithyabhatkajake/libchatter/log"
+	"github.com/adithyabhatkajake/libsynchs/chain"
 	"github.com/adithyabhatkajake/libsynchs/msg"
 	pb "github.com/golang/protobuf/proto"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -35,6 +37,8 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 	// Add client for later contact
 	n.addClient(rw)
+	// Set timer for all nodes
+	n.setConsensusTimer()
 	// Event Handler
 	for {
 		// Receive a message from a client and process them
@@ -58,7 +62,8 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 			continue
 		}
 		// Add command
-		go n.addCmdsAndProposeIfSufficientCommands(cmd)
+		go n.addCmdsAndStartTimerIfSufficientCommands(cmd)
+
 	}
 }
 
@@ -77,4 +82,99 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 		cliBuf.Flush()
 	}
 	log.Trace("Finish client broadcast for", m)
+}
+
+func (n *SyncHS) setConsensusTimer() {
+	// set timer callback function
+	// timer := util.NewTimer(n.callback)
+	// timer.SetTime(n.GetCommitWaitTime())
+	n.timer.SetTime(n.GetCommitWaitTime())
+	n.timer.SetCallAndCanel(n.callback)
+}
+
+func (n *SyncHS) callback() {
+	//check withholding proposal /height = round =view
+	_, exists := n.proposalMap[n.GetID()][n.view][n.leader]
+	_, exists1 := n.equiproposalMap[n.GetID()][n.view][n.leader]
+	if !exists && !exists1 {
+		log.Info("withholding block detected")
+		//Handle withholding behaviour
+		n.handleWithholdingProposal()
+
+		//calculate myself reputation
+		n.ReputationCalculateinCurrentRound(n.GetID())
+		n.view++
+		n.changeLeader()
+		// if n.leader == n.GetID() {
+		// 	n.propose()
+		// }
+		// We have committed this empty block
+		log.Info("Committing an withholdemptyblock-", n.view)
+		log.Info("The block commit time is", time.Now())
+
+		// Let the client know that we committed this block
+		emptyBlockforwh := &chain.ProtoBlock{
+			Header: &chain.ProtoHeader{
+				Height: n.view,
+			},
+			BlockHash: chain.EmptyHash.GetBytes(),
+		}
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		ack.Ack = &msg.CommitAck{
+			Block: emptyBlockforwh,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		return
+	}
+	if exists1 {
+		log.Info("Equivocation block detected")
+		n.ReputationCalculateinCurrentRound(n.GetID())
+		n.view++
+		n.changeLeader()
+		// if n.leader == n.GetID() {
+		// 	n.propose()
+		// }
+		log.Info("Committing equivocationblock-", n.view)
+		log.Info("The block commit time is", time.Now())
+		// We have committed this block
+		// Let the client know that we committed this block
+		emptyBlockforeq := &chain.ProtoBlock{
+			Header: &chain.ProtoHeader{
+				Height: n.view,
+			},
+			BlockHash: chain.EmptyHash.GetBytes(),
+		}
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		ack.Ack = &msg.CommitAck{
+			Block: emptyBlockforeq,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		return
+	}
+	n.ReputationCalculateinCurrentRound(1)
+	n.ReputationCalculateinCurrentRound(0)
+	n.ReputationCalculateinCurrentRound(2)
+	log.Info("Committing an correct block-", n.view)
+	log.Info("The block commit time is", time.Now())
+	// We have committed this block
+	// Let the client know that we committed this block
+
+	synchsmsg := &msg.SyncHSMsg{}
+	ack := &msg.SyncHSMsg_Ack{}
+	ack.Ack = &msg.CommitAck{
+		Block: n.bc.BlocksByHeight[n.view].ToProto(),
+	}
+	synchsmsg.Msg = ack
+	// Tell all the clients, that I have committed this block
+	n.ClientBroadcast(synchsmsg)
+	// }
+	n.view++
+	//TODO ADD LOG for this
+	n.changeLeader()
 }

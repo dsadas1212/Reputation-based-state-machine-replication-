@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/adithyabhatkajake/libchatter/log"
-	"github.com/adithyabhatkajake/libchatter/util"
 	"github.com/adithyabhatkajake/libsynchs/chain"
 
 	"github.com/libp2p/go-libp2p"
@@ -39,7 +38,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
 	shs.cliMap = make(map[*bufio.ReadWriter]bool)      //!!
 	// shs.pendingCommands = make(map[crypto.Hash]*chain.Command)
-	shs.timerMaps = make(map[uint64]*util.Timer)
+	// shs.timerMaps = make(map[uint64]*util.Timer)
 	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
 	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
 	//calculate reputation
