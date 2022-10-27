@@ -89,7 +89,7 @@ func (n *SyncHS) setConsensusTimer() {
 	// timer := util.NewTimer(n.callback)
 	// timer.SetTime(n.GetCommitWaitTime())
 	n.timer.SetTime(n.GetCommitWaitTime())
-	n.timer.SetCallAndCanel(n.callback)
+	n.timer.SetCallAndCancel(n.callback)
 }
 
 func (n *SyncHS) callback() {

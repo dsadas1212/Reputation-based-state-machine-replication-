@@ -5,11 +5,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/adithyabhatkajake/libchatter/util"
-
 	chain "github.com/adithyabhatkajake/libsynchs/chain"
 	config "github.com/adithyabhatkajake/libsynchs/config"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
+	lutil "github.com/adithyabhatkajake/libsynchs/util"
 
 	"github.com/libp2p/go-libp2p-core/host"
 	peerstore "github.com/libp2p/go-libp2p-core/peer"
@@ -32,7 +31,7 @@ type SyncHS struct {
 	// A map of hash to pending commands
 	pendingCommands [][]byte
 	// A mapping between the block number to its commit timer
-	timerMaps map[uint64]*util.Timer
+	timerMaps map[uint64]*lutil.Timer
 	// Certificate map
 	certMap map[uint64]*msg.BlockCertificate
 	// A mapping between the view and (A mapping between the origin and blames against the leader)
@@ -92,5 +91,5 @@ type SyncHS struct {
 	maliciousProposalInject    bool
 	maliciousVoteInject        bool
 	// The timer of every node
-	timer util.Timer
+	timer lutil.Timer
 }
