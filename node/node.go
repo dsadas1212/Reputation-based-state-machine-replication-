@@ -50,6 +50,7 @@ func main() {
 
 	// Log Settings
 	log.SetLevel(logLevel)
+	log.SetOutput(os.Stdout)
 
 	if *cpuprofile != "" {
 		sigs := make(chan os.Signal, 1)
