@@ -49,17 +49,19 @@ type SyncHS struct {
 	//malicious proposal map
 	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
 	//Reputation map
-	// reputationMap map[uint64]map[uint64]map[uint64]uint64
+	reputationMap map[uint64]uint64
 	//ProosalByheightMap
 	proposalByviewMap map[uint64]*msg.Proposal
+
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
-	cliMutex    sync.RWMutex // The lock to modify cliMap
-	netMutex    sync.RWMutex // The lock to modify streamMap: Use mutex when using network streams to talk to other nodes
-	cmdMutex    sync.RWMutex // The lock to modify pendingCommands
-	timerLock   sync.RWMutex // The lock to modify timerMaps
-	certMapLock sync.RWMutex // The lock to modify certMap
-	// repMapLock         sync.RWMutex // The lock to modify reputationMap
+	cliMutex           sync.RWMutex // The lock to modify cliMap
+	netMutex           sync.RWMutex // The lock to modify streamMap: Use mutex when using network streams to talk to other nodes
+	cmdMutex           sync.RWMutex // The lock to modify pendingCommands
+	timerLock          sync.RWMutex // The lock to modify timerMaps
+	certMapLock        sync.RWMutex // The lock to modify certMap
+	leaderByviewLock   sync.RWMutex //The lock to modify leaderroundMap
+	repMapLock         sync.RWMutex // The lock to modify reputationMap
 	voteMapLock        sync.RWMutex // The lock to modify reputationMap
 	propMapLock        sync.RWMutex // The lock to modify reputationMap
 	malipropLock       sync.RWMutex //........
@@ -69,9 +71,10 @@ type SyncHS struct {
 	proposalByviewLock sync.RWMutex
 
 	// Channels
-	msgChannel  chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel  chan []byte         // All commands are re-directed here
-	voteChannel chan *msg.Vote      // All votes are sent here
+	blockCandidateChannel chan *chain.Candidateblock
+	msgChannel            chan *msg.SyncHSMsg // All messages come here first
+	cmdChannel            chan []byte         // All commands are re-directed here
+	voteChannel           chan *msg.Vote      // All votes are sent here
 	// proposeChannel chan *msg.Proposal  // All proposals are sent here
 	// errCh          chan error          // All errors are sent here
 
@@ -90,6 +93,9 @@ type SyncHS struct {
 	withholdingProposalInject  bool
 	maliciousProposalInject    bool
 	maliciousVoteInject        bool
+	// Check callfunc state
+	callFuncNotFinish bool
+	gcallFuncFinish   bool
 	// The timer of every node
 	timer lutil.Timer
 }

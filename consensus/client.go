@@ -39,6 +39,7 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 	n.addClient(rw)
 	// Set timer for all nodes
 	n.setConsensusTimer()
+	log.Debug("finish the setting of timer")
 	// Event Handler
 	for {
 		// Receive a message from a client and process them
@@ -62,6 +63,7 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 			continue
 		}
 		// Add command
+
 		go n.addCmdsAndStartTimerIfSufficientCommands(cmd)
 
 	}
@@ -85,96 +87,122 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 }
 
 func (n *SyncHS) setConsensusTimer() {
-	// set timer callback function
-	// timer := util.NewTimer(n.callback)
-	// timer.SetTime(n.GetCommitWaitTime())
-	n.timer.SetTime(n.GetCommitWaitTime())
 	n.timer.SetCallAndCancel(n.callback)
+	n.timer.SetTime(n.GetCommitWaitTime())
 }
 
 func (n *SyncHS) callback() {
-	//check withholding proposal /height = round =view
-	_, exists := n.proposalMap[n.GetID()][n.view][n.leader]
-	_, exists1 := n.equiproposalMap[n.GetID()][n.view][n.leader]
-	if !exists && !exists1 {
+	log.Debug("callbackFuncation have been prepared!")
+	// _, exists := n.equiproposalMap[n.GetID()][n.view][n.leader]
+	if n.withholdingProposalInject {
+
 		log.Info("withholding block detected")
 		//Handle withholding behaviour
 		n.handleWithholdingProposal()
 
 		//calculate myself reputation
-		n.ReputationCalculateinCurrentRound(n.GetID())
-		n.view++
-		n.changeLeader()
+		// n.ReputationCalculateinCurrentRound(n.GetID())
 		// if n.leader == n.GetID() {
 		// 	n.propose()
 		// }
 		// We have committed this empty block
-		log.Info("Committing an withholdemptyblock-", n.view)
-		log.Info("The block commit time is", time.Now())
+		go func() {
+			log.Info("Committing an withholdemptyblock-", n.view)
+			log.Info("The block commit time is", time.Now())
 
-		// Let the client know that we committed this block
-		emptyBlockforwh := &chain.ProtoBlock{
-			Header: &chain.ProtoHeader{
-				Height: n.view,
-			},
-			BlockHash: chain.EmptyHash.GetBytes(),
-		}
-		synchsmsg := &msg.SyncHSMsg{}
-		ack := &msg.SyncHSMsg_Ack{}
-		ack.Ack = &msg.CommitAck{
-			Block: emptyBlockforwh,
-		}
-		synchsmsg.Msg = ack
-		// Tell all the clients, that I have committed this block
-		n.ClientBroadcast(synchsmsg)
-		return
-	}
-	if exists1 {
-		log.Info("Equivocation block detected")
-		n.ReputationCalculateinCurrentRound(n.GetID())
+			// Let the client know that we committed this block
+			emptyBlockforwh := &chain.ProtoBlock{
+				Header: &chain.ProtoHeader{
+					Height: n.view,
+				},
+				BlockHash: chain.EmptyHash.GetBytes(),
+			}
+			synchsmsg := &msg.SyncHSMsg{}
+			ack := &msg.SyncHSMsg_Ack{}
+			ack.Ack = &msg.CommitAck{
+				Block: emptyBlockforwh,
+			}
+			synchsmsg.Msg = ack
+			// Tell all the clients, that I have committed this block
+			n.ClientBroadcast(synchsmsg)
+
+		}()
 		n.view++
 		n.changeLeader()
+		return
+	}
+	if n.equivocatingProposalInject {
+		log.Info("Equivocation block detected")
 		// if n.leader == n.GetID() {
 		// 	n.propose()
 		// }
 		log.Info("Committing equivocationblock-", n.view)
 		log.Info("The block commit time is", time.Now())
+
 		// We have committed this block
 		// Let the client know that we committed this block
-		emptyBlockforeq := &chain.ProtoBlock{
-			Header: &chain.ProtoHeader{
-				Height: n.view,
-			},
-			BlockHash: chain.EmptyHash.GetBytes(),
-		}
-		synchsmsg := &msg.SyncHSMsg{}
-		ack := &msg.SyncHSMsg_Ack{}
-		ack.Ack = &msg.CommitAck{
-			Block: emptyBlockforeq,
-		}
-		synchsmsg.Msg = ack
-		// Tell all the clients, that I have committed this block
-		n.ClientBroadcast(synchsmsg)
+		go func() {
+			emptyBlockforeq := &chain.ProtoBlock{
+				Header: &chain.ProtoHeader{
+					Height: n.view,
+				},
+				BlockHash: chain.EmptyHash.GetBytes(),
+			}
+			synchsmsg := &msg.SyncHSMsg{}
+			ack := &msg.SyncHSMsg_Ack{}
+			ack.Ack = &msg.CommitAck{
+				Block: emptyBlockforeq,
+			}
+			synchsmsg.Msg = ack
+			// Tell all the clients, that I have committed this block
+			n.ClientBroadcast(synchsmsg)
+		}()
+		n.view++
+		n.changeLeader()
 		return
 	}
-	n.ReputationCalculateinCurrentRound(1)
-	n.ReputationCalculateinCurrentRound(0)
-	n.ReputationCalculateinCurrentRound(2)
-	log.Info("Committing an correct block-", n.view)
-	log.Info("The block commit time is", time.Now())
 	// We have committed this block
 	// Let the client know that we committed this block
 
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
+	_, exist := n.getCertForBlockIndex(n.bc.Head)
+	_, exist1 := n.bc.BlocksByHeight[n.bc.Head]
+	if !exist1 {
+		log.Debug("wait for leader propose")
+		return
+	}
+	if !exist {
+		log.Debug("fail to generate certificate")
+		return
+	}
+	log.Info("Committing an correct block-", n.view)
+	log.Info("The block commit time is", time.Now())
 	ack.Ack = &msg.CommitAck{
-		Block: n.bc.BlocksByHeight[n.view].ToProto(),
+		Block: n.bc.BlocksByHeight[n.bc.Head].ToProto(),
 	}
 	synchsmsg.Msg = ack
 	// Tell all the clients, that I have committed this block
 	n.ClientBroadcast(synchsmsg)
 	// }
-	n.view++
-	//TODO ADD LOG for this
-	n.changeLeader()
+
+	if n.GetID() == n.leader {
+		n.view++
+		//TODO ADD LOG for this
+		n.changeLeader()
+	}
+	// if !n.callFuncFinish && n.callFuncPrepare {
+	// 	n.callFuncFinish = true
+	// 	n.callFuncPrepare = false
+	// }
+	// log.Debug("funcCallback has been finish!")
+
+	log.Debug(n.proposalMap)
+	go n.ReputationCalculateinCurrentRound(2)
+	go n.ReputationCalculateinCurrentRound(1)
+	go n.ReputationCalculateinCurrentRound(0)
+
+	if n.callFuncNotFinish {
+		n.callFuncNotFinish = false
+	}
 }

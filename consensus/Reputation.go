@@ -13,7 +13,7 @@ const (
 	pEpsilonEqui  = 1.5
 	pEpsilonMali  = 1
 	vEpisilonMali = 1
-	gama          = 0.5
+	gama          = 0.01
 )
 
 var (
@@ -42,7 +42,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 
 	}()
 	wg.Wait()
-	log.Info("calculate reputation for node", nodeID)
+	// log.Info("calculate reputation for node", nodeID)
 	proposalsc := float64(proposalnum) - (float64(maliproposalnum)*pEpsilonMali +
 		float64(equiprospoalnum)*pEpsilonEqui +
 		float64(withpropsoalnum)*pEpsilonWith)
@@ -50,7 +50,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 	votesc := float64(votenum) - float64(malivotenum)*vEpisilonMali
 	votescore := n.maxvaluecheck(votesc)
 	nodeScore := math.Tanh(gama * (votescore + proposalscore))
-	log.Info("The reputation of", nodeID, "is", nodeScore)
+	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
 
 }
 
@@ -62,18 +62,19 @@ func (n *SyncHS) proposalNumCalculate(nodeID uint64) uint64 {
 		for _, senderMap := range n.proposalMap[n.GetID()] {
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
+				log.Debug("a valid num have been recored")
 				proposalnum++
-			} else {
-				return 0
 			}
-
+			// else {
+			// 	log.Debug(nodeID, "don't propose in this view")
+			// }
 		}
 		return proposalnum
-	} else {
-		return 0
 	}
+	return 0
 
 }
+
 func (n *SyncHS) voteNumCalculate(nodeID uint64) uint64 {
 	n.voteMapLock.RLock()
 	defer n.voteMapLock.RUnlock()
@@ -83,14 +84,15 @@ func (n *SyncHS) voteNumCalculate(nodeID uint64) uint64 {
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
 				votenum++
-			} else {
-				return 0
 			}
+			// else {
+			// 	log.Debug(nodeID, "don't vote in this view")
+			// }
 		}
-		return proposalnum
-	} else {
-		return 0
+		return votenum
 	}
+
+	return 0
 
 }
 

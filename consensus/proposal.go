@@ -12,23 +12,67 @@ import (
 )
 
 // In reputation-based SMR all things begin with Timer!
-
+// ！！version1 use timer
 func (n *SyncHS) startConsensusTimer() {
 	n.timer.Start()
-	log.Debug("node", n.GetID(), "start a 4Delta timer!")
+	log.Debug("node ", n.GetID(), "start a 4Delta timer ", time.Now())
 
 	go func() {
 		if n.leader == n.GetID() {
-			n.propose()
+			n.Propose()
 		}
 
 	}()
 
 }
 
-// Monitor pending commands, if there is any change and the current node is the leader, then start proposing blocks
-func (n *SyncHS) propose() {
-	log.Info("node", n.GetID(), "is proposing block")
+// func (n *SyncHS) leaderstartTimerForConsensus(sms *msg.SyncHSMsg, sep *msg.ExtProposal) {
+
+// 	ticker := time.NewTicker(time.Duration(int(float64(1)*1000)) * time.Millisecond * 4)
+// 	for range ticker.C {
+// 		log.Debug("leader", n.GetID(), "start its timer!")
+// 		n.Broadcast(sms)
+// 		n.voteForBlock(sep)
+// 		n.callback()
+// 		break
+// 	}
+
+// }
+
+// func (n *SyncHS) nodestartTimerForConsensus() {
+// 	ticker := time.NewTicker(time.Duration(int(float64(1)*1000)) * time.Millisecond * 4)
+// 	for range ticker.C {
+// 		log.Debug("node", n.GetID(), "start its timer!")
+// 		n.callback()
+// 		break
+// 	}
+
+// }
+
+// solve the problem that Keep turning on the timer
+// func (n *SyncHS) gnerateCandidateBlock() {
+// 	cmds, isSuff := n.getCmdsIfSufficient()
+// 	if !isSuff {
+// 		// log.Debug("Insufficient commands, aborting the proposal")
+// 		return
+// 	}
+// 	candiBlock := &chain.Candidateblock{}
+// 	candiBlock.CTxs = cmds
+// 	candiBlock.CResponses = cmds
+// 	n.blockCandidateChannel <- candiBlock
+// 	log.Debug("len is", len(n.blockCandidateChannel))
+// 	go func() {
+// 		if n.GetID() == n.leader {
+// 			n.Propose()
+// 		}
+// 		n.nodestartTimerForConsensus()
+// 	}()
+// 	// go n.nodestartTimerForConsensus()
+
+// }
+
+func (n *SyncHS) Propose() {
+
 	log.Debug("Starting a propose step")
 	// Do we have a certificate?
 	n.bc.Mu.Lock()
@@ -47,6 +91,7 @@ func (n *SyncHS) propose() {
 	}
 	n.bc.Head++
 	newHeight := n.bc.Head
+	log.Info("node", n.GetID(), "is  propose block")
 	prop := n.NewCandidateProposal(cmds, cert, newHeight, nil)
 	block := &chain.ExtBlock{}
 	block.FromProto(prop.Block)
@@ -55,21 +100,46 @@ func (n *SyncHS) propose() {
 	n.bc.BlocksByHash[block.GetBlockHash()] = block
 	//Add this Propsal to the Proposal-view map
 	n.proposalByviewMap[n.view] = prop
-	log.Trace("Finished Proposing")
+	log.Trace("Finished  Proposing")
 	// Ship proposal to processing
 	relayMsg := &msg.SyncHSMsg{}
 	relayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
 	ep := &msg.ExtProposal{}
 	ep.FromProto(prop)
-	log.Debug("Proposing block:", prop.String())
-	//Change itself proposal map
-	n.addProposaltoMap()
-	// Leader sends new block to all the other nodes
-	n.Broadcast(relayMsg)
-	// Leader should also vote
-	n.voteForBlock(ep)
-	// Start 3\delta timer
-	// n.startBlockTimer(block)
+	//prop.String()
+	log.Debug("Proposing block: 2000xxxx")
+	// go n.leaderstartTimerForConsensus(relayMsg, ep)
+	// go func() {
+	// 	if n.GetID() == n.leader {
+	// 		log.Debug("Proposing block:", prop.String())
+	// 		n.leaderstartTimerForConsensus(relayMsg, ep)
+	// 	}
+	// 	n.nodestartTimerForConsensus()
+	// }()
+
+	//START TIMER AND PROPSOE}
+	// candiBlock := &chain.Candidateblock{}
+	// candiBlock.CTxs = cmds
+	// candiBlock.CResponses = cmds
+	// n.blockCandidateChannel <- candiBlock
+	// log.Debug("len is", len(n.blockCandidateChannel))
+	// if !ok {
+	// 	log.Error("CandiBlock channel error")
+	// }
+	// cmds := candiblock.CTxs
+	go n.addProposaltoMap()
+	go n.Broadcast(relayMsg)
+	go n.voteForBlock(ep)
+	// go func() {
+	// 	//Change itself proposal map
+	// 	n.addProposaltoMap()
+	// 	// Leader sends new block to all the other nodes
+	// 	n.Broadcast(relayMsg)
+	// 	// Leader should also vote
+	// 	n.voteForBlock(ep)
+	// 	// Start 3\delta timer
+	// 	// n.startBlockTimer(block)
+	// }()
 
 }
 
@@ -96,13 +166,16 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		return
 	}
 	//malicous proposal
-	if prop.Miner != n.leader {
+	if prop.Miner != n.leader && n.maliciousProposalInject {
 		log.Info("There is a malicious propsoal behaviour")
 		n.addMaliProposaltoMap(prop)
 		n.sendMaliProEvidence(prop)
 		//TODO send evidence!
-		//We should let current head be the block have certificate although
-	} //miabehaviour ocur(empty block)
+		//We should let current head be the block have certificate although//miabehaviour ocur(empty block)
+		return
+
+	}
+
 	var exists bool
 	var propOther *msg.Proposal
 	{
@@ -140,7 +213,7 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 	n.ensureBlockIsDelivered(&ep.ExtBlock)
 
 	// Vote for the proposal
-	n.voteForBlock(ep)
+	go n.voteForBlock(ep)
 	// Start 3\delta timer
 	// n.startBlockTimer(&ep.ExtBlock)
 
@@ -294,11 +367,13 @@ func (n *SyncHS) addProposaltoMap() {
 	if exists && value == 1 {
 		log.Debug("propsoal of this leader in this view has been recorded")
 	}
+	log.Debug(n.GetID(), "Generate a map for leader")
 	senderMap := make(map[uint64]uint64)
 	senderMap[n.leader] = 1
 	sMapcurrentView := make(map[uint64]map[uint64]uint64)
 	sMapcurrentView[n.view] = senderMap
 	n.proposalMap[n.GetID()] = sMapcurrentView
+	// log.Debug("propsoal", n.proposalMap)
 	n.propMapLock.Unlock()
 }
 
@@ -315,6 +390,7 @@ func (n *SyncHS) addProposaltoViewMap(prop *msg.Proposal) {
 // }
 
 // NewCandidateProposal returns a proposal message built using commands
+// change it to Candidateblock -> Candidate propsoal
 func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 	cert *msg.BlockCertificate, newHeight uint64, extra []byte) *msg.Proposal {
 	bhash, view := cert.GetBlockInfo()

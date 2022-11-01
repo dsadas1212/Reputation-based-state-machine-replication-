@@ -1,3 +1,7 @@
 client/client
 node/node
 *.log
+quicktest.sh
+output.txt
+output1
+output1.txt
