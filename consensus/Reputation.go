@@ -13,7 +13,7 @@ const (
 	pEpsilonEqui  = 1.5
 	pEpsilonMali  = 1
 	vEpisilonMali = 1
-	gama          = 0.01
+	gamma         = 0.01
 )
 
 var (
@@ -49,7 +49,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 	proposalscore := n.maxvaluecheck(proposalsc)
 	votesc := float64(votenum) - float64(malivotenum)*vEpisilonMali
 	votescore := n.maxvaluecheck(votesc)
-	nodeScore := math.Tanh(gama * (votescore + proposalscore))
+	nodeScore := math.Tanh(gamma * (votescore + proposalscore))
 	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
 
 }

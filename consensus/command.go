@@ -13,13 +13,15 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 		// 2. else
 		if n.gcallFuncFinish {
 			go n.startConsensusTimer()
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Second * 3)
 			n.gcallFuncFinish = false
 		}
-		if !n.callFuncNotFinish {
-			go n.startConsensusTimer()
-			time.Sleep(time.Millisecond * 50)
-			n.callFuncNotFinish = true
+		if len(n.SyncChannel) == 3 {
+			for i := 0; i < 3; i++ {
+				<-n.SyncChannel
+			}
+			n.startConsensusTimer()
+			time.Sleep(time.Second)
 		}
 		// go n.startConsensusTimer()
 		// if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {

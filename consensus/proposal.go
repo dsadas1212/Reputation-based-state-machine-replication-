@@ -14,8 +14,29 @@ import (
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
 func (n *SyncHS) startConsensusTimer() {
-	n.timer.Start()
-	log.Debug("node ", n.GetID(), "start a 4Delta timer ", time.Now())
+	go func() {
+		if n.GetID() == 1 {
+			n.timer1.Start()
+			log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
+
+		}
+	}()
+	go func() {
+		if n.GetID() == 2 {
+			n.timer2.Start()
+			log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
+
+		}
+	}()
+	go func() {
+		if n.GetID() == 0 {
+			n.timer0.Start()
+			log.Debug("node 0 start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	//
 
 	go func() {
 		if n.leader == n.GetID() {
@@ -127,19 +148,19 @@ func (n *SyncHS) Propose() {
 	// 	log.Error("CandiBlock channel error")
 	// }
 	// cmds := candiblock.CTxs
-	go n.addProposaltoMap()
-	go n.Broadcast(relayMsg)
-	go n.voteForBlock(ep)
-	// go func() {
-	// 	//Change itself proposal map
-	// 	n.addProposaltoMap()
-	// 	// Leader sends new block to all the other nodes
-	// 	n.Broadcast(relayMsg)
-	// 	// Leader should also vote
-	// 	n.voteForBlock(ep)
-	// 	// Start 3\delta timer
-	// 	// n.startBlockTimer(block)
-	// }()
+	// go n.addProposaltoMap()
+	// go n.Broadcast(relayMsg)
+	// go n.voteForBlock(ep)
+	go func() {
+		//Change itself proposal map
+		n.addProposaltoMap()
+		// Leader sends new block to all the other nodes
+		n.Broadcast(relayMsg)
+		// Leader should also vote
+		n.voteForBlock(ep)
+		// Start 3\delta timer
+		// n.startBlockTimer(block)
+	}()
 
 }
 

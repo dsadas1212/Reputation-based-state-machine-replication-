@@ -34,7 +34,9 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.leader = DefaultLeaderID
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
-	shs.timer = util.Timer{}
+	shs.timer0 = util.Timer{}
+	shs.timer1 = util.Timer{}
+	shs.timer2 = util.Timer{}
 
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
@@ -51,6 +53,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.timerMap = make(map[*util.Timer]bool)
 
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
 
@@ -58,7 +61,8 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
-	shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
+	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
+	shs.SyncChannel = make(chan bool, 3)
 
 	shs.certMap = make(map[uint64]*msg.BlockCertificate)
 	// Setup certificate for the first block

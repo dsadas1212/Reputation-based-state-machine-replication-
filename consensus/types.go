@@ -31,7 +31,7 @@ type SyncHS struct {
 	// A map of hash to pending commands
 	pendingCommands [][]byte
 	// A mapping between the block number to its commit timer
-	timerMaps map[uint64]*lutil.Timer
+	// timerMaps map[uint64]*lutil.Timer
 	// Certificate map
 	certMap map[uint64]*msg.BlockCertificate
 	// A mapping between the view and (A mapping between the origin and blames against the leader)
@@ -52,6 +52,8 @@ type SyncHS struct {
 	reputationMap map[uint64]uint64
 	//ProosalByheightMap
 	proposalByviewMap map[uint64]*msg.Proposal
+	//TimerMap
+	timerMap map[*lutil.Timer]bool
 
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
@@ -75,6 +77,7 @@ type SyncHS struct {
 	msgChannel            chan *msg.SyncHSMsg // All messages come here first
 	cmdChannel            chan []byte         // All commands are re-directed here
 	voteChannel           chan *msg.Vote      // All votes are sent here
+	SyncChannel           chan bool           //make a channel to store the signal of timerfinish
 	// proposeChannel chan *msg.Proposal  // All proposals are sent here
 	// errCh          chan error          // All errors are sent here
 
@@ -97,5 +100,7 @@ type SyncHS struct {
 	callFuncNotFinish bool
 	gcallFuncFinish   bool
 	// The timer of every node
-	timer lutil.Timer
+	timer0 lutil.Timer
+	timer1 lutil.Timer
+	timer2 lutil.Timer
 }
