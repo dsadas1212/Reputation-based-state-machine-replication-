@@ -88,10 +88,10 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 
 func (n *SyncHS) setConsensusTimer() {
 	n.timer0.SetCallAndCancel(n.callback)
-	n.timer0.SetTime(20 * time.Second)
+	n.timer0.SetTime(25 * time.Second)
 	n.timer1.SetCallAndCancel(n.callback)
-	n.timer1.SetTime(20 * time.Second)
-	n.timer2.SetTime(20 * time.Second)
+	n.timer1.SetTime(25 * time.Second)
+	n.timer2.SetTime(25 * time.Second)
 	n.timer2.SetCallAndCancel(n.callback)
 }
 
@@ -178,6 +178,9 @@ func (n *SyncHS) callback() {
 
 	}()
 	wg.Wait()
+	// go n.ReputationCalculateinCurrentRound(2)
+	// go n.ReputationCalculateinCurrentRound(1)
+	// go n.ReputationCalculateinCurrentRound(0)
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
 	_, exist := n.getCertForBlockIndex(n.bc.Head)
@@ -205,6 +208,7 @@ func (n *SyncHS) callback() {
 		log.Debug(n.view)
 	}
 	n.SyncChannel <- true
+	log.Debug(len(n.SyncChannel))
 
 }
 

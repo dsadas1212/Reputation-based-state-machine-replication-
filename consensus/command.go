@@ -21,7 +21,6 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 				<-n.SyncChannel
 			}
 			n.startConsensusTimer()
-			time.Sleep(time.Second)
 		}
 		// go n.startConsensusTimer()
 		// if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {

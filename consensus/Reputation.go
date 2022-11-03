@@ -3,6 +3,7 @@ package consensus
 
 import (
 	"math"
+	"strconv"
 	"sync"
 
 	"github.com/adithyabhatkajake/libchatter/log"
@@ -50,7 +51,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 	votesc := float64(votenum) - float64(malivotenum)*vEpisilonMali
 	votescore := n.maxvaluecheck(votesc)
 	nodeScore := math.Tanh(gamma * (votescore + proposalscore))
-	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
+	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", strconv.FormatFloat(nodeScore, 'f', 5, 64))
 
 }
 
@@ -105,8 +106,6 @@ func (n *SyncHS) maliproposalNumCalculate(nodeID uint64) uint64 {
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
 				maliproposalnum++
-			} else {
-				return 0
 			}
 		}
 		return maliproposalnum
@@ -125,8 +124,6 @@ func (n *SyncHS) withholdproposalNumCalculate(nodeID uint64) uint64 {
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
 				withpropsoalnum++
-			} else {
-				return 0
 			}
 		}
 		return withpropsoalnum
@@ -146,8 +143,6 @@ func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
 				equiprospoalnum++
-			} else {
-				return 0
 			}
 
 		}
@@ -162,15 +157,13 @@ func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
 func (n *SyncHS) malivoteNumCalculate(nodeID uint64) uint64 {
 	n.voteMaliLock.RLock()
 	defer n.voteMaliLock.RUnlock()
-	_, exists := n.maliproposalMap[n.GetID()]
+	_, exists := n.voteMaliMap[n.GetID()]
 	if exists {
 		for _, senderMap := range n.voteMaliMap[n.GetID()] {
 
 			num, exists1 := senderMap[nodeID]
 			if exists1 && num == 1 {
 				malivotenum++
-			} else {
-				return 0
 			}
 
 		}

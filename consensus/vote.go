@@ -71,7 +71,7 @@ func (n *SyncHS) voteHandler() {
 				continue
 			}
 		}
-
+		n.addVotetoMap(v.ToProto())
 		//only change votemap for reputation
 		isCert, exists := isCertified[height]
 		if exists && isCert {
@@ -89,7 +89,6 @@ func (n *SyncHS) voteHandler() {
 		isCertified[height] = true
 		go func() {
 			//add this vote to votemap
-			n.addVotetoMap(v.ToProto())
 			n.addCert(bcert, height)
 			// if n.leader == myID {
 			// 	n.propose()
