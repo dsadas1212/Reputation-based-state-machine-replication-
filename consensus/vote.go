@@ -22,15 +22,15 @@ func (n *SyncHS) voteHandler() {
 			log.Error("Vote channel error")
 			continue
 		}
-		if v.Owner != n.leader {
-			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
-			go func() {
-				n.addMaliVotetoMap(v)
-				n.sendMalivoteEvidence(v)
+		// if v.Owner != n.leader && n.maliciousVoteInject {
+		// 	log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
+		// 	go func() {
+		// 		n.addMaliVotetoMap(v)
+		// 		n.sendMalivoteEvidence(v)
 
-			}()
-			continue
-		}
+		// 	}()
+		// 	continue
+		// }
 		bhash := crypto.ToHash(v.GetBlockHash())
 		blk := n.getBlock(bhash)
 
@@ -71,7 +71,6 @@ func (n *SyncHS) voteHandler() {
 				continue
 			}
 		}
-		//add this vote to votemap
 		n.addVotetoMap(v.ToProto())
 		//only change votemap for reputation
 		isCert, exists := isCertified[height]
@@ -89,6 +88,7 @@ func (n *SyncHS) voteHandler() {
 		bcert := NewCert(voteMap[height], bhash, view)
 		isCertified[height] = true
 		go func() {
+			//add this vote to votemap
 			n.addCert(bcert, height)
 			// if n.leader == myID {
 			// 	n.propose()
@@ -149,13 +149,14 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 	voteMsg.Msg = &msg.SyncHSMsg_Vote{Vote: pv}
 	v := &msg.Vote{}
 	v.FromProto(pv)
-	//the voter change his voteMap by himself
-	n.addVotetoMap(pv)
 	go func() {
+		//the voter change his voteMap by himself
+		n.addVotetoMap(pv)
 		// Send vote to all the nodes
 		n.Broadcast(voteMsg)
 		// Handle my own vote
 		n.voteChannel <- v
+
 	}()
 }
 func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
@@ -193,6 +194,7 @@ func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 	voterMap[v.Body.GetVoter()] = 1
 	vMapcurrentView := make(map[uint64]map[uint64]uint64)
 	vMapcurrentView[n.view] = voterMap
-	n.voteMaliMap[n.GetID()] = vMapcurrentView
+	n.voteMap[n.GetID()] = vMapcurrentView
+	// log.Debug("vote", n.voteMap)
 	n.voteMapLock.Unlock()
 }

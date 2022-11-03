@@ -8,6 +8,7 @@ import (
 
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/chain"
+	"github.com/adithyabhatkajake/libsynchs/util"
 
 	"github.com/libp2p/go-libp2p"
 
@@ -33,6 +34,9 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.leader = DefaultLeaderID
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
+	shs.timer0 = util.Timer{}
+	shs.timer1 = util.Timer{}
+	shs.timer2 = util.Timer{}
 
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
@@ -42,23 +46,35 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
 	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
 	//calculate reputation
+	shs.reputationMap = make(map[uint64]uint64)
 	shs.voteMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.proposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	// shs.reputationMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.timerMap = make(map[*util.Timer]bool)
+
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
 
 	// Setup channels
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
+	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
+	shs.SyncChannel = make(chan bool, 3)
 
 	shs.certMap = make(map[uint64]*msg.BlockCertificate)
 	// Setup certificate for the first block
 	shs.certMap[0] = &msg.GenesisCert
+
+	shs.callFuncNotFinish = true
+	shs.gcallFuncFinish = true
+	shs.maliciousVoteInject = false
+	shs.equivocatingProposalInject = false
+	shs.withholdingProposalInject = false
+	shs.maliciousProposalInject = false
+
 }
 
 // Setup sets up the network components

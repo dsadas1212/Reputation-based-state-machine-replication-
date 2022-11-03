@@ -153,7 +153,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 }
 
 func printMetrics() {
-	printDuration, err := time.ParseDuration("60s")
+	printDuration, err := time.ParseDuration("120s")
 	if err != nil {
 		panic(err)
 	}

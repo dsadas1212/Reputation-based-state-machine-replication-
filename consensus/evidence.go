@@ -242,8 +242,6 @@ func (shs *SyncHS) handleWithholdingProposal() {
 	if exists {
 		bhash, _ := precert.GetBlockInfo()
 		emptyBlockforwh.Header.ParentHash = bhash.GetBytes()
-	} else {
-		//TODO what can i do in this
 	}
 	//the empty block also needs certificate(is same as genesis block's certificate)
 	//and we should change the certmap
@@ -252,7 +250,17 @@ func (shs *SyncHS) handleWithholdingProposal() {
 	shs.addCert(emptyCertificate, shs.view)
 	exemptyBlockforwh := &chain.ExtBlock{}
 	exemptyBlockforwh.FromProto(emptyBlockforwh)
-	shs.addNewBlock(exemptyBlockforwh)
+	shs.bc.Mu.RLock()
+	defer shs.bc.Mu.RUnlock()
+	_, exists2 := shs.bc.BlocksByHeight[shs.view]
+	if !exists2 {
+		shs.addNewBlock(exemptyBlockforwh)
+		log.Info("ADD an empty block in", shs.view, "round")
+	} else {
+		log.Info("This emptyblock has been recorded")
+	}
+	log.Debug("the end of withholding handle")
+
 }
 
 func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
