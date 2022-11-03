@@ -14,6 +14,15 @@ import (
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
 func (n *SyncHS) startConsensusTimer() {
+
+	go func() {
+		if n.GetID() == 0 {
+			n.timer0.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
 	go func() {
 		if n.GetID() == 1 {
 			n.timer1.Start()
@@ -21,6 +30,7 @@ func (n *SyncHS) startConsensusTimer() {
 
 		}
 	}()
+
 	go func() {
 		if n.GetID() == 2 {
 			n.timer2.Start()
@@ -28,13 +38,110 @@ func (n *SyncHS) startConsensusTimer() {
 
 		}
 	}()
+
 	go func() {
-		if n.GetID() == 0 {
-			n.timer0.Start()
-			log.Debug("node 0 start a 4Delta timer ", time.Now())
+		if n.GetID() == 3 {
+			n.timer3.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
 		}
 	}()
+
+	go func() {
+		if n.GetID() == 4 {
+			n.timer4.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	go func() {
+		if n.GetID() == 5 {
+			n.timer5.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	go func() {
+		if n.GetID() == 6 {
+			n.timer6.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	go func() {
+		if n.GetID() == 7 {
+			n.timer7.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	go func() {
+		if n.GetID() == 8 {
+			n.timer8.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	go func() {
+		if n.GetID() == 9 {
+			n.timer9.Start()
+			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+		}
+	}()
+
+	// go func() {
+	// 	if n.GetID() == 10 {
+	// 		n.timer10.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
+
+	// go func() {
+	// 	if n.GetID() == 11 {
+	// 		n.timer11.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
+
+	// go func() {
+	// 	if n.GetID() == 12 {
+	// 		n.timer12.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
+
+	// go func() {
+	// 	if n.GetID() == 13 {
+	// 		n.timer13.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
+
+	// go func() {
+	// 	if n.GetID() == 14 {
+	// 		n.timer14.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
+
+	// go func() {
+	// 	if n.GetID() == 15 {
+	// 		n.timer15.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+
+	// 	}
+	// }()
 
 	//
 
