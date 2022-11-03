@@ -16,8 +16,9 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			time.Sleep(time.Second * 3)
 			n.gcallFuncFinish = false
 		}
-		if len(n.SyncChannel) == 3 {
-			for i := 0; i < 3; i++ {
+		//16
+		if len(n.SyncChannel) == 10 {
+			for i := 0; i < 10; i++ {
 				<-n.SyncChannel
 			}
 			n.startConsensusTimer()
