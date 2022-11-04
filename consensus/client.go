@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"bufio"
-	"sync"
 	"time"
 
 	"github.com/adithyabhatkajake/libchatter/log"
@@ -99,23 +98,23 @@ func (n *SyncHS) setConsensusTimer() {
 	n.timer3.SetTime(20 * time.Second)
 	n.timer3.SetCallAndCancel(n.callback)
 
-	n.timer4.SetTime(20 * time.Second)
-	n.timer4.SetCallAndCancel(n.callback)
+	// n.timer4.SetTime(20 * time.Second)
+	// n.timer4.SetCallAndCancel(n.callback)
 
-	n.timer5.SetTime(20 * time.Second)
-	n.timer5.SetCallAndCancel(n.callback)
+	// n.timer5.SetTime(20 * time.Second)
+	// n.timer5.SetCallAndCancel(n.callback)
 
-	n.timer6.SetTime(20 * time.Second)
-	n.timer6.SetCallAndCancel(n.callback)
+	// n.timer6.SetTime(20 * time.Second)
+	// n.timer6.SetCallAndCancel(n.callback)
 
-	n.timer7.SetTime(20 * time.Second)
-	n.timer7.SetCallAndCancel(n.callback)
+	// n.timer7.SetTime(20 * time.Second)
+	// n.timer7.SetCallAndCancel(n.callback)
 
-	n.timer8.SetTime(20 * time.Second)
-	n.timer8.SetCallAndCancel(n.callback)
+	// n.timer8.SetTime(20 * time.Second)
+	// n.timer8.SetCallAndCancel(n.callback)
 
-	n.timer9.SetTime(20 * time.Second)
-	n.timer9.SetCallAndCancel(n.callback)
+	// n.timer9.SetTime(20 * time.Second)
+	// n.timer9.SetCallAndCancel(n.callback)
 
 	// n.timer10.SetTime(20 * time.Second)
 	// n.timer10.SetCallAndCancel(n.callback)
@@ -210,33 +209,34 @@ func (n *SyncHS) callback() {
 	// }
 	// We have committed this block
 	// Let the client know that we committed this block
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	// wg := &sync.WaitGroup{}
+	// wg.Add(1)
+	// go func() {
+	// 	defer wg.Done()
 
-		n.ReputationCalculateinCurrentRound(0)
-		n.ReputationCalculateinCurrentRound(1)
-		n.ReputationCalculateinCurrentRound(2)
-		n.ReputationCalculateinCurrentRound(3)
-		n.ReputationCalculateinCurrentRound(4)
-		n.ReputationCalculateinCurrentRound(5)
-		n.ReputationCalculateinCurrentRound(6)
-		n.ReputationCalculateinCurrentRound(7)
-		n.ReputationCalculateinCurrentRound(8)
-		n.ReputationCalculateinCurrentRound(9)
-		// n.ReputationCalculateinCurrentRound(10)
-		// n.ReputationCalculateinCurrentRound(11)
-		// n.ReputationCalculateinCurrentRound(12)
-		// n.ReputationCalculateinCurrentRound(13)
-		// n.ReputationCalculateinCurrentRound(14)
-		// n.ReputationCalculateinCurrentRound(15)
+	// 	n.ReputationCalculateinCurrentRound(0)
+	// 	n.ReputationCalculateinCurrentRound(1)
+	// 	n.ReputationCalculateinCurrentRound(2)
+	// 	n.ReputationCalculateinCurrentRound(3)
+	// 	// n.ReputationCalculateinCurrentRound(4)
+	// 	// n.ReputationCalculateinCurrentRound(5)
+	// 	// n.ReputationCalculateinCurrentRound(6)
+	// 	// n.ReputationCalculateinCurrentRound(7)
+	// 	// n.ReputationCalculateinCurrentRound(8)
+	// 	// n.ReputationCalculateinCurrentRound(9)
+	// 	// n.ReputationCalculateinCurrentRound(10)
+	// 	// n.ReputationCalculateinCurrentRound(11)
+	// 	// n.ReputationCalculateinCurrentRound(12)
+	// 	// n.ReputationCalculateinCurrentRound(13)
+	// 	// n.ReputationCalculateinCurrentRound(14)
+	// 	// n.ReputationCalculateinCurrentRound(15)
 
-	}()
-	wg.Wait()
-	// go n.ReputationCalculateinCurrentRound(2)
-	// go n.ReputationCalculateinCurrentRound(1)
-	// go n.ReputationCalculateinCurrentRound(0)
+	// }()
+	// wg.Wait()
+	go n.ReputationCalculateinCurrentRound(2)
+	go n.ReputationCalculateinCurrentRound(1)
+	go n.ReputationCalculateinCurrentRound(0)
+	go n.ReputationCalculateinCurrentRound(3)
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
 	_, exist := n.getCertForBlockIndex(n.bc.Head)
@@ -263,6 +263,7 @@ func (n *SyncHS) callback() {
 		// log.Debug(n.leader)
 		// log.Debug(n.view)
 	}
+	log.Debug(n.view)
 	n.SyncChannel <- true
 	log.Debug(len(n.SyncChannel))
 

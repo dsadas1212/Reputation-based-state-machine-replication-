@@ -104,12 +104,12 @@ type SyncHS struct {
 	timer1 lutil.Timer
 	timer2 lutil.Timer
 	timer3 lutil.Timer
-	timer4 lutil.Timer
-	timer5 lutil.Timer
-	timer6 lutil.Timer
-	timer7 lutil.Timer
-	timer8 lutil.Timer
-	timer9 lutil.Timer
+	// timer4 lutil.Timer
+	// timer5 lutil.Timer
+	// timer6 lutil.Timer
+	// timer7 lutil.Timer
+	// timer8 lutil.Timer
+	// timer9 lutil.Timer
 	// timer10 lutil.Timer
 	// timer11 lutil.Timer
 	// timer12 lutil.Timer
