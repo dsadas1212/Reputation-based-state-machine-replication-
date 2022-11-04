@@ -149,9 +149,9 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 	voteMsg.Msg = &msg.SyncHSMsg_Vote{Vote: pv}
 	v := &msg.Vote{}
 	v.FromProto(pv)
+	n.addVotetoMap(pv)
 	go func() {
 		//the voter change his voteMap by himself
-		n.addVotetoMap(pv)
 		// Send vote to all the nodes
 		n.Broadcast(voteMsg)
 		// Handle my own vote

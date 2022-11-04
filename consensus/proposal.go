@@ -47,53 +47,53 @@ func (n *SyncHS) startConsensusTimer() {
 		}
 	}()
 
-	go func() {
-		if n.GetID() == 4 {
-			n.timer4.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 4 {
+	// 		n.timer4.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 5 {
-			n.timer5.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 5 {
+	// 		n.timer5.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 6 {
-			n.timer6.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 6 {
+	// 		n.timer6.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 7 {
-			n.timer7.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 7 {
+	// 		n.timer7.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 8 {
-			n.timer8.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 8 {
+	// 		n.timer8.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 9 {
-			n.timer9.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 9 {
+	// 		n.timer9.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
 	// go func() {
 	// 	if n.GetID() == 10 {
@@ -235,7 +235,7 @@ func (n *SyncHS) Propose() {
 	ep := &msg.ExtProposal{}
 	ep.FromProto(prop)
 	//prop.String()
-	log.Debug("Proposing block: 2000xxxx")
+	log.Debug("Proposing block: 400cmd")
 	// go n.leaderstartTimerForConsensus(relayMsg, ep)
 	// go func() {
 	// 	if n.GetID() == n.leader {
