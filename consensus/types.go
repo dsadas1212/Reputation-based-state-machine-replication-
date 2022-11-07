@@ -37,11 +37,13 @@ type SyncHS struct {
 	// A mapping between the view and (A mapping between the origin and blames against the leader)
 	// blameMap map[uint64]map[uint64]*msg.Blame
 	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
-	voteMap map[uint64]map[uint64]map[uint64]uint64
+	voteMap map[uint64]map[uint64]uint64
+	//voter and its votenum
+	voterMap map[uint64]uint64
 	// malicous vote map
 	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
 	// correct proposal map
-	proposalMap map[uint64]map[uint64]map[uint64]uint64
+	proposalMap map[uint64]map[uint64]uint64
 	//equivocate proposal map
 	equiproposalMap map[uint64]map[uint64]map[uint64]uint64
 	//withholding proposal map
@@ -54,7 +56,8 @@ type SyncHS struct {
 	proposalByviewMap map[uint64]*msg.Proposal
 	//TimerMap
 	timerMap map[*lutil.Timer]bool
-
+	//block maps its cert
+	certBlockMap map[*msg.BlockCertificate]chain.ExtBlock
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
 	cliMutex           sync.RWMutex // The lock to modify cliMap
@@ -71,6 +74,7 @@ type SyncHS struct {
 	voteMaliLock       sync.RWMutex
 	withpropoLock      sync.RWMutex
 	proposalByviewLock sync.RWMutex
+	certBlockLock      sync.RWMutex
 
 	// Channels
 	blockCandidateChannel chan *chain.Candidateblock

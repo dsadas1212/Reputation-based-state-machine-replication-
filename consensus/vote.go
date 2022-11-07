@@ -87,6 +87,7 @@ func (n *SyncHS) voteHandler() {
 		// Our certificate for height v.Data.Block.Data.Index is ready now
 		bcert := NewCert(voteMap[height], bhash, view)
 		isCertified[height] = true
+		// need an anthoer map for non-leader node get exblock
 		go func() {
 			//add this vote to votemap
 			n.addCert(bcert, height)
@@ -186,15 +187,13 @@ func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
 
 func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 	n.voteMapLock.Lock()
-	value, exists := n.voteMap[n.GetID()][n.view][v.Body.GetVoter()]
-	if exists && value == 1 {
-		log.Debug(" vote of this voter in this view has been recorded")
+	n.voterMap[v.GetBody().Voter] = 1
+	if _, exists := n.voteMap[n.view]; exists {
+		n.voteMap[n.view] = n.voterMap
+	} else {
+		n.voteMap[n.view] = n.voterMap
 	}
-	voterMap := make(map[uint64]uint64)
-	voterMap[v.Body.GetVoter()] = 1
-	vMapcurrentView := make(map[uint64]map[uint64]uint64)
-	vMapcurrentView[n.view] = voterMap
-	n.voteMap[n.GetID()] = vMapcurrentView
+
 	// log.Debug("vote", n.voteMap)
 	n.voteMapLock.Unlock()
 }

@@ -108,26 +108,26 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 		shs.addEquiProposaltoMap()
 
 		//we should delete all vote and proposal ocur in this view
-		shs.propMapLock.RLock()
+		// shs.propMapLock.RLock()
 
-		p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
-		if exists && p == 1 {
-			p--
-		} else {
-			log.Info("node", shs.GetID(), "did not change proposalMap in current view")
-		}
-		shs.propMapLock.RUnlock()
-		shs.voteMapLock.RLock()
-		votemap, exists := shs.voteMap[shs.GetID()][shs.view]
-		if exists {
-			for _, vnum := range votemap {
-				if vnum == 1 {
-					vnum--
-				}
-			}
-		} else {
-			log.Debug(shs.GetID(), "did not init votemap")
-		}
+		// p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
+		// if exists && p == 1 {
+		// 	p--
+		// } else {
+		// 	log.Info("node", shs.GetID(), "did not change proposalMap in current view")
+		// }
+		// shs.propMapLock.RUnlock()
+		// shs.voteMapLock.RLock()
+		// votemap, exists := shs.voteMap[shs.GetID()][shs.view]
+		// if exists {
+		// 	for _, vnum := range votemap {
+		// 		if vnum == 1 {
+		// 			vnum--
+		// 		}
+		// 	}
+		// } else {
+		// 	log.Debug(shs.GetID(), "did not init votemap")
+		// }
 		// for voter, v := range shs.voteMap[shs.GetID()][shs.view] {
 		// 	if v == 1 {
 		// 		v--
@@ -210,27 +210,27 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 
 // how to handle WithholdingProposal
 func (shs *SyncHS) handleWithholdingProposal() {
-	shs.propMapLock.RLock()
+	// shs.propMapLock.RLock()
 
-	p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
-	if p == 1 && exists {
-		p--
-	} else {
-		log.Info("node", shs.GetID(), "did not change proposalMap in current view")
-	}
-	shs.propMapLock.RUnlock()
-	shs.voteMapLock.RLock()
-	votemap, exists := shs.voteMap[shs.GetID()][shs.view]
-	if exists {
-		for _, vnum := range votemap {
-			if vnum == 1 {
-				vnum--
-			}
-		}
-	} else {
-		log.Debug(shs.GetID(), "did not init votemap")
-	}
-	shs.voteMapLock.RUnlock()
+	// p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
+	// if p == 1 && exists {
+	// 	p--
+	// } else {
+	// 	log.Info("node", shs.GetID(), "did not change proposalMap in current view")
+	// }
+	// shs.propMapLock.RUnlock()
+	// shs.voteMapLock.RLock()
+	// votemap, exists := shs.voteMap[shs.GetID()][shs.view]
+	// if exists {
+	// 	for _, vnum := range votemap {
+	// 		if vnum == 1 {
+	// 			vnum--
+	// 		}
+	// 	}
+	// } else {
+	// 	log.Debug(shs.GetID(), "did not init votemap")
+	// }
+	// shs.voteMapLock.RUnlock()
 	shs.addWitholdProposaltoMap()
 	emptyBlockforwh := &chain.ProtoBlock{
 		Header: &chain.ProtoHeader{

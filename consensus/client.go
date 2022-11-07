@@ -233,18 +233,25 @@ func (n *SyncHS) callback() {
 
 	// }()
 	// wg.Wait()
-	go n.ReputationCalculateinCurrentRound(2)
-	go n.ReputationCalculateinCurrentRound(1)
 	go n.ReputationCalculateinCurrentRound(0)
+	go n.ReputationCalculateinCurrentRound(1)
+	go n.ReputationCalculateinCurrentRound(2)
 	go n.ReputationCalculateinCurrentRound(3)
+	// log.Debug("NODE", n.GetID(), n.voteMap[n.view])
+
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
-	_, exist := n.getCertForBlockIndex(n.bc.Head)
-
+	//
+	log.Debug(n.GetID(), "node Blockchain height and view number is", n.bc.Head, "AND", n.view)
+	_, exist := n.getCertForBlockIndex(n.view)
 	if !exist {
 		log.Debug("fail to generate certificate")
 		return
 	}
+	// blk, exist1 := n.getBlockFromCert(cert)
+	// if !exist1 {
+	// 	log.Debug("fail to generate the map of cert and exblcok")
+	// }
 
 	log.Info("Committing an correct block-", n.view)
 	log.Info("The block commit time of ", n.GetID(), "is", time.Now())
@@ -252,17 +259,18 @@ func (n *SyncHS) callback() {
 		Block: n.proposalByviewMap[n.view].Block,
 	}
 	synchsmsg.Msg = ack
+
 	// Tell all the clients, that I have committed this block
 	n.ClientBroadcast(synchsmsg)
 	// }
 
-	log.Debug(n.view)
-	if n.view < n.bc.Head {
-		n.view++
-		n.changeLeader()
-		// log.Debug(n.leader)
-		// log.Debug(n.view)
-	}
+	// log.Debug(n.view)
+	// if n.view < n.bc.Head && n.GetID() == n.leader {
+	n.view++
+	n.changeLeader()
+	// log.Debug(n.leader)
+	// log.Debug(n.view)
+	// }
 	log.Debug(n.view)
 	n.SyncChannel <- true
 	log.Debug(len(n.SyncChannel))

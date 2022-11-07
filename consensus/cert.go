@@ -63,3 +63,11 @@ func (n *SyncHS) getCertForBlockIndex(idx uint64) (*msg.BlockCertificate, bool) 
 	blk, exists := n.certMap[idx]
 	return blk, exists
 }
+
+func (n *SyncHS) getBlockFromCert(cert *msg.BlockCertificate) (chain.ExtBlock, bool) {
+	n.certBlockLock.RLock()
+	defer n.certBlockLock.RUnlock()
+	blk, exists := n.certBlockMap[cert]
+	return blk, exists
+
+}
