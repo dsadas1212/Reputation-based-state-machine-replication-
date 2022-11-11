@@ -2,8 +2,6 @@ package consensus
 
 import (
 	"time"
-
-	"github.com/adithyabhatkajake/libchatter/log"
 )
 
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
@@ -22,7 +20,6 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
-			log.Debug(len(n.SyncChannel))
 			n.startConsensusTimer()
 		}
 		// go n.startConsensusTimer()
@@ -34,6 +31,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	}
 }
 
+// !!TODO all pengdingCommands should be change not only  leader?
 func (n *SyncHS) getCmdsIfSufficient() ([][]byte, bool) {
 	blkSize := n.GetBlockSize()
 	n.cmdMutex.Lock()
