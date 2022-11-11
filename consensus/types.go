@@ -98,22 +98,7 @@ type SyncHS struct {
 	callFuncNotFinish bool
 	gcallFuncFinish   bool
 	// The timer of every node
-	timer0 lutil.Timer
-	timer1 lutil.Timer
-	timer2 lutil.Timer
-	timer3 lutil.Timer
-	// timer4 lutil.Timer
-	// timer5 lutil.Timer
-	// timer6 lutil.Timer
-	// timer7 lutil.Timer
-	// timer8 lutil.Timer
-	// timer9 lutil.Timer
-	// timer10 lutil.Timer
-	// timer11 lutil.Timer
-	// timer12 lutil.Timer
-	// timer13 lutil.Timer
-	// timer14 lutil.Timer
-	// timer15 lutil.Timer
+	timer lutil.Timer
 	//initial reputaion of all nodes
 	initialReplicaSore *big.Float
 }

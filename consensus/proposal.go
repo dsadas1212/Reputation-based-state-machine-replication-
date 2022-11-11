@@ -16,36 +16,39 @@ import (
 func (n *SyncHS) startConsensusTimer() {
 
 	go func() {
-		if n.GetID() == 0 {
-			n.timer0.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+		// if n.GetID() == 0 {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+		// if n.leader == n.GetID() {
+		// 	n.Propose()
+		// }
 
-		}
+		// }
 	}()
 
-	go func() {
-		if n.GetID() == 1 {
-			n.timer1.Start()
-			log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 1 {
+	// 		n.timer1.Start()
+	// 		log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 2 {
-			n.timer2.Start()
-			log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 2 {
+	// 		n.timer2.Start()
+	// 		log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
-	go func() {
-		if n.GetID() == 3 {
-			n.timer3.Start()
-			log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	// go func() {
+	// 	if n.GetID() == 3 {
+	// 		n.timer3.Start()
+	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
-		}
-	}()
+	// 	}
+	// }()
 
 	// go func() {
 	// 	if n.GetID() == 4 {

@@ -35,10 +35,10 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.leader = DefaultLeaderID
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
-	shs.timer0 = util.Timer{}
-	shs.timer1 = util.Timer{}
-	shs.timer2 = util.Timer{}
-	shs.timer3 = util.Timer{}
+	shs.timer = util.Timer{}
+	// shs.timer1 = util.Timer{}
+	// shs.timer2 = util.Timer{}
+	// shs.timer3 = util.Timer{}
 	// shs.timer4 = util.Timer{}
 	// shs.timer5 = util.Timer{}
 	// shs.timer6 = util.Timer{}
