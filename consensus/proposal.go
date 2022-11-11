@@ -265,8 +265,9 @@ func (n *SyncHS) Propose() {
 		n.Broadcast(relayMsg)
 		// Leader should also vote
 		n.voteForBlock(ep)
-		// Start 3\delta timer
-		// n.startBlockTimer(block)
+		log.Debug("VOTE TIMER1", time.Now())
+		// // Start 3\delta timer
+		// // n.startBlockTimer(block)
 	}()
 
 }
@@ -294,15 +295,15 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		return
 	}
 	//malicous proposal
-	if prop.Miner != n.leader && n.maliciousProposalInject {
-		log.Info("There is a malicious propsoal behaviour")
-		n.addMaliProposaltoMap(prop)
-		n.sendMaliProEvidence(prop)
-		//TODO send evidence!
-		//We should let current head be the block have certificate although//miabehaviour ocur(empty block)
-		return
+	// if prop.Miner != n.leader && n.maliciousProposalInject {
+	// 	log.Info("There is a malicious propsoal behaviour")
+	// 	n.addMaliProposaltoMap(prop)
+	// 	n.sendMaliProEvidence(prop)
+	// 	//TODO send evidence!
+	// 	//We should let current head be the block have certificate although//miabehaviour ocur(empty block)
+	// 	return
 
-	}
+	// }
 
 	var exists bool
 	var propOther *msg.Proposal
@@ -335,13 +336,18 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		// we have already committed this block, IGNORE
 		return
 	}
+	n.bc.Head++
 	n.addProposaltoMap()
 	n.addNewBlock(&ep.ExtBlock)
+	log.Debug(n.GetID(), "NODE's bchead and blkbyheight", n.bc.Head, "and", ep.Block.Header.GetHeight())
 	n.addProposaltoViewMap(prop)
 	n.ensureBlockIsDelivered(&ep.ExtBlock)
 
 	// Vote for the proposal
-	go n.voteForBlock(ep)
+	go func() {
+		n.voteForBlock(ep)
+		log.Debug("VOTE TIME2", time.Now())
+	}()
 	// Start 3\delta timer
 	// n.startBlockTimer(&ep.ExtBlock)
 
@@ -483,25 +489,15 @@ func (n *SyncHS) addWitholdProposaltoMap() {
 }
 func (n *SyncHS) addProposaltoMap() {
 	n.propMapLock.Lock()
-	// n.proposalMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
-	// n.proposalMap[n.GetID()][n.view] = make(map[uint64]uint64)
-	// p := n.proposalMap[n.GetID()][n.view][n.leader]
-	// if p == 0 {
-	// 	p++
-	// } else {
-	// 	log.Info("thpis proposal has been recorded")
-	// }
-	value, exists := n.proposalMap[n.GetID()][n.view][n.leader]
+	value, exists := n.proposalMap[n.view][n.leader]
 	if exists && value == 1 {
-		log.Debug("propsoal of this leader in this view has been recorded")
+		log.Debug(n.GetID(), " has been recorded the propsoal of this leader in this round")
 	}
-	log.Debug(n.GetID(), "Generate a map for leader")
+	//initial the value of this map
+	log.Debug(n.GetID(), "Generate a map for leader's proposal")
 	senderMap := make(map[uint64]uint64)
 	senderMap[n.leader] = 1
-	sMapcurrentView := make(map[uint64]map[uint64]uint64)
-	sMapcurrentView[n.view] = senderMap
-	n.proposalMap[n.GetID()] = sMapcurrentView
-	// log.Debug("propsoal", n.proposalMap)
+	n.proposalMap[n.view] = senderMap
 	n.propMapLock.Unlock()
 }
 

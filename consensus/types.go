@@ -3,6 +3,7 @@ package consensus
 import (
 	"bufio"
 	"context"
+	"math/big"
 	"sync"
 
 	chain "github.com/adithyabhatkajake/libsynchs/chain"
@@ -37,11 +38,11 @@ type SyncHS struct {
 	// A mapping between the view and (A mapping between the origin and blames against the leader)
 	// blameMap map[uint64]map[uint64]*msg.Blame
 	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
-	voteMap map[uint64]map[uint64]map[uint64]uint64
+	voteMap map[uint64]map[uint64]uint64
 	// malicous vote map
 	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
 	// correct proposal map
-	proposalMap map[uint64]map[uint64]map[uint64]uint64
+	proposalMap map[uint64]map[uint64]uint64
 	//equivocate proposal map
 	equiproposalMap map[uint64]map[uint64]map[uint64]uint64
 	//withholding proposal map
@@ -49,12 +50,9 @@ type SyncHS struct {
 	//malicious proposal map
 	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
 	//Reputation map
-	reputationMap map[uint64]uint64
+	reputationMap map[uint64]map[uint64]*big.Float
 	//ProosalByheightMap
 	proposalByviewMap map[uint64]*msg.Proposal
-	//TimerMap
-	timerMap map[*lutil.Timer]bool
-
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
 	cliMutex           sync.RWMutex // The lock to modify cliMap
@@ -71,13 +69,13 @@ type SyncHS struct {
 	voteMaliLock       sync.RWMutex
 	withpropoLock      sync.RWMutex
 	proposalByviewLock sync.RWMutex
+	certBlockLock      sync.RWMutex
 
 	// Channels
-	blockCandidateChannel chan *chain.Candidateblock
-	msgChannel            chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel            chan []byte         // All commands are re-directed here
-	voteChannel           chan *msg.Vote      // All votes are sent here
-	SyncChannel           chan bool           //make a channel to store the signal of timerfinish
+	msgChannel  chan *msg.SyncHSMsg // All messages come here first
+	cmdChannel  chan []byte         // All commands are re-directed here
+	voteChannel chan *msg.Vote      // All votes are sent here
+	SyncChannel chan bool           //make a channel to store the signal of timerfinish
 	// proposeChannel chan *msg.Proposal  // All proposals are sent here
 	// errCh          chan error          // All errors are sent here
 
@@ -116,4 +114,6 @@ type SyncHS struct {
 	// timer13 lutil.Timer
 	// timer14 lutil.Timer
 	// timer15 lutil.Timer
+	//initial reputaion of all nodes
+	initialReplicaSore *big.Float
 }

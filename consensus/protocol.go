@@ -3,6 +3,7 @@ package consensus
 import (
 	"bufio"
 	"context"
+	"math/big"
 	"sync"
 	"time"
 
@@ -58,15 +59,14 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	// shs.timerMaps = make(map[uint64]*util.Timer)
 	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
 	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
-	//calculate reputation
-	shs.reputationMap = make(map[uint64]uint64)
-	shs.voteMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.proposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.reputationMap = make(map[uint64]map[uint64]*big.Float)
+	shs.voteMap = make(map[uint64]map[uint64]uint64)
+	shs.proposalMap = make(map[uint64]map[uint64]uint64)
 	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.timerMap = make(map[*util.Timer]bool)
+	// shs.certBlockMap = make(map[*msg.BlockCertificate]chain.ExtBlock)
 
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
 
@@ -75,7 +75,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
 	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
-	shs.SyncChannel = make(chan bool, 10)
+	shs.SyncChannel = make(chan bool, 1)
 
 	shs.certMap = make(map[uint64]*msg.BlockCertificate)
 	// Setup certificate for the first block
@@ -87,6 +87,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.equivocatingProposalInject = false
 	shs.withholdingProposalInject = false
 	shs.maliciousProposalInject = false
+	shs.initialReplicaSore = new(big.Float).SetFloat64(1e-6)
 
 }
 

@@ -1,6 +1,8 @@
 package consensus
 
-import "time"
+import (
+	"time"
+)
 
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
@@ -10,17 +12,14 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	//&& n.GetID() == n.leader
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() { //Sufficient Commands start our timer!
 		// change the condition of this: 1. if this block is gensis block start timer directly
-		// 2. else
 		if n.gcallFuncFinish {
 			go n.startConsensusTimer()
 			time.Sleep(time.Second * 3)
 			n.gcallFuncFinish = false
 		}
 		//16
-		if len(n.SyncChannel) == 4 {
-			for i := 0; i < 4; i++ {
-				<-n.SyncChannel
-			}
+		if len(n.SyncChannel) == 1 {
+			<-n.SyncChannel
 			n.startConsensusTimer()
 		}
 		// go n.startConsensusTimer()
@@ -32,6 +31,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	}
 }
 
+// !!TODO all pengdingCommands should be change not only  leader?
 func (n *SyncHS) getCmdsIfSufficient() ([][]byte, bool) {
 	blkSize := n.GetBlockSize()
 	n.cmdMutex.Lock()
