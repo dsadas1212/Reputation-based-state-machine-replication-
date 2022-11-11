@@ -81,25 +81,25 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 	n.cliMutex.Lock()
 	defer n.cliMutex.Unlock()
 	for cliBuf := range n.cliMap {
-		log.Trace("Sending to", cliBuf)
+		log.Debug("Sending to", cliBuf)
 		cliBuf.Write(data)
 		cliBuf.Flush()
 	}
-	log.Trace("Finish client broadcast for", m)
+	log.Debug("Finish client broadcast for", m)
 }
 
 func (n *SyncHS) setConsensusTimer() {
-	n.timer0.SetCallAndCancel(n.callback)
-	n.timer0.SetTime(20 * time.Second)
+	n.timer.SetCallAndCancel(n.callback)
+	n.timer.SetTime(20 * time.Second)
 
-	n.timer1.SetCallAndCancel(n.callback)
-	n.timer1.SetTime(20 * time.Second)
+	// n.timer1.SetCallAndCancel(n.callback)
+	// n.timer1.SetTime(20 * time.Second)
 
-	n.timer2.SetTime(20 * time.Second)
-	n.timer2.SetCallAndCancel(n.callback)
+	// n.timer2.SetTime(20 * time.Second)
+	// n.timer2.SetCallAndCancel(n.callback)
 
-	n.timer3.SetTime(20 * time.Second)
-	n.timer3.SetCallAndCancel(n.callback)
+	// n.timer3.SetTime(20 * time.Second)
+	// n.timer3.SetCallAndCancel(n.callback)
 
 	// n.timer4.SetTime(20 * time.Second)
 	// n.timer4.SetCallAndCancel(n.callback)

@@ -89,10 +89,12 @@ func (n *SyncHS) voteHandler() {
 
 		//reutation version!!TODO
 		var repSumInCert *big.Float = new(big.Float).SetFloat64(0)
+		n.repMapLock.RLock()
 		for i := range voteMap[height] {
 			repSumInCert = repSumInCert.Add(repSumInCert, n.reputationMap[n.view][i])
 		}
-		log.Debug("OUTPUT SCORE", repSumInCert)
+		n.repMapLock.RUnlock()
+		// log.Debug("OUTPUT SCORE", repSumInCert)
 		if repSumInCert.Cmp(n.GetCertBenchMark(n.view)) == -1 || repSumInCert.Cmp(n.GetCertBenchMark(n.view)) == 0 {
 			log.Debug("Not enough reputation to build a certificate")
 			continue
