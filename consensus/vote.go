@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"math/big"
+
 	"github.com/adithyabhatkajake/libchatter/crypto"
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/chain"
@@ -9,13 +11,14 @@ import (
 )
 
 // Vote channel //TODO malicious vote and equivocation proposal detected!
+// TODO{convert the setting of certificate to reputation setting}
 func (n *SyncHS) voteHandler() {
 	// Map leader to a map from sender to its vote
 	voteMap := make(map[uint64]map[uint64]*msg.Vote)
 	// pendingVotes := make(map[crypto.Hash][]*msg.Vote)
 	isCertified := make(map[uint64]bool)
 	myID := n.GetID()
-	Faults := n.GetNumberOfFaultyNodes()
+	// Faults := n.GetNumberOfFaultyNodes()
 	for {
 		v, ok := <-n.voteChannel
 		if !ok {
@@ -79,11 +82,25 @@ func (n *SyncHS) voteHandler() {
 			continue
 		}
 		voteMap[height][v.GetVoter()] = v
-		if uint64(len(voteMap[height])) <= Faults {
-			log.Debug("Not enough votes to build a certificate")
+		// if uint64(len(voteMap[height])) <= Faults {
+		// 	log.Debug("Not enough votes to build a certificate")
+		// 	continue
+		// }
+
+		//reutation version!!TODO
+		var repSumInCert *big.Float = new(big.Float).SetFloat64(0)
+		n.repMapLock.RLock()
+		for i := range voteMap[height] {
+			repSumInCert = repSumInCert.Add(repSumInCert, n.reputationMap[n.view][i])
+		}
+		n.repMapLock.RUnlock()
+		// log.Debug("OUTPUT SCORE", repSumInCert)
+		if repSumInCert.Cmp(n.GetCertBenchMark(n.view)) == -1 || repSumInCert.Cmp(n.GetCertBenchMark(n.view)) == 0 {
+			log.Debug("Not enough reputation to build a certificate")
 			continue
 		}
 		log.Debug("Building a certificate")
+
 		// Our certificate for height v.Data.Block.Data.Index is ready now
 		bcert := NewCert(voteMap[height], bhash, view)
 		isCertified[height] = true
@@ -187,13 +204,24 @@ func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
 
 func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 	n.voteMapLock.Lock()
-	n.voterMap[v.GetBody().Voter] = 1
+	// n.voterMap[v.GetBody().Voter] = 1
 	if _, exists := n.voteMap[n.view]; exists {
-		n.voteMap[n.view] = n.voterMap
+		n.voteMap[n.view][v.GetBody().Voter] = 1
 	} else {
-		n.voteMap[n.view] = n.voterMap
+		n.voteMap[n.view] = make(map[uint64]uint64)
+		n.voteMap[n.view][v.GetBody().Voter] = 1
 	}
 
 	// log.Debug("vote", n.voteMap)
 	n.voteMapLock.Unlock()
+}
+
+func (n *SyncHS) GetCertBenchMark(viewNum uint64) *big.Float {
+	var totalReputationScore *big.Float = new(big.Float).SetFloat64(0)
+	var certBenchMark *big.Float = new(big.Float).SetFloat64(0.5)
+	for _, v := range n.reputationMap[viewNum] {
+		totalReputationScore = totalReputationScore.Add(totalReputationScore, v)
+	}
+	certBenchMarkScore := new(big.Float).Mul(totalReputationScore, certBenchMark)
+	return certBenchMarkScore
 }

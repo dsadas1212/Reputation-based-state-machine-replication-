@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"math/big"
+
 	"github.com/adithyabhatkajake/libchatter/crypto"
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/chain"
@@ -27,25 +29,32 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	if h, _ := bc.GetBlockInfo(); h == chain.EmptyHash {
 		return true
 	}
-	if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {
-		log.Error("The certificate has <= f signatures")
-		return false
-	}
-	for idx, id := range bc.GetSigners() {
+	// if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {
+	// 	log.Error("The certificate has <= f signatures")
+	// 	return false
+	// }
+	benchmark := n.GetCertBenchMark(n.view - 1)
+	totalRepInCert := new(big.Float).SetFloat64(0)
+	log.Debug("SIG", bc.GetSigners())
+	for _, id := range bc.GetSigners() {
 		sig := bc.GetSignatureFromID(id)
 		if sig == nil {
 			log.Error("Signature for ID not found")
 			return false
 		}
-		sigOk, err := n.GetPubKeyFromID(id).Verify(bc.GetData(), sig)
+		_, err := n.GetPubKeyFromID(id).Verify(bc.GetData(), sig)
 		if err != nil {
 			log.Error("Certificate signature verification error")
 			return false
 		}
-		if !sigOk {
-			log.Error("Certificate signature is invalid for idx", idx)
-			return false
-		}
+		// if !sigOk {
+		// 	log.Error("Certificate signature is invalid for idx", idx)
+		// 	return false
+		// }
+		totalRepInCert = totalRepInCert.Add(totalRepInCert, n.reputationMap[n.view-1][id])
+	}
+	if totalRepInCert.Cmp(benchmark) == -1 || totalRepInCert.Cmp(benchmark) == 0 {
+		log.Error("invalid cert because lacking reputation")
 	}
 	return true
 }
@@ -62,12 +71,4 @@ func (n *SyncHS) getCertForBlockIndex(idx uint64) (*msg.BlockCertificate, bool) 
 	defer n.certMapLock.Unlock()
 	blk, exists := n.certMap[idx]
 	return blk, exists
-}
-
-func (n *SyncHS) getBlockFromCert(cert *msg.BlockCertificate) (chain.ExtBlock, bool) {
-	n.certBlockLock.RLock()
-	defer n.certBlockLock.RUnlock()
-	blk, exists := n.certBlockMap[cert]
-	return blk, exists
-
 }

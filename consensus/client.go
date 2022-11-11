@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"bufio"
+	"math/big"
 	"time"
 
 	"github.com/adithyabhatkajake/libchatter/log"
@@ -36,6 +37,8 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 	// Add client for later contact
 	n.addClient(rw)
+	//inital reputationMap for all nodes
+	n.initialReputationMap()
 	// Set timer for all nodes
 	n.setConsensusTimer()
 	log.Debug("finish the setting of timer")
@@ -78,25 +81,25 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 	n.cliMutex.Lock()
 	defer n.cliMutex.Unlock()
 	for cliBuf := range n.cliMap {
-		log.Trace("Sending to", cliBuf)
+		log.Debug("Sending to", cliBuf)
 		cliBuf.Write(data)
 		cliBuf.Flush()
 	}
-	log.Trace("Finish client broadcast for", m)
+	log.Debug("Finish client broadcast for", m)
 }
 
 func (n *SyncHS) setConsensusTimer() {
-	n.timer0.SetCallAndCancel(n.callback)
-	n.timer0.SetTime(20 * time.Second)
+	n.timer.SetCallAndCancel(n.callback)
+	n.timer.SetTime(20 * time.Second)
 
-	n.timer1.SetCallAndCancel(n.callback)
-	n.timer1.SetTime(20 * time.Second)
+	// n.timer1.SetCallAndCancel(n.callback)
+	// n.timer1.SetTime(20 * time.Second)
 
-	n.timer2.SetTime(20 * time.Second)
-	n.timer2.SetCallAndCancel(n.callback)
+	// n.timer2.SetTime(20 * time.Second)
+	// n.timer2.SetCallAndCancel(n.callback)
 
-	n.timer3.SetTime(20 * time.Second)
-	n.timer3.SetCallAndCancel(n.callback)
+	// n.timer3.SetTime(20 * time.Second)
+	// n.timer3.SetCallAndCancel(n.callback)
 
 	// n.timer4.SetTime(20 * time.Second)
 	// n.timer4.SetCallAndCancel(n.callback)
@@ -233,12 +236,12 @@ func (n *SyncHS) callback() {
 
 	// }()
 	// wg.Wait()
-	go n.ReputationCalculateinCurrentRound(0)
-	go n.ReputationCalculateinCurrentRound(1)
-	go n.ReputationCalculateinCurrentRound(2)
-	go n.ReputationCalculateinCurrentRound(3)
+	// go n.ReputationCalculateinCurrentRound(0)
+	// go n.ReputationCalculateinCurrentRound(1)
+	// go n.ReputationCalculateinCurrentRound(2)
+	// go n.ReputationCalculateinCurrentRound(3)
 	// log.Debug("NODE", n.GetID(), n.voteMap[n.view])
-
+	n.addNewViewReputaiontoMap()
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
 	//
@@ -277,14 +280,21 @@ func (n *SyncHS) callback() {
 
 }
 
-//TODO ADD LOG for this
+func (n *SyncHS) initialReputationMap() {
+	n.repMapLock.Lock()
+	defer n.repMapLock.Unlock()
+	log.Debug(n.pMap)
+	for i := uint64(0); i <= uint64(len(n.pMap)); i++ {
+		// n.reputationMapwithoutRound[i] = n.initialReplicaSore
+		if _, exists := n.reputationMap[n.view]; exists {
+			n.reputationMap[n.view][i] = n.initialReplicaSore
 
-// if !n.callFuncFinish && n.callFuncPrepare {
-// 	n.callFuncFinish = true
-// 	n.callFuncPrepare = false
-// }
-// log.Debug("funcCallback has been finish!")
+		} else {
+			n.reputationMap[n.view] = make(map[uint64]*big.Float)
+			n.reputationMap[n.view][i] = n.initialReplicaSore
+		}
+	}
 
-// if n.callFuncNotFinish {
-// 	n.callFuncNotFinish = false
-// }
+	log.Debug("finish repmap setting and  Node", n.GetID(), "'S repmap is", n.reputationMap[n.view])
+
+}

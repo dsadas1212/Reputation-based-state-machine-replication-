@@ -3,19 +3,19 @@ package consensus
 
 import (
 	"math"
-	"strconv"
+	"math/big"
 	"sync"
 
 	"github.com/adithyabhatkajake/libchatter/log"
 )
 
 const (
-	pEpsilonWith     = 1.5
-	pEpsilonEqui     = 1.5
-	pEpsilonMali     = 1
-	vEpisilonMali    = 1
-	gamma            = 0.01
-	initialNodescore = 1e-6
+	pEpsilonWith     = float64(1.5)
+	pEpsilonEqui     = float64(1.5)
+	pEpsilonMali     = float64(1)
+	vEpisilonMali    = float64(1)
+	gamma            = float64(0.01)
+	initialNodescore = float64(1e-6)
 )
 
 var (
@@ -27,7 +27,8 @@ var (
 	malivotenum     uint64
 )
 
-func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
+// TODO change correspongding reputaion map
+func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 	//first we get the correct proposal/vote from map
 	//get current various proposal/vote number
 	// roundnum := n.view
@@ -45,17 +46,33 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) {
 	}()
 	wg.Wait()
 	// log.Info("calculate reputation for node", nodeID)
-	proposalsc := float64(proposalnum)
+	proposalsc := new(big.Float).SetUint64(proposalnum)
 	// - (float64(maliproposalnum)*pEpsilonMali +
 	// float64(equiprospoalnum)*pEpsilonEqui +
 	// float64(withpropsoalnum)*pEpsilonWith)
-	proposalscore := n.maxvaluecheck(proposalsc)
-	votesc := float64(votenum)
+	proposalscore := n.maxValueCheckNum(proposalsc)
+	votesc := new(big.Float).SetUint64(votenum)
 	// - float64(malivotenum)*vEpisilonMali
-	votescore := n.maxvaluecheck(votesc)
-	nodeScore := math.Tanh(gamma*(votescore+proposalscore)) + initialNodescore
-	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", strconv.FormatFloat(nodeScore, 'f', 15, 64))
+	votescore := n.maxValueCheckNum(votesc)
+	calInitialNodescore := new(big.Float).SetFloat64(initialNodescore)
+	calGama := new(big.Float).SetFloat64(gamma)
+	transcriptNum := new(big.Float).Add(votescore, proposalscore)
+	gamaMulTranscript := new(big.Float).Mul(calGama, transcriptNum)
+	fltnum, _ := gamaMulTranscript.Float64()
+	behaviourSocre := new(big.Float).SetFloat64(math.Tanh(fltnum))
+	baseNodeSocre := new(big.Float).Add(behaviourSocre, calInitialNodescore)
+	nodeScore := n.maxValueCheckScore(baseNodeSocre)
+	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
+	return nodeScore
 
+}
+
+func (n *SyncHS) reputationCountforRound() *big.Float {
+	var currentReputationSum *big.Float = new(big.Float)
+	for i := 0; i < len(n.pMap); i++ {
+		currentReputationSum = currentReputationSum.Add(currentReputationSum, n.ReputationCalculateinCurrentRound(uint64(i)))
+	}
+	return currentReputationSum
 }
 
 func (n *SyncHS) proposalNumCalculate(nodeID uint64) uint64 {
@@ -195,12 +212,45 @@ func (n *SyncHS) malivoteNumCalculate(nodeID uint64) uint64 {
 
 }
 
-func (n *SyncHS) maxvaluecheck(a float64) float64 {
-	if a >= initialNodescore {
-		return a
+func (n *SyncHS) maxValueCheckNum(a *big.Float) *big.Float {
+	// if a >= initialNodescore {
+	// 	return a
+	// } else {
+	// 	return initialNodescore
+	// }
+	b := new(big.Float).SetUint64(0)
+	c := a.Cmp(b)
+	if c == -1 {
+		return b
 	} else {
-		return initialNodescore
+		return a
+	}
+
+}
+
+func (n *SyncHS) maxValueCheckScore(a *big.Float) *big.Float {
+	b := new(big.Float).SetFloat64(initialNodescore)
+	c := a.Cmp(b)
+	if c == -1 {
+		return b
+	} else {
+		return a
 	}
 }
 
 //calcute the score of each node in this round
+
+func (n *SyncHS) addNewViewReputaiontoMap() {
+	n.repMapLock.Lock()
+	defer n.repMapLock.Unlock()
+	for i := uint64(0); i <= uint64(len(n.pMap)); i++ {
+		// n.reputationMapwithoutRound[i] = n.ReputationCalculateinCurrentRound(i)
+		if _, exists1 := n.reputationMap[n.view+1]; exists1 {
+			n.reputationMap[n.view+1][i] = n.ReputationCalculateinCurrentRound(i)
+		} else {
+			n.reputationMap[n.view+1] = make(map[uint64]*big.Float)
+			n.reputationMap[n.view+1][i] = n.ReputationCalculateinCurrentRound(i)
+		}
+	}
+	log.Debug("Node", n.GetID(), "map is ", n.reputationMap)
+}

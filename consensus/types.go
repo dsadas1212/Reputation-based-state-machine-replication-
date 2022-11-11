@@ -3,6 +3,7 @@ package consensus
 import (
 	"bufio"
 	"context"
+	"math/big"
 	"sync"
 
 	chain "github.com/adithyabhatkajake/libsynchs/chain"
@@ -38,8 +39,6 @@ type SyncHS struct {
 	// blameMap map[uint64]map[uint64]*msg.Blame
 	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
 	voteMap map[uint64]map[uint64]uint64
-	//voter and its votenum
-	voterMap map[uint64]uint64
 	// malicous vote map
 	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
 	// correct proposal map
@@ -51,13 +50,9 @@ type SyncHS struct {
 	//malicious proposal map
 	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
 	//Reputation map
-	reputationMap map[uint64]uint64
+	reputationMap map[uint64]map[uint64]*big.Float
 	//ProosalByheightMap
 	proposalByviewMap map[uint64]*msg.Proposal
-	//TimerMap
-	timerMap map[*lutil.Timer]bool
-	//block maps its cert
-	certBlockMap map[*msg.BlockCertificate]chain.ExtBlock
 	/* Locks - We separate all the locks, so that acquiring
 	one lock does not make other goroutines stop */
 	cliMutex           sync.RWMutex // The lock to modify cliMap
@@ -77,11 +72,10 @@ type SyncHS struct {
 	certBlockLock      sync.RWMutex
 
 	// Channels
-	blockCandidateChannel chan *chain.Candidateblock
-	msgChannel            chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel            chan []byte         // All commands are re-directed here
-	voteChannel           chan *msg.Vote      // All votes are sent here
-	SyncChannel           chan bool           //make a channel to store the signal of timerfinish
+	msgChannel  chan *msg.SyncHSMsg // All messages come here first
+	cmdChannel  chan []byte         // All commands are re-directed here
+	voteChannel chan *msg.Vote      // All votes are sent here
+	SyncChannel chan bool           //make a channel to store the signal of timerfinish
 	// proposeChannel chan *msg.Proposal  // All proposals are sent here
 	// errCh          chan error          // All errors are sent here
 
@@ -104,20 +98,7 @@ type SyncHS struct {
 	callFuncNotFinish bool
 	gcallFuncFinish   bool
 	// The timer of every node
-	timer0 lutil.Timer
-	timer1 lutil.Timer
-	timer2 lutil.Timer
-	timer3 lutil.Timer
-	// timer4 lutil.Timer
-	// timer5 lutil.Timer
-	// timer6 lutil.Timer
-	// timer7 lutil.Timer
-	// timer8 lutil.Timer
-	// timer9 lutil.Timer
-	// timer10 lutil.Timer
-	// timer11 lutil.Timer
-	// timer12 lutil.Timer
-	// timer13 lutil.Timer
-	// timer14 lutil.Timer
-	// timer15 lutil.Timer
+	timer lutil.Timer
+	//initial reputaion of all nodes
+	initialReplicaSore *big.Float
 }

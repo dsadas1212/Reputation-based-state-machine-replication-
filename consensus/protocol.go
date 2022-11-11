@@ -3,6 +3,7 @@ package consensus
 import (
 	"bufio"
 	"context"
+	"math/big"
 	"sync"
 	"time"
 
@@ -34,10 +35,10 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.leader = DefaultLeaderID
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
-	shs.timer0 = util.Timer{}
-	shs.timer1 = util.Timer{}
-	shs.timer2 = util.Timer{}
-	shs.timer3 = util.Timer{}
+	shs.timer = util.Timer{}
+	// shs.timer1 = util.Timer{}
+	// shs.timer2 = util.Timer{}
+	// shs.timer3 = util.Timer{}
 	// shs.timer4 = util.Timer{}
 	// shs.timer5 = util.Timer{}
 	// shs.timer6 = util.Timer{}
@@ -58,16 +59,13 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	// shs.timerMaps = make(map[uint64]*util.Timer)
 	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
 	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
-	//calculate reputation
-	shs.reputationMap = make(map[uint64]uint64)
+	shs.reputationMap = make(map[uint64]map[uint64]*big.Float)
 	shs.voteMap = make(map[uint64]map[uint64]uint64)
 	shs.proposalMap = make(map[uint64]map[uint64]uint64)
 	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.timerMap = make(map[*util.Timer]bool)
-	shs.voterMap = make(map[uint64]uint64)
 	// shs.certBlockMap = make(map[*msg.BlockCertificate]chain.ExtBlock)
 
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
@@ -89,6 +87,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.equivocatingProposalInject = false
 	shs.withholdingProposalInject = false
 	shs.maliciousProposalInject = false
+	shs.initialReplicaSore = new(big.Float).SetFloat64(1e-6)
 
 }
 
