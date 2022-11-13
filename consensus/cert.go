@@ -35,7 +35,6 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	// }
 	benchmark := n.GetCertBenchMark(n.view - 1)
 	totalRepInCert := new(big.Float).SetFloat64(0)
-	log.Debug("SIG", bc.GetSigners())
 	for _, id := range bc.GetSigners() {
 		sig := bc.GetSignatureFromID(id)
 		if sig == nil {

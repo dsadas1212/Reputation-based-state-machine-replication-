@@ -16,137 +16,9 @@ import (
 func (n *SyncHS) startConsensusTimer() {
 
 	go func() {
-		// if n.GetID() == 0 {
 		n.timer.Start()
 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-		// if n.leader == n.GetID() {
-		// 	n.Propose()
-		// }
-
-		// }
 	}()
-
-	// go func() {
-	// 	if n.GetID() == 1 {
-	// 		n.timer1.Start()
-	// 		log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 2 {
-	// 		n.timer2.Start()
-	// 		log.Debug(n.GetID(), "start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 3 {
-	// 		n.timer3.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 4 {
-	// 		n.timer4.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 5 {
-	// 		n.timer5.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 6 {
-	// 		n.timer6.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 7 {
-	// 		n.timer7.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 8 {
-	// 		n.timer8.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 9 {
-	// 		n.timer9.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 10 {
-	// 		n.timer10.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 11 {
-	// 		n.timer11.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 12 {
-	// 		n.timer12.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 13 {
-	// 		n.timer13.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 14 {
-	// 		n.timer14.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	// go func() {
-	// 	if n.GetID() == 15 {
-	// 		n.timer15.Start()
-	// 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
-	// 	}
-	// }()
-
-	//
 
 	go func() {
 		if n.leader == n.GetID() {
@@ -156,51 +28,6 @@ func (n *SyncHS) startConsensusTimer() {
 	}()
 
 }
-
-// func (n *SyncHS) leaderstartTimerForConsensus(sms *msg.SyncHSMsg, sep *msg.ExtProposal) {
-
-// 	ticker := time.NewTicker(time.Duration(int(float64(1)*1000)) * time.Millisecond * 4)
-// 	for range ticker.C {
-// 		log.Debug("leader", n.GetID(), "start its timer!")
-// 		n.Broadcast(sms)
-// 		n.voteForBlock(sep)
-// 		n.callback()
-// 		break
-// 	}
-
-// }
-
-// func (n *SyncHS) nodestartTimerForConsensus() {
-// 	ticker := time.NewTicker(time.Duration(int(float64(1)*1000)) * time.Millisecond * 4)
-// 	for range ticker.C {
-// 		log.Debug("node", n.GetID(), "start its timer!")
-// 		n.callback()
-// 		break
-// 	}
-
-// }
-
-// solve the problem that Keep turning on the timer
-// func (n *SyncHS) gnerateCandidateBlock() {
-// 	cmds, isSuff := n.getCmdsIfSufficient()
-// 	if !isSuff {
-// 		// log.Debug("Insufficient commands, aborting the proposal")
-// 		return
-// 	}
-// 	candiBlock := &chain.Candidateblock{}
-// 	candiBlock.CTxs = cmds
-// 	candiBlock.CResponses = cmds
-// 	n.blockCandidateChannel <- candiBlock
-// 	log.Debug("len is", len(n.blockCandidateChannel))
-// 	go func() {
-// 		if n.GetID() == n.leader {
-// 			n.Propose()
-// 		}
-// 		n.nodestartTimerForConsensus()
-// 	}()
-// 	// go n.nodestartTimerForConsensus()
-
-// }
 
 func (n *SyncHS) Propose() {
 
@@ -239,28 +66,6 @@ func (n *SyncHS) Propose() {
 	ep.FromProto(prop)
 	//prop.String()
 	log.Debug("Proposing block: 400cmd")
-	// go n.leaderstartTimerForConsensus(relayMsg, ep)
-	// go func() {
-	// 	if n.GetID() == n.leader {
-	// 		log.Debug("Proposing block:", prop.String())
-	// 		n.leaderstartTimerForConsensus(relayMsg, ep)
-	// 	}
-	// 	n.nodestartTimerForConsensus()
-	// }()
-
-	//START TIMER AND PROPSOE}
-	// candiBlock := &chain.Candidateblock{}
-	// candiBlock.CTxs = cmds
-	// candiBlock.CResponses = cmds
-	// n.blockCandidateChannel <- candiBlock
-	// log.Debug("len is", len(n.blockCandidateChannel))
-	// if !ok {
-	// 	log.Error("CandiBlock channel error")
-	// }
-	// cmds := candiblock.CTxs
-	// go n.addProposaltoMap()
-	// go n.Broadcast(relayMsg)
-	// go n.voteForBlock(ep)
 	go func() {
 		//Change itself proposal map
 		n.addProposaltoMap()
@@ -428,14 +233,6 @@ func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 
 func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
 	n.malipropLock.Lock()
-	// n.maliproposalMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
-	// n.maliproposalMap[n.GetID()][n.view] = make(map[uint64]uint64)
-	// mp := n.maliproposalMap[n.GetID()][n.view][prop.Miner]
-	// if mp == 0 {
-	// 	mp++
-	// } else {
-	// 	log.Info("Malicious proposal of the leader has been recorded")
-	// }
 	value, exists := n.maliproposalMap[n.GetID()][n.view][prop.GetMiner()]
 	if exists && value == 1 {
 		log.Debug("Malicious proposal of this miner in this view has been recorded")
@@ -458,27 +255,11 @@ func (n *SyncHS) addEquiProposaltoMap() {
 	equiSMapcurrentView := make(map[uint64]map[uint64]uint64)
 	equiSMapcurrentView[n.view] = equiSenderMap
 	n.equiproposalMap[n.GetID()] = equiSMapcurrentView
-	// n.equiproposalMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
-	// n.equiproposalMap[n.GetID()][n.view] = make(map[uint64]uint64)
-	// e := n.equiproposalMap[n.GetID()][n.view][n.leader]
-	// if e == 0 {
-	// 	e++
-	// } else {
-	// 	log.Info("equivocation of the leader has been recorded")
-	// }
 	n.equipropLock.Unlock()
 }
 
 func (n *SyncHS) addWitholdProposaltoMap() {
 	n.withpropoLock.Lock()
-	// n.withproposalMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
-	// n.withproposalMap[n.GetID()][n.view] = make(map[uint64]uint64)
-	// w := n.withproposalMap[n.GetID()][n.view][n.leader]
-	// if w == 0 {
-	// 	w++
-	// } else {
-	// 	log.Info("this withholding proposal has been recorded")
-	// }
 	value, exists := n.withproposalMap[n.GetID()][n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug("withholding propsoal of this leader in this view has been recorded")

@@ -36,22 +36,6 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
 	shs.timer = util.Timer{}
-	// shs.timer1 = util.Timer{}
-	// shs.timer2 = util.Timer{}
-	// shs.timer3 = util.Timer{}
-	// shs.timer4 = util.Timer{}
-	// shs.timer5 = util.Timer{}
-	// shs.timer6 = util.Timer{}
-	// shs.timer7 = util.Timer{}
-	// shs.timer8 = util.Timer{}
-	// shs.timer9 = util.Timer{}
-	// shs.timer10 = util.Timer{}
-	// shs.timer11 = util.Timer{}
-	// shs.timer12 = util.Timer{}
-	// shs.timer13 = util.Timer{}
-	// shs.timer14 = util.Timer{}
-	// shs.timer15 = util.Timer{}
-
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
 	shs.cliMap = make(map[*bufio.ReadWriter]bool)      //!!
