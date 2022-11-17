@@ -97,76 +97,50 @@ func (n *SyncHS) setConsensusTimer() {
 func (n *SyncHS) callback() {
 
 	log.Debug(n.GetID(), "callbackFuncation have been prepared!", time.Now())
-	// _, exists := n.equiproposalMap[n.GetID()][n.view][n.leader]
-	// if n.withholdingProposalInject {
+	if n.withholdingProposalInject {
+		log.Info("In round", n.view, "withholding block have been detected")
+		//Handle withholding behaviour
+		n.handleWithholdingProposal()
+		n.addNewViewReputaiontoMap()
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		log.Info("Committing an withholdemptyblock-", n.view)
+		log.Info("The block commit time is", time.Now())
 
-	// 	log.Info("withholding block detected")
-	// 	//Handle withholding behaviour
-	// 	n.handleWithholdingProposal()
+		// Let the client know that we committed this block
+		ack.Ack = &msg.CommitAck{
+			Block: n.proposalByviewMap[n.view].Block,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		n.view++
+		n.changeLeader()
+		n.SyncChannel <- true
+		log.Debug(len(n.SyncChannel))
+		return
+	}
+	if n.equivocatingProposalInject {
+		log.Info("In round", n.view, "equivocating block have been detected")
+		n.addNewViewReputaiontoMap()
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		log.Info("Committing an equivocationEmptyblock-", n.view)
+		log.Info("The block commit time is", time.Now())
+		// Let the client know that we committed this block
+		ack.Ack = &msg.CommitAck{
+			Block: n.proposalByviewMap[n.view].Block,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		n.view++
+		n.changeLeader()
+		n.SyncChannel <- true
+		log.Debug(len(n.SyncChannel))
+		return
 
-	// 	//calculate myself reputation
-	// 	// n.ReputationCalculateinCurrentRound(n.GetID())
-	// 	// if n.leader == n.GetID() {
-	// 	// 	n.propose()
-	// 	// }
-	// 	// We have committed this empty block
-	// 	go func() {
-	// 		log.Info("Committing an withholdemptyblock-", n.view)
-	// 		log.Info("The block commit time is", time.Now())
-
-	// 		// Let the client know that we committed this block
-	// 		emptyBlockforwh := &chain.ProtoBlock{
-	// 			Header: &chain.ProtoHeader{
-	// 				Height: n.view,
-	// 			},
-	// 			BlockHash: chain.EmptyHash.GetBytes(),
-	// 		}
-	// 		synchsmsg := &msg.SyncHSMsg{}
-	// 		ack := &msg.SyncHSMsg_Ack{}
-	// 		ack.Ack = &msg.CommitAck{
-	// 			Block: emptyBlockforwh,
-	// 		}
-	// 		synchsmsg.Msg = ack
-	// 		// Tell all the clients, that I have committed this block
-	// 		n.ClientBroadcast(synchsmsg)
-
-	// 	}()
-	// 	n.view++
-	// 	n.changeLeader()
-	// 	return
-	// }
-	// if n.equivocatingProposalInject {
-	// 	log.Info("Equivocation block detected")
-	// 	// if n.leader == n.GetID() {
-	// 	// 	n.propose()
-	// 	// }
-	// 	log.Info("Committing equivocationblock-", n.view)
-	// 	log.Info("The block commit time is", time.Now())
-
-	// 	// We have committed this block
-	// 	// Let the client know that we committed this block
-	// 	go func() {
-	// 		emptyBlockforeq := &chain.ProtoBlock{
-	// 			Header: &chain.ProtoHeader{
-	// 				Height: n.view,
-	// 			},
-	// 			BlockHash: chain.EmptyHash.GetBytes(),
-	// 		}
-	// 		synchsmsg := &msg.SyncHSMsg{}
-	// 		ack := &msg.SyncHSMsg_Ack{}
-	// 		ack.Ack = &msg.CommitAck{
-	// 			Block: emptyBlockforeq,
-	// 		}
-	// 		synchsmsg.Msg = ack
-	// 		// Tell all the clients, that I have committed this block
-	// 		n.ClientBroadcast(synchsmsg)
-	// 	}()
-	// 	n.view++
-	// 	n.changeLeader()
-	// 	return
-	// }
-	// We have committed this block
-	// Let the client know that we committed this block
+	}
 	n.addNewViewReputaiontoMap()
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
@@ -175,6 +149,7 @@ func (n *SyncHS) callback() {
 	_, exist := n.getCertForBlockIndex(n.view)
 	if !exist {
 		log.Debug("fail to generate certificate")
+		n.SyncChannel <- true
 		return
 	}
 	// blk, exist1 := n.getBlockFromCert(cert)
@@ -191,15 +166,8 @@ func (n *SyncHS) callback() {
 
 	// Tell all the clients, that I have committed this block
 	n.ClientBroadcast(synchsmsg)
-	// }
-
-	// log.Debug(n.view)
-	// if n.view < n.bc.Head && n.GetID() == n.leader {
 	n.view++
 	n.changeLeader()
-	// log.Debug(n.leader)
-	// log.Debug(n.view)
-	// }
 	n.SyncChannel <- true
 	log.Debug(len(n.SyncChannel))
 

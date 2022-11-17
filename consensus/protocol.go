@@ -47,8 +47,8 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.voteMap = make(map[uint64]map[uint64]uint64)
 	shs.proposalMap = make(map[uint64]map[uint64]uint64)
 	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.equiproposalMap = make(map[uint64]map[uint64]uint64)
+	shs.withproposalMap = make(map[uint64]map[uint64]uint64)
 	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
 	// shs.certBlockMap = make(map[*msg.BlockCertificate]chain.ExtBlock)
 
@@ -58,6 +58,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
+	shs.proposeChannel = make(chan *msg.Proposal, ProtocolMsgBuffer)
 	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
 	shs.SyncChannel = make(chan bool, 1)
 
@@ -133,7 +134,9 @@ func (shs *SyncHS) Setup(n *net.Network) error {
 
 // Start implements the Protocol Interface
 func (shs *SyncHS) Start() {
-	// First, start vote handler concurrently
+	//First, start propsoal in forward step handler
+	go shs.forwardProposalHandler()
+	// Second, start vote handler concurrently
 	go shs.voteHandler()
 	// Start E2C Protocol - Start message handler
 	shs.protocol()

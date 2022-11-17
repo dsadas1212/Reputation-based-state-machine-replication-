@@ -10,16 +10,20 @@ message Proposal {
 	// A proposal contains the following
 	// The block being proposed
 	chain.ProtoBlock Block = 1 ;
+	//The forward sender of this propsoal innitial value is nil
+	uint64 ForwardSender = 2;
+	//The signature of sender
+	bytes ForwardSig = 3;
 	// The miner of the block
-	uint64 Miner = 2 ;
+	uint64 Miner = 4;
 	// The signature for the block
-	bytes MiningProof = 3 ;
+	bytes MiningProof = 5;
 	// The view number
-	uint64 View = 4 ;
+	uint64 View = 6 ;
 	// Propose Evidence - Evidence why this node should propose this block
 	// Can be a plain signature for closed world systems
 	// Can be certificate for previous block as in Sync HotStuff/HotStuff
     // Can be a nonce in PoW systems
-    bytes ProposeEvidence = 5 ;
+    bytes ProposeEvidence = 7 ;
 }
 

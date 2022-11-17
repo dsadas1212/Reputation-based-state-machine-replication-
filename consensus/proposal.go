@@ -13,8 +13,8 @@ import (
 
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
+// swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
 func (n *SyncHS) startConsensusTimer() {
-
 	go func() {
 		n.timer.Start()
 		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
@@ -26,6 +26,52 @@ func (n *SyncHS) startConsensusTimer() {
 		}
 
 	}()
+
+}
+
+// withholding case
+func (n *SyncHS) startConsensusTimerWithWithhold() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	}()
+	go func() {
+		if n.leader == n.GetID() {
+			if n.GetID()%3 == 0 && n.GetID() != 0 {
+				n.Withholdingpropose()
+				n.withholdingProposalInject = true
+			}
+			n.withholdingProposalInject = false
+			n.Propose()
+		} else {
+			if n.leader%3 == 0 && n.leader != 0 {
+				n.withholdingProposalInject = true
+			}
+			n.withholdingProposalInject = false
+		}
+	}()
+}
+
+// equivocating case
+func (n *SyncHS) startConsensusTimerWithEquivocation() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	}()
+	go func() {
+		if n.leader == n.GetID() {
+			if n.GetID()%3 == 0 && n.GetID() != 0 {
+				n.Equivocationpropose()
+			}
+
+			n.Propose()
+		}
+	}()
+
+}
+
+// malicious prospoal case
+func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
 
 }
 
@@ -49,7 +95,7 @@ func (n *SyncHS) Propose() {
 	}
 	n.bc.Head++
 	newHeight := n.bc.Head
-	log.Info("node", n.GetID(), "is  propose block")
+	log.Info("node", n.GetID(), "is proposing block")
 	prop := n.NewCandidateProposal(cmds, cert, newHeight, nil)
 	block := &chain.ExtBlock{}
 	block.FromProto(prop.Block)
@@ -58,12 +104,10 @@ func (n *SyncHS) Propose() {
 	n.bc.BlocksByHash[block.GetBlockHash()] = block
 	//Add this Propsal to the Proposal-view map
 	n.proposalByviewMap[n.view] = prop
-	log.Trace("Finished  Proposing")
+	log.Trace("Finished prepare Proposing")
 	// Ship proposal to processing
 	relayMsg := &msg.SyncHSMsg{}
 	relayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
-	ep := &msg.ExtProposal{}
-	ep.FromProto(prop)
 	//prop.String()
 	log.Debug("Proposing block: 400cmd")
 	go func() {
@@ -72,19 +116,19 @@ func (n *SyncHS) Propose() {
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
 		// Leader should also vote
-		n.voteForBlock(ep)
-		log.Debug("VOTE TIMER1", time.Now())
+		//n.voteForBlock(ep)
+		// log.Debug("VOTE TIMER1", time.Now())
 		// // Start 3\delta timer
 		// // n.startBlockTimer(block)
 	}()
 
 }
 
-// Deal with the proposal
-func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
-
+// TODO{Deal with the proposal(add the forward step)}
+func (n *SyncHS) forward(prop *msg.Proposal) {
+	log.Debug("Receive leader's proposal, preparing forward")
 	ht := prop.Block.GetHeader().GetHeight()
-	log.Trace("Handling proposal ", ht)
+	log.Debug("Handling leader proposal ", ht)
 	ep := &msg.ExtProposal{}
 	ep.FromProto(prop)
 	if crypto.ToHash(ep.Block.BlockHash) != ep.GetBlockHash() {
@@ -102,7 +146,7 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 		log.Error("Invalid certificate received for block", ht)
 		return
 	}
-	//malicous proposal
+	////malicous proposal
 	// if prop.Miner != n.leader && n.maliciousProposalInject {
 	// 	log.Info("There is a malicious propsoal behaviour")
 	// 	n.addMaliProposaltoMap(prop)
@@ -112,72 +156,114 @@ func (n *SyncHS) proposeHandler(prop *msg.Proposal) {
 	// 	return
 
 	// }
-
-	var exists bool
-	var propOther *msg.Proposal
-	{
-		// First check for equivocation
-		// n.bc.Mu.RLock()
-		// blk, exists = n.bc.BlocksByHeight[ht]
-		// n.bc.Mu.RUnlock()
-		n.propMapLock.RLock()
-		propOther, exists = n.proposalByviewMap[n.view]
-		n.propMapLock.RUnlock()
+	////change propsoal forwardSender and forwardsig
+	prop.ForwardSender = n.GetID()
+	data1, _ := pb.Marshal(prop.GetBlock().GetHeader())
+	sig, err := n.GetMyKey().Sign(data1)
+	if err != nil {
+		log.Error("Error in signing a block during Forward preparing")
+		panic(err)
 	}
-	// if exists && ep.GetBlockHash() != blk.GetBlockHash() {
-	// 	// Equivocation
-	// 	log.Warn("Equivocation detected.", ep.GetBlockHash(), blk.GetBlockHash())
-	// 	// TODO trigger view change
-	// 	n.addEquiProposaltoMap(prop)
-	// 	//TODO send evidence
-	// }
-
-	if exists && ep.Proposal.Block.ComputeHash() != propOther.Block.ComputeHash() {
-		log.Warn("Equivocation detected.", ep.Proposal.Block.ComputeHash(),
-			propOther.Block.ComputeHash())
-		n.addEquiProposaltoMap()
-		n.sendEqProEvidence(prop, propOther)
-		return
-	}
-	if exists {
-		// Duplicate block received,
-		// we have already committed this block, IGNORE
-		return
-	}
-	n.bc.Head++
-	n.addProposaltoMap()
-	n.addNewBlock(&ep.ExtBlock)
-	log.Debug(n.GetID(), "NODE's bchead and blkbyheight", n.bc.Head, "and", ep.Block.Header.GetHeight())
-	n.addProposaltoViewMap(prop)
-	n.ensureBlockIsDelivered(&ep.ExtBlock)
-
-	// Vote for the proposal
+	prop.ForwardSig = sig
+	fRelayMsg := &msg.SyncHSMsg{}
+	fRelayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
 	go func() {
-		n.voteForBlock(ep)
-		log.Debug("VOTE TIME2", time.Now())
+		//forward this prospoal
+		n.Broadcast(fRelayMsg)
+		//hanlde myself forward prospoal
+		n.proposeChannel <- prop
+
 	}()
-	// Start 3\delta timer
-	// n.startBlockTimer(&ep.ExtBlock)
 
 }
 
-// attack injection!!
-// Leader propose two diferent proposal in this round
-// note that equivocationpropsoe and withholdingpropose lead nodes this round
-// commit empty block which means if equicocationpropose or withholding propose
-// exists propsose() should be convert
-// But the other two cases(malicious) are just the opposite
-func (n *SyncHS) equivocationpropose() {
+// TODO{}
+func (n *SyncHS) forwardProposalHandler() {
+	fpropMap := make(map[uint64]map[uint64]*msg.Proposal)
+	for {
+		//check if equivocation have been detected
+		if n.equivocatingProposalInject {
+			continue
+		}
+		//check if all forward proposal have been detected
+		if len(fpropMap[n.view]) >= len(n.pMap) {
+			continue
+		}
+		fprop, ok := <-n.proposeChannel
+		if !ok {
+			log.Error("Proposal channel error")
+			continue
+		}
+		log.Debug("NODE", n.GetID(), "Receive forwardSender", fprop.ForwardSender, "'s prospoal")
+		ht := fprop.Block.GetHeader().GetHeight()
+		log.Trace("Handling forwardSender proposal ", ht)
+		ep := &msg.ExtProposal{}
+		ep.FromProto(fprop)
+		if crypto.ToHash(ep.Block.BlockHash) != ep.GetBlockHash() {
+			log.Warn("Invalid block. Computed Hash and the Obtained hash does not match")
+			continue
+		}
+		data, _ := pb.Marshal(fprop.GetBlock().GetHeader())
+		correct, err := n.GetPubKeyFromID(n.leader).Verify(data, ep.GetMiningProof())
+		if !correct || err != nil {
+			log.Error("Incorrect leader signature for proposal ", ht)
+			continue
+		}
+		// Check block certificate for non-genesis blocks
+		if !n.IsCertValid(&ep.BlockCertificate) {
+			log.Error("Invalid certificate received for block", ht)
+			continue
+		}
+		// Check forward sender signature
+		correctSenderSig, errSig := n.GetPubKeyFromID(ep.ForwardSender).Verify(data, ep.GetForwardSig())
+		if !correctSenderSig || errSig != nil {
+			log.Error("Incorrect ForwardSender signature for proposal ", ht)
+			continue
+		}
+		//check equivocation prospoal
+		_, exists := n.proposalByviewMap[n.view]
+		if !exists {
+			n.proposalByviewMap[n.view] = fprop
 
-}
+		}
+		ep2 := &msg.ExtProposal{}
+		ep2.FromProto(n.proposalByviewMap[n.view])
+		n.equivocatingProposalInject = ep2.GetBlockHash() != ep.GetBlockHash()
+		//Faulty leader don't send his misbehavious
+		if n.equivocatingProposalInject && n.GetID() != n.leader {
+			log.Warn("Equivocation detected.", ep2.GetBlockHash(),
+				ep.GetBlockHash())
+			n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
+			continue
 
-// leader withholding his proposal
-func (n *SyncHS) withholdingpropose() {
+		}
+		_, exists = fpropMap[n.view]
+		if !exists {
+			fpropMap[n.view] = make(map[uint64]*msg.Proposal)
+		}
+		fpropMap[n.view][fprop.ForwardSender] = fprop
+		if len(fpropMap[n.view]) < len(n.pMap) {
+			log.Debug("NO enough forward prospoal have received")
+			continue
+		}
+		if n.GetID() != n.leader {
+			n.bc.Head++
+			n.addProposaltoMap()
+			n.addNewBlock(&ep.ExtBlock)
+			// log.Debug(n.GetID(), "NODE's bchead and blkbyheight", n.bc.Head, "and", ep.Block.Header.GetHeight())
+			n.addProposaltoViewMap(fprop)
+			n.ensureBlockIsDelivered(&ep.ExtBlock)
+			// Vote for the forward proposal
+			go func() {
+				//only to vote
+				n.voteForBlock(ep)
+			}()
+		} else {
+			//leader only need to vote
+			n.voteForBlock(ep)
+		}
 
-}
-
-// non-leader node propose propsoal
-func (n *SyncHS) maliciousproposalpropose() {
+	}
 
 }
 
@@ -193,6 +279,12 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 	var parentblk *chain.ExtBlock
 	// Ensure that all the parents are delivered first.
 	parentIdx := blk.GetHeight() - 1
+	//genesis block is always ture
+	if parentIdx == 0 {
+		log.Debug("All parents are delivered")
+		return
+
+	}
 	// Wait for parents to be delivered first
 	for tries := 30; tries > 0; tries-- {
 		<-time.After(time.Millisecond)
@@ -218,7 +310,7 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 		return
 	}
 	// All parents are delivered, lets break out!!
-	log.Trace("All parents are delivered")
+	log.Debug("All parents are delivered")
 }
 
 //TODO ，need chain.block  to start timer?
@@ -246,29 +338,27 @@ func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
 }
 func (n *SyncHS) addEquiProposaltoMap() {
 	n.equipropLock.Lock()
-	value, exists := n.equiproposalMap[n.GetID()][n.view][n.leader]
+	value, exists := n.equiproposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug("equivocation propsoal of this leader in this view has been recorded")
+		return
 	}
 	equiSenderMap := make(map[uint64]uint64)
 	equiSenderMap[n.leader] = 1
-	equiSMapcurrentView := make(map[uint64]map[uint64]uint64)
-	equiSMapcurrentView[n.view] = equiSenderMap
-	n.equiproposalMap[n.GetID()] = equiSMapcurrentView
+	n.equiproposalMap[n.view] = equiSenderMap
 	n.equipropLock.Unlock()
 }
 
 func (n *SyncHS) addWitholdProposaltoMap() {
 	n.withpropoLock.Lock()
-	value, exists := n.withproposalMap[n.GetID()][n.view][n.leader]
+	value, exists := n.withproposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug("withholding propsoal of this leader in this view has been recorded")
+		return
 	}
 	withSenderMap := make(map[uint64]uint64)
 	withSenderMap[n.leader] = 1
-	withSMapcurrentView := make(map[uint64]map[uint64]uint64)
-	withSMapcurrentView[n.view] = withSenderMap
-	n.withproposalMap[n.GetID()] = withSMapcurrentView
+	n.withproposalMap[n.view] = withSenderMap
 	n.withpropoLock.Unlock()
 }
 func (n *SyncHS) addProposaltoMap() {
@@ -276,9 +366,10 @@ func (n *SyncHS) addProposaltoMap() {
 	value, exists := n.proposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug(n.GetID(), " has been recorded the propsoal of this leader in this round")
+		return
 	}
 	//initial the value of this map
-	log.Debug(n.GetID(), "Generate a map for leader's proposal")
+	// log.Debug(n.GetID(), "Generate a map for leader's proposal")
 	senderMap := make(map[uint64]uint64)
 	senderMap[n.leader] = 1
 	n.proposalMap[n.view] = senderMap
@@ -335,6 +426,8 @@ func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 	pevidence, _ := pb.Marshal(cert.ToProto())
 	prop := &msg.Proposal{
 		Miner:           n.GetId(),
+		ForwardSender:   n.leader, //no forward happen, regard leader as defalut value as well as malicious prospoal
+		ForwardSig:      nil,
 		View:            view,
 		Block:           blk,
 		MiningProof:     sig,       // Signature from the leader in the current view

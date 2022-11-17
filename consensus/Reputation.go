@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	pEpsilonWith     = float64(1.5)
-	pEpsilonEqui     = float64(1.5)
-	pEpsilonMali     = float64(1)
-	vEpisilonMali    = float64(1)
-	gamma            = float64(0.01)
+	pEpsilonWith     = float64(10)
+	pEpsilonEqui     = float64(10)
+	pEpsilonMali     = float64(2)
+	vEpisilonMali    = float64(2)
+	gamma            = float64(0.0001)
 	initialNodescore = float64(1e-6)
 )
 
@@ -38,6 +38,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 		defer wg.Done()
 		n.proposalNumCalculate(nodeID)
 		n.voteNumCalculate(nodeID)
+		n.withholdproposalNumCalculate(nodeID)
 		// n.maliproposalNumCalculate(nodeID)
 		// n.equivocationproposalNumCalculate(nodeID)
 		// n.withholdproposalNumCalculate(nodeID)
@@ -47,10 +48,12 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 	wg.Wait()
 	// log.Info("calculate reputation for node", nodeID)
 	proposalsc := new(big.Float).SetUint64(proposalnum)
+	misProprosalSc := new(big.Float).SetUint64(withpropsoalnum*10 + equiprospoalnum*10)
+
 	// - (float64(maliproposalnum)*pEpsilonMali +
 	// float64(equiprospoalnum)*pEpsilonEqui +
 	// float64(withpropsoalnum)*pEpsilonWith)
-	proposalscore := n.maxValueCheckNum(proposalsc)
+	proposalscore := n.maxValueCheckNum(new(big.Float).Sub(proposalsc, misProprosalSc))
 	votesc := new(big.Float).SetUint64(votenum)
 	// - float64(malivotenum)*vEpisilonMali
 	votescore := n.maxValueCheckNum(votesc)
@@ -155,39 +158,30 @@ func (n *SyncHS) maliproposalNumCalculate(nodeID uint64) uint64 {
 func (n *SyncHS) withholdproposalNumCalculate(nodeID uint64) uint64 {
 	n.withpropoLock.RLock()
 	defer n.withpropoLock.RUnlock()
-	_, exists := n.withproposalMap[n.GetID()]
-	if exists {
-		for _, senderMap := range n.withproposalMap[n.GetID()] {
-			num, exists1 := senderMap[nodeID]
-			if exists1 && num == 1 {
-				withpropsoalnum++
-			}
+	withpropsoalnum = 0
+	for _, withSenderMap := range n.withproposalMap {
+		num, exists := withSenderMap[nodeID]
+		if exists && num == 1 {
+			withpropsoalnum++
 		}
-		return withpropsoalnum
-	} else {
-		return 0
+
 	}
+	return withpropsoalnum
 
 }
 
 func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
 	n.equipropLock.RLock()
 	defer n.equipropLock.RUnlock()
-	_, exists := n.equiproposalMap[n.GetID()]
-	if exists {
-		for _, senderMap := range n.equiproposalMap[n.GetID()] {
-
-			num, exists1 := senderMap[nodeID]
-			if exists1 && num == 1 {
-				equiprospoalnum++
-			}
-
+	equiprospoalnum = 0
+	for _, equiSenderMap := range n.equiproposalMap {
+		num, exists := equiSenderMap[nodeID]
+		if exists && num == 1 {
+			equiprospoalnum++
 		}
-		return equiprospoalnum
 
-	} else {
-		return 0
 	}
+	return equiprospoalnum
 
 }
 

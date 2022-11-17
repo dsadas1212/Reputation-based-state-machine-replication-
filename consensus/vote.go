@@ -177,6 +177,7 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 
 	}()
 }
+
 func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
 	n.voteMaliLock.Lock()
 	value, exists := n.voteMaliMap[n.GetID()][n.view][v.ProtoVoteBody.GetVoter()]
