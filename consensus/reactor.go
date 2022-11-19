@@ -41,7 +41,6 @@ func (n *SyncHS) protocol() {
 				}()
 
 			}
-
 		case *msg.SyncHSMsg_Eqevidence:
 			eqevidence := msgIn.GetEqevidence()
 			log.Debug("Receive a EQevidence from", eqevidence.Evidence.EvOrigin)

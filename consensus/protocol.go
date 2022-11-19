@@ -39,17 +39,13 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
 	shs.cliMap = make(map[*bufio.ReadWriter]bool)      //!!
-	// shs.pendingCommands = make(map[crypto.Hash]*chain.Command)
-	// shs.timerMaps = make(map[uint64]*util.Timer)
-	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
-	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
 	shs.reputationMap = make(map[uint64]map[uint64]*big.Float)
 	shs.voteMap = make(map[uint64]map[uint64]uint64)
 	shs.proposalMap = make(map[uint64]map[uint64]uint64)
-	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.maliproposalMap = make(map[uint64]map[uint64]uint64)
 	shs.equiproposalMap = make(map[uint64]map[uint64]uint64)
 	shs.withproposalMap = make(map[uint64]map[uint64]uint64)
-	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.voteMaliMap = make(map[uint64]map[uint64]uint64)
 	// shs.certBlockMap = make(map[*msg.BlockCertificate]chain.ExtBlock)
 
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)

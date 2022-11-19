@@ -62,6 +62,7 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	}
 	if totalRepInCert.Cmp(benchmark) == -1 || totalRepInCert.Cmp(benchmark) == 0 {
 		log.Error("invalid cert because lacking reputation")
+		return false
 	}
 	return true
 }

@@ -104,7 +104,7 @@ func (n *SyncHS) callback() {
 		n.addNewViewReputaiontoMap()
 		synchsmsg := &msg.SyncHSMsg{}
 		ack := &msg.SyncHSMsg_Ack{}
-		log.Info("Committing an withholdemptyblock-", n.view)
+		log.Info("Committing an emptyblock in withholding case-", n.view)
 		log.Info("The block commit time is", time.Now())
 
 		// Let the client know that we committed this block
@@ -125,7 +125,7 @@ func (n *SyncHS) callback() {
 		n.addNewViewReputaiontoMap()
 		synchsmsg := &msg.SyncHSMsg{}
 		ack := &msg.SyncHSMsg_Ack{}
-		log.Info("Committing an equivocationEmptyblock-", n.view)
+		log.Info("Committing an emptyblock in equivocation case-", n.view)
 		log.Info("The block commit time is", time.Now())
 		// Let the client know that we committed this block
 		ack.Ack = &msg.CommitAck{
@@ -188,6 +188,6 @@ func (n *SyncHS) initialReputationMap() {
 		}
 	}
 
-	log.Debug("finish repmap setting and  Node", n.GetID(), "'S repmap is", n.reputationMap[n.view])
+	log.Debug("finish repmap setting and  Node", n.GetID(), "'s repmap is", n.reputationMap[n.view])
 
 }

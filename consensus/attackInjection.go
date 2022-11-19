@@ -3,6 +3,7 @@ package consensus
 import (
 	"github.com/adithyabhatkajake/libchatter/log"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
+	pb "github.com/golang/protobuf/proto"
 )
 
 // attack injection!!
@@ -72,6 +73,48 @@ func (n *SyncHS) Maliciousproposalpropose() {
 }
 
 // node vote for an non-leader block
-func (n *SyncHS) voteForNonLeaderBlk() {}
+func (n *SyncHS) voteForNonLeaderBlk() {
+	// create a invalid block hash
+	log.Info("NODE", n.GetID(), "is voting for a nonexistent block")
+	pvd := &msg.ProtoVoteData{
+		BlockHash: []byte{'I', 'n', 'v', 'a', 'l', 'i', 'd'},
+		View:      n.view,
+		Owner:     n.GetID(),
+	}
+	data, err := pb.Marshal(pvd)
+	if err != nil {
+		log.Error("Error marshing vote data during voting")
+		log.Error(err)
+		return
+	}
+	sig, err := n.GetMyKey().Sign(data)
+	if err != nil {
+		log.Error("Error signing vote")
+		log.Error(err)
+		return
+	}
+	pvb := &msg.ProtoVoteBody{
+		Voter:     n.GetID(),
+		Signature: sig,
+	}
+	pv := &msg.ProtoVote{
+		Body: pvb,
+		Data: pvd,
+	}
+	voteMsg := &msg.SyncHSMsg{}
+	voteMsg.Msg = &msg.SyncHSMsg_Vote{Vote: pv}
+	v := &msg.Vote{}
+	v.FromProto(pv)
+	n.addVotetoMap(pv)
+	go func() {
+		//the voter change his voteMap by himself
+		// Send vote to all the nodes
+		n.Broadcast(voteMsg)
+		// Handle my own vote
+		n.voteChannel <- v
+
+	}()
+
+}
 
 //

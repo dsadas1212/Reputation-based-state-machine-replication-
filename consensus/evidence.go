@@ -104,39 +104,6 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 				ms.GetEqevidence().String())
 			return
 		}
-
-		//we should delete all vote and proposal ocur in this view
-		// shs.propMapLock.RLock()
-
-		// p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
-		// if exists && p == 1 {
-		// 	p--
-		// } else {
-		// 	log.Info("node", shs.GetID(), "did not change proposalMap in current view")
-		// }
-		// shs.propMapLock.RUnlock()
-		// shs.voteMapLock.RLock()
-		// votemap, exists := shs.voteMap[shs.GetID()][shs.view]
-		// if exists {
-		// 	for _, vnum := range votemap {
-		// 		if vnum == 1 {
-		// 			vnum--
-		// 		}
-		// 	}
-		// } else {
-		// 	log.Debug(shs.GetID(), "did not init votemap")
-		// }
-		// for voter, v := range shs.voteMap[shs.GetID()][shs.view] {
-		// 	if v == 1 {
-		// 		v--
-		// 	} else {
-		// 		log.Info("node", shs.GetID(), "did not receive ", voter, "'s vote in current view")
-		// 	}
-		// }
-		// shs.voteMapLock.RUnlock()
-		//how to commit a empty block with certificate
-		//and we should change all map need this empty block
-		//round = view = height = head
 		shs.bc.Mu.Lock()
 		defer shs.bc.Mu.Unlock()
 		head := shs.bc.Head
@@ -148,7 +115,7 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 
 		value, exists1 := shs.equiproposalMap[shs.view][shs.leader]
 		if exists1 && value == 1 {
-			log.Debug("the equivocation behaviour of leader in round", shs.view, "have been recorded!")
+			log.Debug("the equivocation evidence of leader in round", shs.view, "have been recorded!")
 			return
 		}
 		shs.bc.Head++
@@ -182,6 +149,19 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 				ms.GetMpevidence().String())
 			return
 		}
+		shs.malipropLock.RLock()
+		maliSenderMap, exists := shs.maliproposalMap[shs.view]
+		if exists {
+			for i := range maliSenderMap {
+				if i == ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget {
+					log.Debugln("the malicious prospoal evidence of node",
+						ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						"in round", shs.view, "have been recorded!")
+					return
+				}
+			}
+		}
+		shs.malipropLock.RUnlock()
 		shs.addMaliProposaltoMap(ms.GetProp())
 		//continue best-case !
 
@@ -197,9 +177,20 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 			return
 		}
 		//continue best-case ! //TODO add malicious vote to map!
-		msvote := &msg.Vote{}
-		msvote.FromProto(ms.GetVote())
-		shs.addMaliVotetoMap(msvote)
+		shs.voteMaliLock.RLock()
+		maliVoterMap, exists := shs.voteMaliMap[shs.view]
+		if exists {
+			for i := range maliVoterMap {
+				if i == ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget {
+					log.Debugln("the malicious vote evidence of node",
+						ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						"in round", shs.view, "have been recorded!")
+					return
+				}
+			}
+		}
+		shs.voteMaliLock.RUnlock()
+		shs.addMaliVotetoMap(ms.GetVote())
 
 	case nil:
 		log.Warn("Unspecified msg type ", x)
@@ -209,11 +200,6 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 	}
 
 }
-
-// handleEquivocationProposal
-// func (shs *SyncHS) handleEquivocationPropsoal() {
-
-// }
 
 // how to handle WithholdingProposal,the evidence of it need not boradcast.
 func (shs *SyncHS) handleWithholdingProposal() {
@@ -248,7 +234,7 @@ func (shs *SyncHS) handleWithholdingProposal() {
 
 func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
 	log.Traceln("Function isEqpEvidenceValid with input", eq.String())
-	// Check if the evidence is for the current leader
+	// Check if the evidence against for the current leader
 	if eq.Evidence.EvidenceData.MisbehaviourTarget != shs.leader {
 		log.Debug("Invalid eqpMisbehaviour Target. Found", eq.Evidence.EvidenceData.MisbehaviourTarget,
 			",Expected:", shs.leader)

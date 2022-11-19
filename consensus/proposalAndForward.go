@@ -72,8 +72,24 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 
 // malicious prospoal case
 func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
+	}()
+	go func() {
+		if n.leader == n.GetID() {
+			n.Propose()
+		} else {
+			if n.GetID() == 0 {
+				n.Maliciousproposalpropose()
+			}
+		}
+
+	}()
 
 }
+
+// malicious vote case need to change the step in forwardhandler
 
 func (n *SyncHS) Propose() {
 
@@ -126,7 +142,7 @@ func (n *SyncHS) Propose() {
 
 // TODO{Deal with the proposal(add the forward step)}
 func (n *SyncHS) forward(prop *msg.Proposal) {
-	log.Debug("Receive leader's proposal, preparing forward")
+	log.Debug("Node", n.GetID(), "Receive leader's proposal, preparing forward")
 	ht := prop.Block.GetHeader().GetHeight()
 	log.Debug("Handling leader proposal ", ht)
 	ep := &msg.ExtProposal{}
@@ -146,16 +162,14 @@ func (n *SyncHS) forward(prop *msg.Proposal) {
 		log.Error("Invalid certificate received for block", ht)
 		return
 	}
-	////malicous proposal
-	// if prop.Miner != n.leader && n.maliciousProposalInject {
-	// 	log.Info("There is a malicious propsoal behaviour")
-	// 	n.addMaliProposaltoMap(prop)
-	// 	n.sendMaliProEvidence(prop)
-	// 	//TODO send evidence!
-	// 	//We should let current head be the block have certificate although//miabehaviour ocur(empty block)
-	// 	return
+	//malicous proposal
+	n.maliciousProposalInject = prop.Miner != n.leader
+	if n.maliciousProposalInject {
+		log.Info("There is a malicious propsoal behaviour")
+		go n.sendMaliProEvidence(prop)
+		return
 
-	// }
+	}
 	////change propsoal forwardSender and forwardsig
 	prop.ForwardSender = n.GetID()
 	data1, _ := pb.Marshal(prop.GetBlock().GetHeader())
@@ -233,7 +247,7 @@ func (n *SyncHS) forwardProposalHandler() {
 		if n.equivocatingProposalInject && n.GetID() != n.leader {
 			log.Warn("Equivocation detected.", ep2.GetBlockHash(),
 				ep.GetBlockHash())
-			n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
+			go n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
 			continue
 
 		}
@@ -246,16 +260,16 @@ func (n *SyncHS) forwardProposalHandler() {
 			log.Debug("NO enough forward prospoal have received")
 			continue
 		}
+		//!!!!!!!!!!!
+		//set node2 votes for nonexists block
 		if n.GetID() != n.leader {
 			n.bc.Head++
 			n.addProposaltoMap()
 			n.addNewBlock(&ep.ExtBlock)
-			// log.Debug(n.GetID(), "NODE's bchead and blkbyheight", n.bc.Head, "and", ep.Block.Header.GetHeight())
 			n.addProposaltoViewMap(fprop)
 			n.ensureBlockIsDelivered(&ep.ExtBlock)
 			// Vote for the forward proposal
 			go func() {
-				//only to vote
 				n.voteForBlock(ep)
 			}()
 		} else {
@@ -323,17 +337,15 @@ func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 	n.bc.Mu.Unlock()
 }
 
+// Note that, there may be many many nodes to do this in same roound, so this case is same with votecase
 func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
 	n.malipropLock.Lock()
-	value, exists := n.maliproposalMap[n.GetID()][n.view][prop.GetMiner()]
-	if exists && value == 1 {
-		log.Debug("Malicious proposal of this miner in this view has been recorded")
+	if _, exists := n.maliproposalMap[n.view]; exists {
+		n.maliproposalMap[n.view][prop.Miner] = 1
+	} else {
+		n.maliproposalMap[n.view] = make(map[uint64]uint64)
+		n.maliproposalMap[n.view][prop.Miner] = 1
 	}
-	maliSenderMap := make(map[uint64]uint64)
-	maliSenderMap[prop.GetMiner()] = 1
-	maliSMapcurrentView := make(map[uint64]map[uint64]uint64)
-	maliSMapcurrentView[n.view] = maliSenderMap
-	n.maliproposalMap[n.GetID()] = maliSMapcurrentView
 	n.malipropLock.Unlock()
 }
 func (n *SyncHS) addEquiProposaltoMap() {
@@ -368,8 +380,6 @@ func (n *SyncHS) addProposaltoMap() {
 		log.Debug(n.GetID(), " has been recorded the propsoal of this leader in this round")
 		return
 	}
-	//initial the value of this map
-	// log.Debug(n.GetID(), "Generate a map for leader's proposal")
 	senderMap := make(map[uint64]uint64)
 	senderMap[n.leader] = 1
 	n.proposalMap[n.view] = senderMap
@@ -382,14 +392,7 @@ func (n *SyncHS) addProposaltoViewMap(prop *msg.Proposal) {
 	n.proposalByviewLock.Unlock()
 }
 
-// func (n *SyncHS) addNewTimer(pos uint64, timer *util.Timer) {
-// 	n.timerLock.Lock()
-// 	n.timerMaps[pos] = timer
-// 	n.timerLock.Unlock()
-// }
-
 // NewCandidateProposal returns a proposal message built using commands
-// change it to Candidateblock -> Candidate propsoal
 func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 	cert *msg.BlockCertificate, newHeight uint64, extra []byte) *msg.Proposal {
 	bhash, view := cert.GetBlockInfo()

@@ -40,7 +40,7 @@ type SyncHS struct {
 	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
 	voteMap map[uint64]map[uint64]uint64
 	// malicous vote map
-	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
+	voteMaliMap map[uint64]map[uint64]uint64
 	// correct proposal map
 	proposalMap map[uint64]map[uint64]uint64
 	//equivocate proposal map
@@ -48,7 +48,7 @@ type SyncHS struct {
 	//withholding proposal map
 	withproposalMap map[uint64]map[uint64]uint64
 	//malicious proposal map
-	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
+	maliproposalMap map[uint64]map[uint64]uint64
 	//Reputation map
 	reputationMap map[uint64]map[uint64]*big.Float
 	//ProosalByheightMap

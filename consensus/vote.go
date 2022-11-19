@@ -25,33 +25,14 @@ func (n *SyncHS) voteHandler() {
 			log.Error("Vote channel error")
 			continue
 		}
-		// if v.Owner != n.leader && n.maliciousVoteInject {
-		// 	log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
-		// 	go func() {
-		// 		n.addMaliVotetoMap(v)
-		// 		n.sendMalivoteEvidence(v)
-
-		// 	}()
-		// 	continue
-		// }
+		n.maliciousVoteInject = v.Owner != n.leader
+		if n.maliciousProposalInject {
+			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
+			go n.sendMalivoteEvidence(v)
+			continue
+		}
 		bhash := crypto.ToHash(v.GetBlockHash())
 		blk := n.getBlock(bhash)
-
-		// if blk == nil {
-		// 	// log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
-		// 	// pendingVotes[bhash] = append(pendingVotes[bhash], v)
-		// 	// TODO, what to do in this case? malicious vote!
-		// 	// go func() {
-		// 	// 	n.addMaliVotetoMap(v)
-		// 	// 	n.sendMalivoteEvidence(v)
-
-		// 	// }()
-
-		// 	continue
-		// }
-
-		//Check if this the first vote for this block height!!
-
 		height := n.view
 		view := v.GetView()
 		_, exists := voteMap[height]
@@ -178,28 +159,14 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 	}()
 }
 
-func (n *SyncHS) addMaliVotetoMap(v *msg.Vote) {
+func (n *SyncHS) addMaliVotetoMap(v *msg.ProtoVote) {
 	n.voteMaliLock.Lock()
-	value, exists := n.voteMaliMap[n.GetID()][n.view][v.ProtoVoteBody.GetVoter()]
-	if exists && value == 1 {
-		log.Debug("Malicious vote of this voter in this view has been recorded")
+	if _, exists := n.voteMaliMap[n.view]; exists {
+		n.voteMaliMap[n.view][v.GetBody().Voter] = 1
+	} else {
+		n.voteMaliMap[n.view] = make(map[uint64]uint64)
+		n.voteMaliMap[n.view][v.GetBody().Voter] = 1
 	}
-	malivoterMap := make(map[uint64]uint64)
-	malivoterMap[v.ProtoVoteBody.GetVoter()] = 1
-	malivMapcurrentView := make(map[uint64]map[uint64]uint64)
-	malivMapcurrentView[n.view] = malivoterMap
-	n.voteMaliMap[n.GetID()] = malivMapcurrentView
-
-	// n.voteMaliMap[n.GetID()] = make(map[uint64]map[uint64]uint64)
-	// n.voteMaliMap[n.GetID()][n.view] = make(map[uint64]uint64)
-	// n.voteMaliMap[n.GetID()][n.view] = map[uint64]uint64{
-	// 	v.Body.GetVoter(): 1,
-	// }
-	// if vomali == 0 {
-	// 	vomali++
-	// } else {
-	// 	log.Debug("Malicious vote of this voter in this view has been recorded")
-	// }
 	n.voteMaliLock.Unlock()
 }
 
@@ -212,7 +179,7 @@ func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 		n.voteMap[n.view] = make(map[uint64]uint64)
 		n.voteMap[n.view][v.GetBody().Voter] = 1
 	}
-
+	// log.Debug("Node", n.GetID(), "'S votemap is", n.voteMap)
 	// log.Debug("vote", n.voteMap)
 	n.voteMapLock.Unlock()
 }
