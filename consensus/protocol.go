@@ -36,36 +36,16 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.view = 1 // View Number starts from 1 (convert view to round)
 	shs.pendingCommands = make([][]byte, 1000)
 	shs.timer = util.Timer{}
-	// shs.timer1 = util.Timer{}
-	// shs.timer2 = util.Timer{}
-	// shs.timer3 = util.Timer{}
-	// shs.timer4 = util.Timer{}
-	// shs.timer5 = util.Timer{}
-	// shs.timer6 = util.Timer{}
-	// shs.timer7 = util.Timer{}
-	// shs.timer8 = util.Timer{}
-	// shs.timer9 = util.Timer{}
-	// shs.timer10 = util.Timer{}
-	// shs.timer11 = util.Timer{}
-	// shs.timer12 = util.Timer{}
-	// shs.timer13 = util.Timer{}
-	// shs.timer14 = util.Timer{}
-	// shs.timer15 = util.Timer{}
-
 	// Setup maps
 	shs.streamMap = make(map[uint64]*bufio.ReadWriter) //!!
 	shs.cliMap = make(map[*bufio.ReadWriter]bool)      //!!
-	// shs.pendingCommands = make(map[crypto.Hash]*chain.Command)
-	// shs.timerMaps = make(map[uint64]*util.Timer)
-	// shs.blameMap = make(map[uint64]map[uint64]*msg.Blame)
-	// shs.certMap = make(map[uint64]*msg.BlockCertificate) // if we should add votemap and proposal map and how to
 	shs.reputationMap = make(map[uint64]map[uint64]*big.Float)
 	shs.voteMap = make(map[uint64]map[uint64]uint64)
 	shs.proposalMap = make(map[uint64]map[uint64]uint64)
-	shs.maliproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.equiproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.withproposalMap = make(map[uint64]map[uint64]map[uint64]uint64)
-	shs.voteMaliMap = make(map[uint64]map[uint64]map[uint64]uint64)
+	shs.maliproposalMap = make(map[uint64]map[uint64]uint64)
+	shs.equiproposalMap = make(map[uint64]map[uint64]uint64)
+	shs.withproposalMap = make(map[uint64]map[uint64]uint64)
+	shs.voteMaliMap = make(map[uint64]map[uint64]uint64)
 	// shs.certBlockMap = make(map[*msg.BlockCertificate]chain.ExtBlock)
 
 	shs.proposalByviewMap = make(map[uint64]*msg.Proposal)
@@ -74,6 +54,7 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.msgChannel = make(chan *msg.SyncHSMsg, ProtocolMsgBuffer)
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
+	shs.proposeChannel = make(chan *msg.Proposal, ProtocolMsgBuffer)
 	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
 	shs.SyncChannel = make(chan bool, 1)
 
@@ -149,7 +130,9 @@ func (shs *SyncHS) Setup(n *net.Network) error {
 
 // Start implements the Protocol Interface
 func (shs *SyncHS) Start() {
-	// First, start vote handler concurrently
+	//First, start propsoal in forward step handler
+	go shs.forwardProposalHandler()
+	// Second, start vote handler concurrently
 	go shs.voteHandler()
 	// Start E2C Protocol - Start message handler
 	shs.protocol()

@@ -25,8 +25,16 @@ func NewCert(certMap map[uint64]*msg.Vote, blockhash crypto.Hash, view uint64) *
 // IsCertValid checks if the certificate is valid for the data
 func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	log.Debug("Received a block certificate -")
+	h, _ := bc.GetBlockInfo()
 	// Certificate for genesis is always correct
-	if h, _ := bc.GetBlockInfo(); h == chain.EmptyHash {
+	if h == chain.EmptyHash {
+		return true
+	}
+	exEmptyBlk := n.bc.BlocksByHash[h]
+	cmds := exEmptyBlk.ExtBody.GetTxs()
+
+	//Certificate for emptycmdblock is always correct
+	if len(cmds) == 0 {
 		return true
 	}
 	// if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {
@@ -35,7 +43,6 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	// }
 	benchmark := n.GetCertBenchMark(n.view - 1)
 	totalRepInCert := new(big.Float).SetFloat64(0)
-	log.Debug("SIG", bc.GetSigners())
 	for _, id := range bc.GetSigners() {
 		sig := bc.GetSignatureFromID(id)
 		if sig == nil {
@@ -55,6 +62,7 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	}
 	if totalRepInCert.Cmp(benchmark) == -1 || totalRepInCert.Cmp(benchmark) == 0 {
 		log.Error("invalid cert because lacking reputation")
+		return false
 	}
 	return true
 }

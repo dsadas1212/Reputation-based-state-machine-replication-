@@ -40,15 +40,15 @@ type SyncHS struct {
 	// correct vote map (recorder:origin:the number/value of vote/proposal/reputation)
 	voteMap map[uint64]map[uint64]uint64
 	// malicous vote map
-	voteMaliMap map[uint64]map[uint64]map[uint64]uint64
+	voteMaliMap map[uint64]map[uint64]uint64
 	// correct proposal map
 	proposalMap map[uint64]map[uint64]uint64
 	//equivocate proposal map
-	equiproposalMap map[uint64]map[uint64]map[uint64]uint64
+	equiproposalMap map[uint64]map[uint64]uint64
 	//withholding proposal map
-	withproposalMap map[uint64]map[uint64]map[uint64]uint64
+	withproposalMap map[uint64]map[uint64]uint64
 	//malicious proposal map
-	maliproposalMap map[uint64]map[uint64]map[uint64]uint64
+	maliproposalMap map[uint64]map[uint64]uint64
 	//Reputation map
 	reputationMap map[uint64]map[uint64]*big.Float
 	//ProosalByheightMap
@@ -72,11 +72,11 @@ type SyncHS struct {
 	certBlockLock      sync.RWMutex
 
 	// Channels
-	msgChannel  chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel  chan []byte         // All commands are re-directed here
-	voteChannel chan *msg.Vote      // All votes are sent here
-	SyncChannel chan bool           //make a channel to store the signal of timerfinish
-	// proposeChannel chan *msg.Proposal  // All proposals are sent here
+	msgChannel     chan *msg.SyncHSMsg // All messages come here first
+	cmdChannel     chan []byte         // All commands are re-directed here
+	voteChannel    chan *msg.Vote      // All votes are sent here
+	SyncChannel    chan bool           //make a channel to store the signal of timerfinish
+	proposeChannel chan *msg.Proposal  // All proposals are sent here
 	// errCh          chan error          // All errors are sent here
 
 	// Block chain

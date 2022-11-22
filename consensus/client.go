@@ -85,162 +85,62 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 		cliBuf.Write(data)
 		cliBuf.Flush()
 	}
-	log.Debug("Finish client broadcast for", m)
+	log.Trace("Finish client broadcast for", m)
 }
 
 func (n *SyncHS) setConsensusTimer() {
 	n.timer.SetCallAndCancel(n.callback)
 	n.timer.SetTime(20 * time.Second)
 
-	// n.timer1.SetCallAndCancel(n.callback)
-	// n.timer1.SetTime(20 * time.Second)
-
-	// n.timer2.SetTime(20 * time.Second)
-	// n.timer2.SetCallAndCancel(n.callback)
-
-	// n.timer3.SetTime(20 * time.Second)
-	// n.timer3.SetCallAndCancel(n.callback)
-
-	// n.timer4.SetTime(20 * time.Second)
-	// n.timer4.SetCallAndCancel(n.callback)
-
-	// n.timer5.SetTime(20 * time.Second)
-	// n.timer5.SetCallAndCancel(n.callback)
-
-	// n.timer6.SetTime(20 * time.Second)
-	// n.timer6.SetCallAndCancel(n.callback)
-
-	// n.timer7.SetTime(20 * time.Second)
-	// n.timer7.SetCallAndCancel(n.callback)
-
-	// n.timer8.SetTime(20 * time.Second)
-	// n.timer8.SetCallAndCancel(n.callback)
-
-	// n.timer9.SetTime(20 * time.Second)
-	// n.timer9.SetCallAndCancel(n.callback)
-
-	// n.timer10.SetTime(20 * time.Second)
-	// n.timer10.SetCallAndCancel(n.callback)
-
-	// n.timer11.SetTime(20 * time.Second)
-	// n.timer11.SetCallAndCancel(n.callback)
-
-	// n.timer12.SetTime(20 * time.Second)
-	// n.timer12.SetCallAndCancel(n.callback)
-
-	// n.timer13.SetTime(20 * time.Second)
-	// n.timer13.SetCallAndCancel(n.callback)
-
-	// n.timer14.SetTime(20 * time.Second)
-	// n.timer14.SetCallAndCancel(n.callback)
-
-	// n.timer15.SetTime(20 * time.Second)
-	// n.timer15.SetCallAndCancel(n.callback)
-
 }
 
 func (n *SyncHS) callback() {
 
 	log.Debug(n.GetID(), "callbackFuncation have been prepared!", time.Now())
-	// _, exists := n.equiproposalMap[n.GetID()][n.view][n.leader]
-	// if n.withholdingProposalInject {
+	if n.withholdingProposalInject {
+		log.Info("In round", n.view, "withholding block have been detected")
+		//Handle withholding behaviour
+		n.handleWithholdingProposal()
+		n.addNewViewReputaiontoMap()
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		log.Info("Committing an emptyblock in withholding case-", n.view)
+		log.Info("The block commit time is", time.Now())
 
-	// 	log.Info("withholding block detected")
-	// 	//Handle withholding behaviour
-	// 	n.handleWithholdingProposal()
+		// Let the client know that we committed this block
+		ack.Ack = &msg.CommitAck{
+			Block: n.proposalByviewMap[n.view].Block,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		n.view++
+		n.changeLeader()
+		n.SyncChannel <- true
+		log.Debug(len(n.SyncChannel))
+		return
+	}
+	if n.equivocatingProposalInject {
+		log.Info("In round", n.view, "equivocating block have been detected")
+		n.addNewViewReputaiontoMap()
+		synchsmsg := &msg.SyncHSMsg{}
+		ack := &msg.SyncHSMsg_Ack{}
+		log.Info("Committing an emptyblock in equivocation case-", n.view)
+		log.Info("The block commit time is", time.Now())
+		// Let the client know that we committed this block
+		ack.Ack = &msg.CommitAck{
+			Block: n.proposalByviewMap[n.view].Block,
+		}
+		synchsmsg.Msg = ack
+		// Tell all the clients, that I have committed this block
+		n.ClientBroadcast(synchsmsg)
+		n.view++
+		n.changeLeader()
+		n.SyncChannel <- true
+		log.Debug(len(n.SyncChannel))
+		return
 
-	// 	//calculate myself reputation
-	// 	// n.ReputationCalculateinCurrentRound(n.GetID())
-	// 	// if n.leader == n.GetID() {
-	// 	// 	n.propose()
-	// 	// }
-	// 	// We have committed this empty block
-	// 	go func() {
-	// 		log.Info("Committing an withholdemptyblock-", n.view)
-	// 		log.Info("The block commit time is", time.Now())
-
-	// 		// Let the client know that we committed this block
-	// 		emptyBlockforwh := &chain.ProtoBlock{
-	// 			Header: &chain.ProtoHeader{
-	// 				Height: n.view,
-	// 			},
-	// 			BlockHash: chain.EmptyHash.GetBytes(),
-	// 		}
-	// 		synchsmsg := &msg.SyncHSMsg{}
-	// 		ack := &msg.SyncHSMsg_Ack{}
-	// 		ack.Ack = &msg.CommitAck{
-	// 			Block: emptyBlockforwh,
-	// 		}
-	// 		synchsmsg.Msg = ack
-	// 		// Tell all the clients, that I have committed this block
-	// 		n.ClientBroadcast(synchsmsg)
-
-	// 	}()
-	// 	n.view++
-	// 	n.changeLeader()
-	// 	return
-	// }
-	// if n.equivocatingProposalInject {
-	// 	log.Info("Equivocation block detected")
-	// 	// if n.leader == n.GetID() {
-	// 	// 	n.propose()
-	// 	// }
-	// 	log.Info("Committing equivocationblock-", n.view)
-	// 	log.Info("The block commit time is", time.Now())
-
-	// 	// We have committed this block
-	// 	// Let the client know that we committed this block
-	// 	go func() {
-	// 		emptyBlockforeq := &chain.ProtoBlock{
-	// 			Header: &chain.ProtoHeader{
-	// 				Height: n.view,
-	// 			},
-	// 			BlockHash: chain.EmptyHash.GetBytes(),
-	// 		}
-	// 		synchsmsg := &msg.SyncHSMsg{}
-	// 		ack := &msg.SyncHSMsg_Ack{}
-	// 		ack.Ack = &msg.CommitAck{
-	// 			Block: emptyBlockforeq,
-	// 		}
-	// 		synchsmsg.Msg = ack
-	// 		// Tell all the clients, that I have committed this block
-	// 		n.ClientBroadcast(synchsmsg)
-	// 	}()
-	// 	n.view++
-	// 	n.changeLeader()
-	// 	return
-	// }
-	// We have committed this block
-	// Let the client know that we committed this block
-	// wg := &sync.WaitGroup{}
-	// wg.Add(1)
-	// go func() {
-	// 	defer wg.Done()
-
-	// 	n.ReputationCalculateinCurrentRound(0)
-	// 	n.ReputationCalculateinCurrentRound(1)
-	// 	n.ReputationCalculateinCurrentRound(2)
-	// 	n.ReputationCalculateinCurrentRound(3)
-	// 	// n.ReputationCalculateinCurrentRound(4)
-	// 	// n.ReputationCalculateinCurrentRound(5)
-	// 	// n.ReputationCalculateinCurrentRound(6)
-	// 	// n.ReputationCalculateinCurrentRound(7)
-	// 	// n.ReputationCalculateinCurrentRound(8)
-	// 	// n.ReputationCalculateinCurrentRound(9)
-	// 	// n.ReputationCalculateinCurrentRound(10)
-	// 	// n.ReputationCalculateinCurrentRound(11)
-	// 	// n.ReputationCalculateinCurrentRound(12)
-	// 	// n.ReputationCalculateinCurrentRound(13)
-	// 	// n.ReputationCalculateinCurrentRound(14)
-	// 	// n.ReputationCalculateinCurrentRound(15)
-
-	// }()
-	// wg.Wait()
-	// go n.ReputationCalculateinCurrentRound(0)
-	// go n.ReputationCalculateinCurrentRound(1)
-	// go n.ReputationCalculateinCurrentRound(2)
-	// go n.ReputationCalculateinCurrentRound(3)
-	// log.Debug("NODE", n.GetID(), n.voteMap[n.view])
+	}
 	n.addNewViewReputaiontoMap()
 	synchsmsg := &msg.SyncHSMsg{}
 	ack := &msg.SyncHSMsg_Ack{}
@@ -249,6 +149,7 @@ func (n *SyncHS) callback() {
 	_, exist := n.getCertForBlockIndex(n.view)
 	if !exist {
 		log.Debug("fail to generate certificate")
+		n.SyncChannel <- true
 		return
 	}
 	// blk, exist1 := n.getBlockFromCert(cert)
@@ -265,16 +166,8 @@ func (n *SyncHS) callback() {
 
 	// Tell all the clients, that I have committed this block
 	n.ClientBroadcast(synchsmsg)
-	// }
-
-	// log.Debug(n.view)
-	// if n.view < n.bc.Head && n.GetID() == n.leader {
 	n.view++
 	n.changeLeader()
-	// log.Debug(n.leader)
-	// log.Debug(n.view)
-	// }
-	log.Debug(n.view)
 	n.SyncChannel <- true
 	log.Debug(len(n.SyncChannel))
 
@@ -295,6 +188,6 @@ func (n *SyncHS) initialReputationMap() {
 		}
 	}
 
-	log.Debug("finish repmap setting and  Node", n.GetID(), "'S repmap is", n.reputationMap[n.view])
+	log.Debug("finish repmap setting and  Node", n.GetID(), "'s repmap is", n.reputationMap[n.view])
 
 }

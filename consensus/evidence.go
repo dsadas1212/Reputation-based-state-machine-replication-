@@ -104,65 +104,39 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 				ms.GetEqevidence().String())
 			return
 		}
-		//change corresponding map
-		shs.addEquiProposaltoMap()
-
-		//we should delete all vote and proposal ocur in this view
-		// shs.propMapLock.RLock()
-
-		// p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
-		// if exists && p == 1 {
-		// 	p--
-		// } else {
-		// 	log.Info("node", shs.GetID(), "did not change proposalMap in current view")
-		// }
-		// shs.propMapLock.RUnlock()
-		// shs.voteMapLock.RLock()
-		// votemap, exists := shs.voteMap[shs.GetID()][shs.view]
-		// if exists {
-		// 	for _, vnum := range votemap {
-		// 		if vnum == 1 {
-		// 			vnum--
-		// 		}
-		// 	}
-		// } else {
-		// 	log.Debug(shs.GetID(), "did not init votemap")
-		// }
-		// for voter, v := range shs.voteMap[shs.GetID()][shs.view] {
-		// 	if v == 1 {
-		// 		v--
-		// 	} else {
-		// 		log.Info("node", shs.GetID(), "did not receive ", voter, "'s vote in current view")
-		// 	}
-		// }
-		shs.voteMapLock.RUnlock()
-		//how to commit a empty block with certificate
-		//and we should change all map need this empty block
-		//round = view = height = head
-
-		emptyBlockforeq := &chain.ProtoBlock{
-			Header: &chain.ProtoHeader{
-				Height: shs.view,
-			},
-			BlockHash: chain.EmptyHash.GetBytes(),
+		shs.bc.Mu.Lock()
+		defer shs.bc.Mu.Unlock()
+		head := shs.bc.Head
+		cert, exists := shs.getCertForBlockIndex(head)
+		if !exists {
+			log.Debug("The head does not have a certificate, abort handle equivocation evidecne")
+			return
 		}
-		precert, exists := shs.getCertForBlockIndex(shs.view - 1)
-		if exists {
-			bhash, _ := precert.GetBlockInfo()
-			emptyBlockforeq.Header.ParentHash = bhash.GetBytes()
-		} else {
-			//TODO what can i do in this
+
+		value, exists1 := shs.equiproposalMap[shs.view][shs.leader]
+		if exists1 && value == 1 {
+			log.Debug("the equivocation evidence of leader in round", shs.view, "have been recorded!")
+			return
 		}
-		//the empty block also needs certificate(is same as genesis block's certificate)
-		//and we should change the certmap
+		shs.bc.Head++
+		newHeight := shs.bc.Head
+		//CREATE non-cmds block and proposal
+		blksize := shs.GetBlockSize()
+		emptyCmds := make([][]byte, blksize)
+		EquivocationProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, nil)
+		exemptyblock := &chain.ExtBlock{}
+		exemptyblock.FromProto(EquivocationProp.Block)
+		// Add this block to the chain
+		shs.bc.BlocksByHeight[newHeight] = exemptyblock
+		shs.bc.BlocksByHash[exemptyblock.GetBlockHash()] = exemptyblock
+		//Add this Propsal to the Proposal-view map
+		shs.proposalByviewMap[shs.view] = EquivocationProp
+		//gnerate empty certificate for this block directly
 		emptyCertificate := &msg.BlockCertificate{}
-		emptyCertificate.SetBlockInfo(chain.EmptyHash, shs.view)
+		emptyCertificate.SetBlockInfo(exemptyblock.GetBlockHash(), shs.view)
 		shs.addCert(emptyCertificate, shs.view)
-		exemptyBlockforeq := &chain.ExtBlock{}
-		exemptyBlockforeq.FromProto(emptyBlockforeq)
-		shs.addNewBlock(exemptyBlockforeq)
-		// shs.view++
-		// shs.changeLeader() timer end do this
+		//for continue to do evil, misbehaviour leader keep consistency
+		shs.addEquiProposaltoMap()
 
 	case *msg.SyncHSMsg_Mpevidence:
 		log.Warn("Received a Malicious proposal evidence!")
@@ -175,6 +149,19 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 				ms.GetMpevidence().String())
 			return
 		}
+		shs.malipropLock.RLock()
+		maliSenderMap, exists := shs.maliproposalMap[shs.view]
+		if exists {
+			for i := range maliSenderMap {
+				if i == ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget {
+					log.Debugln("the malicious prospoal evidence of node",
+						ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						"in round", shs.view, "have been recorded!")
+					return
+				}
+			}
+		}
+		shs.malipropLock.RUnlock()
 		shs.addMaliProposaltoMap(ms.GetProp())
 		//continue best-case !
 
@@ -190,9 +177,20 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 			return
 		}
 		//continue best-case ! //TODO add malicious vote to map!
-		msvote := &msg.Vote{}
-		msvote.FromProto(ms.GetVote())
-		shs.addMaliVotetoMap(msvote)
+		shs.voteMaliLock.RLock()
+		maliVoterMap, exists := shs.voteMaliMap[shs.view]
+		if exists {
+			for i := range maliVoterMap {
+				if i == ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget {
+					log.Debugln("the malicious vote evidence of node",
+						ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						"in round", shs.view, "have been recorded!")
+					return
+				}
+			}
+		}
+		shs.voteMaliLock.RUnlock()
+		shs.addMaliVotetoMap(ms.GetVote())
 
 	case nil:
 		log.Warn("Unspecified msg type ", x)
@@ -203,69 +201,40 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 
 }
 
-// handleEquivocationProposal
-// func (shs *SyncHS) handleEquivocationPropsoal() {
-
-// }
-
-// how to handle WithholdingProposal
+// how to handle WithholdingProposal,the evidence of it need not boradcast.
 func (shs *SyncHS) handleWithholdingProposal() {
-	// shs.propMapLock.RLock()
-
-	// p, exists := shs.proposalMap[shs.GetID()][shs.view][shs.leader]
-	// if p == 1 && exists {
-	// 	p--
-	// } else {
-	// 	log.Info("node", shs.GetID(), "did not change proposalMap in current view")
-	// }
-	// shs.propMapLock.RUnlock()
-	// shs.voteMapLock.RLock()
-	// votemap, exists := shs.voteMap[shs.GetID()][shs.view]
-	// if exists {
-	// 	for _, vnum := range votemap {
-	// 		if vnum == 1 {
-	// 			vnum--
-	// 		}
-	// 	}
-	// } else {
-	// 	log.Debug(shs.GetID(), "did not init votemap")
-	// }
-	// shs.voteMapLock.RUnlock()
-	shs.addWitholdProposaltoMap()
-	emptyBlockforwh := &chain.ProtoBlock{
-		Header: &chain.ProtoHeader{
-			Height: shs.view,
-		},
-		BlockHash: chain.EmptyHash.GetBytes(),
+	shs.bc.Mu.Lock()
+	defer shs.bc.Mu.Unlock()
+	head := shs.bc.Head
+	cert, exists := shs.getCertForBlockIndex(head)
+	if !exists {
+		log.Debug("The head does not have a certificate, abort handle withholding evidence")
+		return
 	}
-	precert, exists := shs.getCertForBlockIndex(shs.view - 1)
-	if exists {
-		bhash, _ := precert.GetBlockInfo()
-		emptyBlockforwh.Header.ParentHash = bhash.GetBytes()
-	}
-	//the empty block also needs certificate(is same as genesis block's certificate)
-	//and we should change the certmap
+	shs.bc.Head++
+	newHeight := shs.bc.Head
+	//CREATE non-cmds block and proposal
+	blksize := shs.GetBlockSize()
+	emptyCmds := make([][]byte, blksize)
+	withholdProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, nil)
+	exemptyblock := &chain.ExtBlock{}
+	exemptyblock.FromProto(withholdProp.Block)
+	// Add this block to the chain
+	shs.bc.BlocksByHeight[newHeight] = exemptyblock
+	shs.bc.BlocksByHash[exemptyblock.GetBlockHash()] = exemptyblock
+	//Add this Propsal to the Proposal-view map
+	shs.proposalByviewMap[shs.view] = withholdProp
+	//gnerate empty certificate for this block directly
 	emptyCertificate := &msg.BlockCertificate{}
-	emptyCertificate.SetBlockInfo(chain.EmptyHash, shs.view)
+	emptyCertificate.SetBlockInfo(exemptyblock.GetBlockHash(), shs.view)
 	shs.addCert(emptyCertificate, shs.view)
-	exemptyBlockforwh := &chain.ExtBlock{}
-	exemptyBlockforwh.FromProto(emptyBlockforwh)
-	shs.bc.Mu.RLock()
-	defer shs.bc.Mu.RUnlock()
-	_, exists2 := shs.bc.BlocksByHeight[shs.view]
-	if !exists2 {
-		shs.addNewBlock(exemptyBlockforwh)
-		log.Info("ADD an empty block in", shs.view, "round")
-	} else {
-		log.Info("This emptyblock has been recorded")
-	}
-	log.Debug("the end of withholding handle")
-
+	//For consistency change itself withhold map
+	shs.addWitholdProposaltoMap()
 }
 
 func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
 	log.Traceln("Function isEqpEvidenceValid with input", eq.String())
-	// Check if the evidence is for the current leader
+	// Check if the evidence against for the current leader
 	if eq.Evidence.EvidenceData.MisbehaviourTarget != shs.leader {
 		log.Debug("Invalid eqpMisbehaviour Target. Found", eq.Evidence.EvidenceData.MisbehaviourTarget,
 			",Expected:", shs.leader)
