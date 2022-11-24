@@ -26,8 +26,8 @@ func (n *SyncHS) voteHandler() {
 			continue
 		}
 		n.maliciousVoteInject = v.Owner != n.leader
-		if n.maliciousProposalInject {
-			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.")
+		if n.maliciousVoteInject {
+			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.", "Owner is", v.Owner, "leader is", n.leader)
 			go n.sendMalivoteEvidence(v)
 			continue
 		}

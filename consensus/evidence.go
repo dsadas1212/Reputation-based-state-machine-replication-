@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"github.com/adithyabhatkajake/libchatter/log"
-	"github.com/adithyabhatkajake/libsynchs/chain"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
 
 	// "github.com/adithyabhatkajake/libsynchs/msg"
@@ -10,8 +9,7 @@ import (
 	pb "github.com/golang/protobuf/proto"
 )
 
-//Now, I want to change blame.go to misbehavour handler.
-//(except withholding and equivocation,there are malicious block and votes)
+//TODO chenge it to handler version!!!
 
 func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) {
 	log.Warn("sending an Equivocation proposal evidence to all nodes")
@@ -23,7 +21,7 @@ func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) 
 	eqEvidence.Evidence.EvOrigin = shs.GetID()
 	eqEvidence.E1 = prop1
 	eqEvidence.E2 = propo2
-	data, err := pb.Marshal(eqEvidence) // signature should include overall content
+	data, err := pb.Marshal(eqEvidence.Evidence.EvidenceData) // signature should include overall content
 	if err != nil {
 		log.Errorln("Error marshalling eqEvidence", err)
 		return
@@ -34,9 +32,12 @@ func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) 
 	}
 	eqprEvMsg := &msg.SyncHSMsg{}
 	eqprEvMsg.Msg = &msg.SyncHSMsg_Eqevidence{Eqevidence: eqEvidence}
-	shs.Broadcast(eqprEvMsg)
-	go shs.handleMisbehaviourEvidence(eqprEvMsg)
 
+	go func() {
+		shs.Broadcast(eqprEvMsg)
+		//handle myself evidence
+		shs.eqEvidenceChannel <- eqEvidence
+	}()
 }
 
 func (shs *SyncHS) sendMaliProEvidence(prop *msg.Proposal) {
@@ -48,7 +49,7 @@ func (shs *SyncHS) sendMaliProEvidence(prop *msg.Proposal) {
 	maliproEvidence.Evidence.EvidenceData.View = shs.view
 	maliproEvidence.Evidence.EvOrigin = shs.GetID()
 	maliproEvidence.E = prop
-	data, err := pb.Marshal(maliproEvidence)
+	data, err := pb.Marshal(maliproEvidence.Evidence.EvidenceData)
 	if err != nil {
 		log.Errorln("Error marshalling maliproEvidence", err)
 		return
@@ -59,9 +60,11 @@ func (shs *SyncHS) sendMaliProEvidence(prop *msg.Proposal) {
 	}
 	maliEvprMsg := &msg.SyncHSMsg{}
 	maliEvprMsg.Msg = &msg.SyncHSMsg_Mpevidence{Mpevidence: maliproEvidence}
-	shs.Broadcast(maliEvprMsg)
-	go shs.handleMisbehaviourEvidence(maliEvprMsg)
-
+	go func() {
+		shs.Broadcast(maliEvprMsg)
+		//handle myself evidence
+		shs.maliProEvidenceChannel <- maliproEvidence
+	}()
 }
 
 // msg.vote or proto vote?
@@ -73,7 +76,7 @@ func (shs *SyncHS) sendMalivoteEvidence(v *msg.Vote) {
 	malivoteEvidence.Evidence.EvidenceData.MisbehaviourTarget = v.ProtoVoteBody.GetVoter()
 	malivoteEvidence.Evidence.EvOrigin = shs.GetID()
 	malivoteEvidence.E = v.ToProto()
-	data, err := pb.Marshal(malivoteEvidence)
+	data, err := pb.Marshal(malivoteEvidence.Evidence.EvidenceData)
 	if err != nil {
 		log.Errorln("Error marshalling malivoteEvidence", err)
 		return
@@ -84,53 +87,52 @@ func (shs *SyncHS) sendMalivoteEvidence(v *msg.Vote) {
 	}
 	malivoteEvMsg := &msg.SyncHSMsg{}
 	malivoteEvMsg.Msg = &msg.SyncHSMsg_Mvevidence{Mvevidence: malivoteEvidence}
-	shs.Broadcast(malivoteEvMsg)
-	go shs.handleMisbehaviourEvidence(malivoteEvMsg)
+	go func() {
+		shs.Broadcast(malivoteEvMsg)
+		//handle myself evidence
+		shs.maliVoteEvidenceChannel <- malivoteEvidence
+	}()
 
 }
 
-func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
-
-	switch x := ms.Msg.(type) {
-	case *msg.SyncHSMsg_Eqevidence:
-		log.Warn("Received a Equicocation proposal evidence!")
-		log.Trace("Received a Equivocation proposal evidence against",
-			ms.GetEqevidence().Evidence.EvidenceData.MisbehaviourTarget, "from",
-			ms.GetEqevidence().Evidence.EvOrigin)
-		//check if the evidence is correct
-		isValid := shs.isEqpEvidenceValid(ms.GetEqevidence())
-		if !isValid {
-			log.Debugln("Received an invalid Equivocation proposal evidence message",
-				ms.GetEqevidence().String())
-			return
+func (shs *SyncHS) EquivocationEvidenceHandler() {
+	for {
+		eqEvidence, ok := <-shs.eqEvidenceChannel
+		if !ok {
+			log.Error("Equivocation Evidence channel error")
+			continue
 		}
-		shs.bc.Mu.Lock()
-		defer shs.bc.Mu.Unlock()
+		log.Warn("Received a Equicocation proposal evidence!")
+		log.Debug("Received a Equivocation proposal evidence against",
+			eqEvidence.GetEvidence().GetEvidenceData().GetMisbehaviourTarget(), "from",
+			eqEvidence.GetEvidence().GetEvOrigin())
+		value, exists1 := shs.equiproposalMap[shs.view][shs.leader]
+		if exists1 && value == 1 {
+			log.Debug("the equivocation evidence of leader in round", shs.view, "have been recorded!")
+			continue
+		}
+		isValid := shs.isEqpEvidenceValid(eqEvidence)
+		if !isValid {
+			log.Debugln("Received an invalid Equivocation proposal evidence message")
+			// ms.GetEqevidence().String()
+			continue
+		}
 		head := shs.bc.Head
 		cert, exists := shs.getCertForBlockIndex(head)
 		if !exists {
 			log.Debug("The head does not have a certificate, abort handle equivocation evidecne")
-			return
+			continue
 		}
 
-		value, exists1 := shs.equiproposalMap[shs.view][shs.leader]
-		if exists1 && value == 1 {
-			log.Debug("the equivocation evidence of leader in round", shs.view, "have been recorded!")
-			return
-		}
 		shs.bc.Head++
 		newHeight := shs.bc.Head
 		//CREATE non-cmds block and proposal
 		blksize := shs.GetBlockSize()
 		emptyCmds := make([][]byte, blksize)
-		EquivocationProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, nil)
-		exemptyblock := &chain.ExtBlock{}
-		exemptyblock.FromProto(EquivocationProp.Block)
+		exemptyblock := shs.createAnEmptyBlock(emptyCmds, cert, newHeight, []byte{'E'})
 		// Add this block to the chain
 		shs.bc.BlocksByHeight[newHeight] = exemptyblock
 		shs.bc.BlocksByHash[exemptyblock.GetBlockHash()] = exemptyblock
-		//Add this Propsal to the Proposal-view map
-		shs.proposalByviewMap[shs.view] = EquivocationProp
 		//gnerate empty certificate for this block directly
 		emptyCertificate := &msg.BlockCertificate{}
 		emptyCertificate.SetBlockInfo(exemptyblock.GetBlockHash(), shs.view)
@@ -138,67 +140,90 @@ func (shs *SyncHS) handleMisbehaviourEvidence(ms *msg.SyncHSMsg) {
 		//for continue to do evil, misbehaviour leader keep consistency
 		shs.addEquiProposaltoMap()
 
-	case *msg.SyncHSMsg_Mpevidence:
+	}
+}
+
+func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
+	for {
+		maliProEvidence, ok := <-shs.maliProEvidenceChannel
+		if !ok {
+			log.Error("Malicous Propsal Evidence channel error")
+			continue
+		}
 		log.Warn("Received a Malicious proposal evidence!")
-		log.Trace("Received a Malicious proposal evidence against",
-			ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget, "from",
-			ms.GetMpevidence().Evidence.EvOrigin)
-		isValid := shs.isMalipEvidenceValid(ms.GetMpevidence())
+		log.Debug("Received a Malicious proposal evidence against",
+			maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget, "from",
+			maliProEvidence.Evidence.EvOrigin)
+		isValid := shs.isMalipEvidenceValid(maliProEvidence)
 		if !isValid {
-			log.Debugln("Received an invalid Malicious proposal evidence message",
-				ms.GetMpevidence().String())
-			return
+			log.Debugln("Received an invalid Malicious proposal evidence message")
+			continue
 		}
 		shs.malipropLock.RLock()
 		maliSenderMap, exists := shs.maliproposalMap[shs.view]
 		if exists {
 			for i := range maliSenderMap {
-				if i == ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget {
+				if i == maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget {
 					log.Debugln("the malicious prospoal evidence of node",
-						ms.GetMpevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget,
 						"in round", shs.view, "have been recorded!")
-					return
+					shs.maliProspoalExists = true
+					break
 				}
+			}
+			if shs.maliProspoalExists {
+				continue
+			} else {
+				log.Debug("there is anthoner maliciouspropsoal have been recorded")
+				shs.addMaliProposaltoMap(maliProEvidence.E)
+				shs.maliProspoalExists = false
+				continue
 			}
 		}
 		shs.malipropLock.RUnlock()
-		shs.addMaliProposaltoMap(ms.GetProp())
-		//continue best-case !
+		shs.addMaliProposaltoMap(maliProEvidence.E)
+	}
+}
 
-	case *msg.SyncHSMsg_Mvevidence:
-		log.Warn("Received a Malicious vote evidence!")
-		log.Trace("Received a Malicious vote evidence against",
-			ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget, "from",
-			ms.GetMvevidence().Evidence.EvOrigin)
-		isValid := shs.isMalivEvidenceValid(ms.GetMvevidence())
-		if !isValid {
-			log.Debugln("Received an invalid Malicious vote evidence message",
-				ms.GetMvevidence().String())
-			return
+func (shs *SyncHS) MaliciousVoteEvidenceHandler() {
+	for {
+		maliVoteEvidence, ok := <-shs.maliVoteEvidenceChannel
+		if !ok {
+			log.Error("Malicous vote Evidence channel error")
+			continue
 		}
-		//continue best-case ! //TODO add malicious vote to map!
+		log.Warn("Received a Malicious vote evidence!")
+		log.Debug("Received a Malicious vote evidence against",
+			maliVoteEvidence.Evidence.EvidenceData.MisbehaviourTarget, "from",
+			maliVoteEvidence.Evidence.EvOrigin)
+		isValid := shs.isMalivEvidenceValid(maliVoteEvidence)
+		if !isValid {
+			log.Debugln("Received an invalid Malicious vote evidence message")
+			continue
+		}
 		shs.voteMaliLock.RLock()
 		maliVoterMap, exists := shs.voteMaliMap[shs.view]
 		if exists {
 			for i := range maliVoterMap {
-				if i == ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget {
+				if i == maliVoteEvidence.Evidence.EvidenceData.MisbehaviourTarget {
 					log.Debugln("the malicious vote evidence of node",
-						ms.GetMvevidence().Evidence.EvidenceData.MisbehaviourTarget,
+						maliVoteEvidence.Evidence.EvidenceData.MisbehaviourTarget,
 						"in round", shs.view, "have been recorded!")
-					return
+					shs.maliVoteExists = true
+					break
 				}
+			}
+			if shs.maliVoteExists {
+				continue
+			} else {
+				shs.addMaliVotetoMap(maliVoteEvidence.E)
+				shs.maliVoteExists = false
+				continue
 			}
 		}
 		shs.voteMaliLock.RUnlock()
-		shs.addMaliVotetoMap(ms.GetVote())
-
-	case nil:
-		log.Warn("Unspecified msg type ", x)
-	default:
-		log.Warn("Unknown msg type or Unmeet msg type", x)
-
+		shs.addMaliVotetoMap(maliVoteEvidence.E)
 	}
-
 }
 
 // how to handle WithholdingProposal,the evidence of it need not boradcast.
@@ -216,14 +241,11 @@ func (shs *SyncHS) handleWithholdingProposal() {
 	//CREATE non-cmds block and proposal
 	blksize := shs.GetBlockSize()
 	emptyCmds := make([][]byte, blksize)
-	withholdProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, nil)
-	exemptyblock := &chain.ExtBlock{}
-	exemptyblock.FromProto(withholdProp.Block)
+	// withholdProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, []byte{'E'})
+	exemptyblock := shs.createAnEmptyBlock(emptyCmds, cert, newHeight, []byte{'E'})
 	// Add this block to the chain
 	shs.bc.BlocksByHeight[newHeight] = exemptyblock
 	shs.bc.BlocksByHash[exemptyblock.GetBlockHash()] = exemptyblock
-	//Add this Propsal to the Proposal-view map
-	shs.proposalByviewMap[shs.view] = withholdProp
 	//gnerate empty certificate for this block directly
 	emptyCertificate := &msg.BlockCertificate{}
 	emptyCertificate.SetBlockInfo(exemptyblock.GetBlockHash(), shs.view)
@@ -247,7 +269,7 @@ func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
 		return false
 	}
 	//check the signature of sender
-	data, err := pb.Marshal(eq)
+	data, err := pb.Marshal(eq.Evidence.EvidenceData)
 	if err != nil {
 		log.Debug("Error Marshalling eqEvidence message")
 		return false
@@ -259,29 +281,26 @@ func (shs *SyncHS) isEqpEvidenceValid(eq *msg.EquivocationEvidence) bool {
 		return false
 	}
 	//check the content of the equivocation proposal come from leader
-	data1, err := pb.Marshal(eq.E1.Block.Header)
+	data1, err := pb.Marshal(eq.E1.GetBlock().GetHeader())
 	if err != nil {
 		log.Debug("Invalid Marshalling Block.Header1")
 		return false
 	}
-	data2, err := pb.Marshal(eq.E2.Block.Header)
+	data2, err := pb.Marshal(eq.E2.GetBlock().GetHeader())
 	if err != nil {
 		log.Debug("Invalid Marshalling Block.Header2")
 		return false
 	}
 	// ck := eq.E1.Miner == eq.E2.Miner && shs.leader == eq.E2.Miner;
-	isSigValidP1, err := shs.GetPubKeyFromID(shs.leader).Verify(data1, eq.E1.MiningProof)
-	if err != nil {
-		log.Debug("Invalid signature for Block.Header1")
+	isSigValidP1, err := shs.GetPubKeyFromID(shs.leader).Verify(data1, eq.E1.GetMiningProof())
+	if !isSigValidP1 || err != nil {
+		log.Debug("Invalid signature for Block.Header1,err is", err)
 		return false
 	}
-	isSigValidP2, err := shs.GetPubKeyFromID(shs.leader).Verify(data2, eq.E2.MiningProof)
-	if err != nil {
+	isSigValidP2, err := shs.GetPubKeyFromID(shs.leader).Verify(data2, eq.E2.GetMiningProof())
+
+	if !isSigValidP2 || err != nil {
 		log.Debug("Invalid signature for Block.Header2")
-		return false
-	}
-	if !isSigValidP1 || !isSigValidP2 {
-		log.Debug("Invalid signature on Proposal")
 		return false
 	}
 	return true
@@ -298,12 +317,12 @@ func (shs *SyncHS) isMalipEvidenceValid(ml *msg.MalicousProposalEvidence) bool {
 	}
 	// Check if the view is correct!
 	if ml.Evidence.EvidenceData.View != shs.view {
-		log.Debug("Invalid View. Found", ml.Evidence.EvidenceData.View,
+		log.Debug("malipropsoal Invalid View. Found", ml.Evidence.EvidenceData.View,
 			",Expected:", shs.view)
 		return false
 	}
 	//check the signature of sender
-	data, err := pb.Marshal(ml)
+	data, err := pb.Marshal(ml.Evidence.EvidenceData)
 	if err != nil {
 		log.Debug("Error Marshalling maliqEvidence message")
 		return false
@@ -342,7 +361,7 @@ func (shs *SyncHS) isMalivEvidenceValid(mlv *msg.MalicousVoteEvidence) bool {
 		return false
 	}
 	//check the signature of sender
-	data, err := pb.Marshal(mlv)
+	data, err := pb.Marshal(mlv.Evidence.EvidenceData)
 	if err != nil {
 		log.Debug("Error Marshalling eqEvidence message")
 		return false

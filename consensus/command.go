@@ -9,13 +9,15 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() { //Sufficient Commands start our timer!
 		// change the condition of this: 1. if this block is gensis block start timer directly
 		if n.gcallFuncFinish {
-			n.startConsensusTimer()
+			// n.startConsensusTimerWithWithhold()
+			n.startConsensusTimerWithMaliciousPropsoal()
 			n.gcallFuncFinish = false
 		}
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
-			n.startConsensusTimer()
+			// n.startConsensusTimerWithWithhold()
+			n.startConsensusTimerWithMaliciousPropsoal()
 		}
 		// go n.startConsensusTimer()
 		// if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {

@@ -24,17 +24,17 @@ func NewCert(certMap map[uint64]*msg.Vote, blockhash crypto.Hash, view uint64) *
 
 // IsCertValid checks if the certificate is valid for the data
 func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
-	log.Debug("Received a block certificate -")
+	// log.Debug("Received a block certificate -")
 	h, _ := bc.GetBlockInfo()
 	// Certificate for genesis is always correct
 	if h == chain.EmptyHash {
 		return true
 	}
 	exEmptyBlk := n.bc.BlocksByHash[h]
-	cmds := exEmptyBlk.ExtBody.GetTxs()
+	ex := exEmptyBlk.ExtHeader.GetExtra()
 
 	//Certificate for emptycmdblock is always correct
-	if len(cmds) == 0 {
+	if len(ex) == 1 {
 		return true
 	}
 	// if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {

@@ -72,11 +72,15 @@ type SyncHS struct {
 	certBlockLock      sync.RWMutex
 
 	// Channels
-	msgChannel     chan *msg.SyncHSMsg // All messages come here first
-	cmdChannel     chan []byte         // All commands are re-directed here
-	voteChannel    chan *msg.Vote      // All votes are sent here
-	SyncChannel    chan bool           //make a channel to store the signal of timerfinish
-	proposeChannel chan *msg.Proposal  // All proposals are sent here
+	msgChannel              chan *msg.SyncHSMsg                // All messages come here first
+	cmdChannel              chan []byte                        // All commands are re-directed here
+	voteChannel             chan *msg.Vote                     // All votes are sent here
+	SyncChannel             chan bool                          //make a channel to store the signal of timerfinish
+	proposeChannel          chan *msg.Proposal                 // All proposals are sent here
+	eqEvidenceChannel       chan *msg.EquivocationEvidence     // All EquivocationEvidence are sent here
+	maliProEvidenceChannel  chan *msg.MalicousProposalEvidence //....
+	maliVoteEvidenceChannel chan *msg.MalicousVoteEvidence     //....
+	maliPropseChannel       chan *msg.Proposal                 //....
 	// errCh          chan error          // All errors are sent here
 
 	// Block chain
@@ -94,6 +98,9 @@ type SyncHS struct {
 	withholdingProposalInject  bool
 	maliciousProposalInject    bool
 	maliciousVoteInject        bool
+	//check malicious propsoal/vote recording
+	maliProspoalExists bool
+	maliVoteExists     bool
 	// Check callfunc state
 	callFuncNotFinish bool
 	gcallFuncFinish   bool

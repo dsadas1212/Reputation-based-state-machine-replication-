@@ -1,0 +1,10 @@
+Throughput (Kops/sec),BlockSize,Latency(ms)
+10,Reputation-based-SMR-b100,105
+60,Reputation-based-SMR-b100,105.2
+90,Reputation-based-SMR-b100,105.5
+100,Reputation-based-SMR-b100,106
+105,Reputation-based-SMR-b100,106.1
+110,Reputation-based-SMR-b100,108
+109,Reputation-based-SMR-b100,110
+109.5,Reputation-based-SMR-b100,121
+109.8,Reputation-based-SMR-b100,150

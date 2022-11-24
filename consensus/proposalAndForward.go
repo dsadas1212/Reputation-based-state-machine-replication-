@@ -13,7 +13,6 @@ import (
 
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
-// swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
 func (n *SyncHS) startConsensusTimer() {
 	go func() {
 		n.timer.Start()
@@ -28,68 +27,6 @@ func (n *SyncHS) startConsensusTimer() {
 	}()
 
 }
-
-// withholding case
-func (n *SyncHS) startConsensusTimerWithWithhold() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-	}()
-	go func() {
-		if n.leader == n.GetID() {
-			if n.GetID()%3 == 0 && n.GetID() != 0 {
-				n.Withholdingpropose()
-				n.withholdingProposalInject = true
-			}
-			n.withholdingProposalInject = false
-			n.Propose()
-		} else {
-			if n.leader%3 == 0 && n.leader != 0 {
-				n.withholdingProposalInject = true
-			}
-			n.withholdingProposalInject = false
-		}
-	}()
-}
-
-// equivocating case
-func (n *SyncHS) startConsensusTimerWithEquivocation() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-	}()
-	go func() {
-		if n.leader == n.GetID() {
-			if n.GetID()%3 == 0 && n.GetID() != 0 {
-				n.Equivocationpropose()
-			}
-
-			n.Propose()
-		}
-	}()
-
-}
-
-// malicious prospoal case
-func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-	}()
-	go func() {
-		if n.leader == n.GetID() {
-			n.Propose()
-		} else {
-			if n.GetID() == 0 {
-				n.Maliciousproposalpropose()
-			}
-		}
-
-	}()
-
-}
-
-// malicious vote case need to change the step in forwardhandler
 
 func (n *SyncHS) Propose() {
 
@@ -131,18 +68,13 @@ func (n *SyncHS) Propose() {
 		n.addProposaltoMap()
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
-		// Leader should also vote
-		//n.voteForBlock(ep)
-		// log.Debug("VOTE TIMER1", time.Now())
-		// // Start 3\delta timer
-		// // n.startBlockTimer(block)
 	}()
 
 }
 
 // TODO{Deal with the proposal(add the forward step)}
 func (n *SyncHS) forward(prop *msg.Proposal) {
-	log.Debug("Node", n.GetID(), "Receive leader's proposal, preparing forward")
+	log.Debug("Node", n.GetID(), "Receive ", prop.GetMiner(), "'s proposal, preparing forward")
 	ht := prop.Block.GetHeader().GetHeight()
 	log.Debug("Handling leader proposal ", ht)
 	ep := &msg.ExtProposal{}
@@ -162,14 +94,7 @@ func (n *SyncHS) forward(prop *msg.Proposal) {
 		log.Error("Invalid certificate received for block", ht)
 		return
 	}
-	//malicous proposal
-	n.maliciousProposalInject = prop.Miner != n.leader
-	if n.maliciousProposalInject {
-		log.Info("There is a malicious propsoal behaviour")
-		go n.sendMaliProEvidence(prop)
-		return
 
-	}
 	////change propsoal forwardSender and forwardsig
 	prop.ForwardSender = n.GetID()
 	data1, _ := pb.Marshal(prop.GetBlock().GetHeader())
@@ -195,10 +120,6 @@ func (n *SyncHS) forward(prop *msg.Proposal) {
 func (n *SyncHS) forwardProposalHandler() {
 	fpropMap := make(map[uint64]map[uint64]*msg.Proposal)
 	for {
-		//check if equivocation have been detected
-		if n.equivocatingProposalInject {
-			continue
-		}
 		//check if all forward proposal have been detected
 		if len(fpropMap[n.view]) >= len(n.pMap) {
 			continue
@@ -206,6 +127,10 @@ func (n *SyncHS) forwardProposalHandler() {
 		fprop, ok := <-n.proposeChannel
 		if !ok {
 			log.Error("Proposal channel error")
+			continue
+		}
+		//check if equivocation have been detected
+		if n.equivocatingProposalInject {
 			continue
 		}
 		log.Debug("NODE", n.GetID(), "Receive forwardSender", fprop.ForwardSender, "'s prospoal")
@@ -244,10 +169,14 @@ func (n *SyncHS) forwardProposalHandler() {
 		ep2.FromProto(n.proposalByviewMap[n.view])
 		n.equivocatingProposalInject = ep2.GetBlockHash() != ep.GetBlockHash()
 		//Faulty leader don't send his misbehavious
-		if n.equivocatingProposalInject && n.GetID() != n.leader {
-			log.Warn("Equivocation detected.", ep2.GetBlockHash(),
+		if n.equivocatingProposalInject {
+			log.Warn("Node", n.GetID(), " detect  Equivocation .", ep2.GetBlockHash(),
 				ep.GetBlockHash())
-			go n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
+			if n.GetID() != n.leader {
+				go n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
+				continue
+			}
+			//leader only need to wait for handle equicocation
 			continue
 
 		}
@@ -408,9 +337,9 @@ func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 		TxHash:     nil, // Compute merkle tree out of transactions in the block body
 	}
 	// Set Hash
-	log.Debug("PrevHash:",
+	log.Trace("PrevHash:",
 		util.HashToString(crypto.ToHash(pheader.GetParentHash())))
-	log.Debug("Computed Proposal ", newHeight,
+	log.Trace("Computed Proposal ", newHeight,
 		" with hash ", util.HashToString(bhash))
 	// Sign
 	data, _ := pb.Marshal(pheader)
@@ -437,4 +366,26 @@ func (n *SyncHS) NewCandidateProposal(cmds [][]byte,
 		ProposeEvidence: pevidence, // Certificate for parent block
 	}
 	return prop
+}
+
+func (n *SyncHS) createAnEmptyBlock(cmds [][]byte, cert *msg.BlockCertificate, newHeight uint64, extra []byte) *chain.ExtBlock {
+	bhash, _ := cert.GetBlockInfo()
+	pbody := &chain.ProtoBody{
+		Txs:       cmds,
+		Responses: cmds, // For now, the response is the same as the cmd
+	}
+	pheader := &chain.ProtoHeader{
+		Extra:      extra,
+		Height:     newHeight,
+		ParentHash: bhash.GetBytes(),
+		TxHash:     nil, // Compute merkle tree out of transactions in the block body
+	}
+	blk := &chain.ProtoBlock{
+		Header:    pheader,
+		Body:      pbody,
+		BlockHash: chain.EmptyHash.GetBytes(),
+	}
+	exblk := &chain.ExtBlock{}
+	exblk.FromProto(blk)
+	return exblk
 }

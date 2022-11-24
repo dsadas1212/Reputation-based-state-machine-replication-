@@ -81,7 +81,7 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 	n.cliMutex.Lock()
 	defer n.cliMutex.Unlock()
 	for cliBuf := range n.cliMap {
-		log.Debug("Sending to", cliBuf)
+		log.Trace("Sending to", cliBuf)
 		cliBuf.Write(data)
 		cliBuf.Flush()
 	}
@@ -100,16 +100,15 @@ func (n *SyncHS) callback() {
 	if n.withholdingProposalInject {
 		log.Info("In round", n.view, "withholding block have been detected")
 		//Handle withholding behaviour
-		n.handleWithholdingProposal()
 		n.addNewViewReputaiontoMap()
 		synchsmsg := &msg.SyncHSMsg{}
 		ack := &msg.SyncHSMsg_Ack{}
 		log.Info("Committing an emptyblock in withholding case-", n.view)
 		log.Info("The block commit time is", time.Now())
-
+		log.Debug(n.GetID(), "node Blockchain height and view number is", n.bc.Head, "AND", n.view)
 		// Let the client know that we committed this block
 		ack.Ack = &msg.CommitAck{
-			Block: n.proposalByviewMap[n.view].Block,
+			Block: n.bc.BlocksByHeight[n.bc.Head].ToProto(),
 		}
 		synchsmsg.Msg = ack
 		// Tell all the clients, that I have committed this block
@@ -121,15 +120,18 @@ func (n *SyncHS) callback() {
 		return
 	}
 	if n.equivocatingProposalInject {
+		//this equivocation behaviour have been handle
+		n.equivocatingProposalInject = false
 		log.Info("In round", n.view, "equivocating block have been detected")
 		n.addNewViewReputaiontoMap()
 		synchsmsg := &msg.SyncHSMsg{}
 		ack := &msg.SyncHSMsg_Ack{}
 		log.Info("Committing an emptyblock in equivocation case-", n.view)
 		log.Info("The block commit time is", time.Now())
+		log.Debug(n.GetID(), "node Blockchain height and view number is", n.bc.Head, "AND", n.view)
 		// Let the client know that we committed this block
 		ack.Ack = &msg.CommitAck{
-			Block: n.proposalByviewMap[n.view].Block,
+			Block: n.bc.BlocksByHeight[n.bc.Head].ToProto(),
 		}
 		synchsmsg.Msg = ack
 		// Tell all the clients, that I have committed this block
@@ -152,15 +154,11 @@ func (n *SyncHS) callback() {
 		n.SyncChannel <- true
 		return
 	}
-	// blk, exist1 := n.getBlockFromCert(cert)
-	// if !exist1 {
-	// 	log.Debug("fail to generate the map of cert and exblcok")
-	// }
 
 	log.Info("Committing an correct block-", n.view)
 	log.Info("The block commit time of ", n.GetID(), "is", time.Now())
 	ack.Ack = &msg.CommitAck{
-		Block: n.proposalByviewMap[n.view].Block,
+		Block: n.bc.BlocksByHeight[n.bc.Head].ToProto(),
 	}
 	synchsmsg.Msg = ack
 
