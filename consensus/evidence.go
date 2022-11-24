@@ -159,7 +159,6 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 			log.Debugln("Received an invalid Malicious proposal evidence message")
 			continue
 		}
-		shs.malipropLock.RLock()
 		maliSenderMap, exists := shs.maliproposalMap[shs.view]
 		if exists {
 			for i := range maliSenderMap {
@@ -172,6 +171,7 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 				}
 			}
 			if shs.maliProspoalExists {
+				shs.maliProspoalExists = false
 				continue
 			} else {
 				log.Debug("there is anthoner maliciouspropsoal have been recorded")
@@ -180,7 +180,6 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 				continue
 			}
 		}
-		shs.malipropLock.RUnlock()
 		shs.addMaliProposaltoMap(maliProEvidence.E)
 	}
 }
@@ -214,6 +213,7 @@ func (shs *SyncHS) MaliciousVoteEvidenceHandler() {
 				}
 			}
 			if shs.maliVoteExists {
+				shs.maliVoteExists = false
 				continue
 			} else {
 				shs.addMaliVotetoMap(maliVoteEvidence.E)
@@ -315,7 +315,7 @@ func (shs *SyncHS) isMalipEvidenceValid(ml *msg.MalicousProposalEvidence) bool {
 			",Expected: other non-leader node")
 		return false
 	}
-	// Check if the view is correct!
+	//Check if the view is correct!
 	if ml.Evidence.EvidenceData.View != shs.view {
 		log.Debug("malipropsoal Invalid View. Found", ml.Evidence.EvidenceData.View,
 			",Expected:", shs.view)

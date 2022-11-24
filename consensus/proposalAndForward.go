@@ -86,7 +86,7 @@ func (n *SyncHS) forward(prop *msg.Proposal) {
 	data, _ := pb.Marshal(prop.GetBlock().GetHeader())
 	correct, err := n.GetPubKeyFromID(n.leader).Verify(data, ep.GetMiningProof())
 	if !correct || err != nil {
-		log.Error("Incorrect signature for proposal ", ht)
+		log.Error("Forward Incorrect signature for proposal ", ht)
 		return
 	}
 	// Check block certificate for non-genesis blocks
@@ -145,7 +145,7 @@ func (n *SyncHS) forwardProposalHandler() {
 		data, _ := pb.Marshal(fprop.GetBlock().GetHeader())
 		correct, err := n.GetPubKeyFromID(n.leader).Verify(data, ep.GetMiningProof())
 		if !correct || err != nil {
-			log.Error("Incorrect leader signature for proposal ", ht)
+			log.Error("Forwardhandler Incorrect leader signature for proposal ", ht)
 			continue
 		}
 		// Check block certificate for non-genesis blocks
@@ -276,6 +276,7 @@ func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
 		n.maliproposalMap[n.view][prop.Miner] = 1
 	}
 	n.malipropLock.Unlock()
+	log.Debug("malipropsoalMAP IN VIEW", n.view, "is", n.maliproposalMap[n.view])
 }
 func (n *SyncHS) addEquiProposaltoMap() {
 	n.equipropLock.Lock()

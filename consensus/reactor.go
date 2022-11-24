@@ -35,16 +35,13 @@ func (n *SyncHS) protocol() {
 					// Send proposal to forward step
 					go n.forward(prop)
 				} else {
-					log.Debug("Received a Malicious proposal from ", prop.GetMiner())
+					log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
 					go func() {
 						n.maliPropseChannel <- prop
 					}()
 				}
 			} else {
-				go func() {
-					n.proposeChannel <- prop
-				}()
-
+				n.proposeChannel <- prop
 			}
 		case *msg.SyncHSMsg_Eqevidence:
 			eqEvidence := msgIn.GetEqevidence()

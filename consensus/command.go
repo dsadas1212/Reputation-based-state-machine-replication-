@@ -1,5 +1,7 @@
 package consensus
 
+import "time"
+
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
 	defer n.cmdMutex.Unlock()
@@ -16,7 +18,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
-			// n.startConsensusTimerWithWithhold()
+			time.Sleep(time.Second * 5)
 			n.startConsensusTimerWithMaliciousPropsoal()
 		}
 		// go n.startConsensusTimer()

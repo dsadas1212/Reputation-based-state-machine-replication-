@@ -80,7 +80,7 @@ func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
 			n.Propose()
 
 		} else {
-			if n.GetID() == 0 && n.view == 1 {
+			if n.GetID() == 0 {
 				n.Maliciousproposalpropose()
 			}
 		}
@@ -179,7 +179,15 @@ func (n *SyncHS) MaliciousPropsoalHandler() {
 			continue
 		}
 		log.Info("There is a malicious propsoal")
-		go n.sendMaliProEvidence(malipro)
+		if n.GetID() != 0 {
+			//misbehaviourtarget don't send its evidence!
+			n.sendMaliProEvidence(malipro)
+			continue
+		} else {
+			//misbehaviourtarget only need to handle its misbehave!
+			continue
+		}
+
 	}
 }
 
