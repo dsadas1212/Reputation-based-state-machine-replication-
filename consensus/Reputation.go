@@ -204,5 +204,5 @@ func (n *SyncHS) addNewViewReputaiontoMap() {
 			n.reputationMap[n.view+1][i] = n.ReputationCalculateinCurrentRound(i)
 		}
 	}
-	log.Debug("Node", n.GetID(), "transcript is ", n.reputationMap)
+	// log.Debug("Node", n.GetID(), "transcript is ", n.reputationMap)
 }

@@ -1,5 +1,7 @@
 package consensus
 
+import "time"
+
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
 	defer n.cmdMutex.Unlock()
@@ -9,13 +11,15 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() { //Sufficient Commands start our timer!
 		// change the condition of this: 1. if this block is gensis block start timer directly
 		if n.gcallFuncFinish {
-			n.startConsensusTimer()
+			// n.startConsensusTimerWithWithhold()
+			n.startConsensusTimerWithMaliciousVote()
 			n.gcallFuncFinish = false
 		}
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
-			n.startConsensusTimer()
+			time.Sleep(time.Second * 5)
+			n.startConsensusTimerWithMaliciousVote()
 		}
 		// go n.startConsensusTimer()
 		// if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {

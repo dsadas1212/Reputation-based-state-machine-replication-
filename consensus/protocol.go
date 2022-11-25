@@ -55,6 +55,10 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.cmdChannel = make(chan []byte, ProtocolMsgBuffer)
 	shs.voteChannel = make(chan *msg.Vote, ProtocolMsgBuffer)
 	shs.proposeChannel = make(chan *msg.Proposal, ProtocolMsgBuffer)
+	shs.eqEvidenceChannel = make(chan *msg.EquivocationEvidence, ProtocolMsgBuffer)
+	shs.maliProEvidenceChannel = make(chan *msg.MalicousProposalEvidence, ProtocolMsgBuffer)
+	shs.maliVoteEvidenceChannel = make(chan *msg.MalicousVoteEvidence, ProtocolMsgBuffer)
+	shs.maliPropseChannel = make(chan *msg.Proposal, ProtocolMsgBuffer)
 	// shs.blockCandidateChannel = make(chan *chain.Candidateblock, ProtocolMsgBuffer)
 	shs.SyncChannel = make(chan bool, 1)
 
@@ -68,6 +72,8 @@ func (shs *SyncHS) Init(c *config.NodeConfig) {
 	shs.equivocatingProposalInject = false
 	shs.withholdingProposalInject = false
 	shs.maliciousProposalInject = false
+	shs.maliVoteExists = false
+	shs.maliProspoalExists = false
 	shs.initialReplicaSore = new(big.Float).SetFloat64(1e-6)
 
 }
@@ -134,6 +140,11 @@ func (shs *SyncHS) Start() {
 	go shs.forwardProposalHandler()
 	// Second, start vote handler concurrently
 	go shs.voteHandler()
+	go shs.MaliciousPropsoalHandler()
+	go shs.EquivocationEvidenceHandler()
+	go shs.MaliciousVoteEvidenceHandler()
+	go shs.MaliciousProposalEvidenceHandler()
+
 	// Start E2C Protocol - Start message handler
 	shs.protocol()
 }

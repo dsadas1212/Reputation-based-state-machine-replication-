@@ -30,30 +30,36 @@ func (n *SyncHS) protocol() {
 		case *msg.SyncHSMsg_Prop:
 			prop := msgIn.GetProp()
 			if prop.ForwardSender == n.leader {
-				log.Debug("Received a proposal from ", prop.GetMiner())
-				// Send proposal to forward step
-				go n.forward(prop)
+				if prop.GetMiner() == n.leader {
+					log.Debug("Received a proposal from ", prop.GetMiner())
+					// Send proposal to forward step
+					go n.forward(prop)
+				} else {
+					log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
+					go func() {
+						n.maliPropseChannel <- prop
+					}()
+				}
 			} else {
-				log.Debug("Receved a propsoal in forward step from", prop.GetForwardSender())
-				// go n.forwardProposalHandler(prop)
-				go func() {
-					n.proposeChannel <- prop
-				}()
-
+				n.proposeChannel <- prop
 			}
 		case *msg.SyncHSMsg_Eqevidence:
-			eqevidence := msgIn.GetEqevidence()
-			log.Debug("Receive a EQevidence from", eqevidence.Evidence.EvOrigin)
-			go n.handleMisbehaviourEvidence(msgIn)
-		case *msg.SyncHSMsg_Mpevidence:
-			malipevidence := msgIn.GetMpevidence()
-			log.Debug("Receive a Mpevidence from", malipevidence.Evidence.EvOrigin)
-			go n.handleMisbehaviourEvidence(msgIn)
-		case *msg.SyncHSMsg_Mvevidence:
-			malieevidence := msgIn.GetMvevidence()
-			log.Debug("Receive a Mvevidence from", malieevidence.Evidence.EvOrigin)
-			go n.handleMisbehaviourEvidence(msgIn)
+			eqEvidence := msgIn.GetEqevidence()
+			go func() {
+				n.eqEvidenceChannel <- eqEvidence
+			}()
 
+		case *msg.SyncHSMsg_Mpevidence:
+			maliProEvidence := msgIn.GetMpevidence()
+			go func() {
+				n.maliProEvidenceChannel <- maliProEvidence
+			}()
+
+		case *msg.SyncHSMsg_Mvevidence:
+			maliVoteEvidence := msgIn.GetMvevidence()
+			go func() {
+				n.maliVoteEvidenceChannel <- maliVoteEvidence
+			}()
 		case *msg.SyncHSMsg_Vote:
 			pvote := msgIn.GetVote()
 			vote := &msg.Vote{}

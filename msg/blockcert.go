@@ -3,8 +3,8 @@ package msg
 import (
 	"sync/atomic"
 
-	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/chain"
+	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
 	pb "github.com/golang/protobuf/proto"
@@ -35,7 +35,7 @@ var (
 // GetBlockInfo returns the Block Certificate information
 // i.e. block hash and view number
 func (bc *BlockCertificate) GetBlockInfo() (crypto.Hash, uint64) {
-	log.Debug("BlockHash in cert is", bc.data.BlockHash)
+	log.Debug(" blockhash in cert is", bc.data.BlockHash)
 	return crypto.ToHash(bc.data.GetBlockHash()), bc.data.GetView()
 }
 

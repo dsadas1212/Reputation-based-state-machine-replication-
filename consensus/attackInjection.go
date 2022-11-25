@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"time"
+
 	"github.com/adithyabhatkajake/libchatter/log"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
 	pb "github.com/golang/protobuf/proto"
@@ -12,6 +14,100 @@ import (
 // commit empty block which means if equicocationpropose or withholding propose
 // exists propsose() should be convert
 // But the other two cases(malicious) are just the opposite
+
+// swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
+// withholding case
+func (n *SyncHS) startConsensusTimerWithWithhold() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
+	}()
+	go func() {
+		if n.GetID() == n.leader {
+			// if n.GetID()%3 == 0 && n.GetID() != 0
+			if n.GetID() == 2 {
+				n.Withholdingpropose()
+				n.withholdingProposalInject = true
+				n.handleWithholdingProposal()
+
+			} else {
+				n.withholdingProposalInject = false
+				n.Propose()
+			}
+
+		} else {
+			// if n.leader%3 == 0 && n.leader != 0
+			if n.leader == 2 {
+				n.withholdingProposalInject = true
+				n.handleWithholdingProposal()
+			} else {
+				n.withholdingProposalInject = false
+			}
+
+		}
+	}()
+}
+
+// equivocating case
+func (n *SyncHS) startConsensusTimerWithEquivocation() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
+	}()
+	go func() {
+		if n.leader == n.GetID() {
+			// n.GetID()%3 == 0 && n.GetID() != 0
+			if n.GetID() == 2 {
+				n.Equivocationpropose()
+			} else {
+				n.Propose()
+			}
+
+		}
+	}()
+
+}
+
+// malicious prospoal case
+func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
+	go func() {
+		n.timer.Start()
+		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
+
+	}()
+	go func() {
+		if n.GetID() == n.leader {
+			n.Propose()
+
+		} else {
+			if n.GetID() == 0 {
+				n.Maliciousproposalpropose()
+			}
+		}
+
+	}()
+
+}
+
+// malicious vote case
+func (n *SyncHS) startConsensusTimerWithMaliciousVote() {
+
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
+
+	go func() {
+		if n.GetID() == n.leader {
+			n.Propose()
+		} else {
+			if n.GetID() == 0 {
+				n.maliciousVoteInject = true
+			}
+		}
+
+	}()
+}
+
+// malicious vote case need to change the step in forwardhandler
 func (n *SyncHS) Equivocationpropose() {
 	log.Info("leader", n.GetID(), "equivocating block in view(round)", n.view)
 	n.bc.Mu.Lock()
@@ -68,8 +164,49 @@ func (n *SyncHS) Maliciousproposalpropose() {
 	maliProp := n.NewCandidateProposal(cmds, cert, n.bc.Head+1, nil)
 	maliRelayMsg := &msg.SyncHSMsg{}
 	maliRelayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: maliProp}
-	go n.Broadcast(maliRelayMsg)
+	//we need other channel to handle maliciousprospoal
+	go func() {
+		//malicious broadcast
+		n.Broadcast(maliRelayMsg)
+		//hanlde myself malicious proposal
+		n.maliPropseChannel <- maliProp
 
+	}()
+
+}
+
+func (n *SyncHS) MaliciousPropsoalHandler() {
+	for {
+		malipro, ok := <-n.maliPropseChannel
+		if !ok {
+			log.Error("MaliciousProposal channel error")
+			continue
+		}
+		log.Debug("Node", n.GetID(), "Receive ", malipro.GetMiner(), "'s MaliciousProposal in round", n.view)
+		//this misbehaviour only ocur in propose step,so we only detect the sign of miner
+		data, _ := pb.Marshal(malipro.GetBlock().GetHeader())
+		correct, err := n.GetPubKeyFromID(malipro.GetMiner()).Verify(data, malipro.GetMiningProof())
+		if !correct || err != nil {
+			log.Error("Incorrect signature for maliciousproposal ", n.view)
+			continue
+		}
+		//malicous proposal
+		n.maliciousProposalInject = malipro.Miner != n.leader
+		if !n.maliciousProposalInject {
+			log.Debug("There is an invalid mailiciouspropsoal")
+			continue
+		}
+		log.Info("There is a malicious propsoal")
+		if n.GetID() != 0 {
+			//misbehaviourtarget don't send its evidence!
+			n.sendMaliProEvidence(malipro)
+			continue
+		} else {
+			//misbehaviourtarget only need to handle its misbehave!
+			continue
+		}
+
+	}
 }
 
 // node vote for an non-leader block
