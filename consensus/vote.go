@@ -25,8 +25,7 @@ func (n *SyncHS) voteHandler() {
 			log.Error("Vote channel error")
 			continue
 		}
-		n.maliciousVoteInject = v.Owner != n.leader
-		if n.maliciousVoteInject {
+		if v.Owner != n.leader {
 			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.", "Owner is", v.Owner, "leader is", n.leader)
 			go n.sendMalivoteEvidence(v)
 			continue

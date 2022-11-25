@@ -197,10 +197,17 @@ func (n *SyncHS) forwardProposalHandler() {
 			n.addNewBlock(&ep.ExtBlock)
 			n.addProposaltoViewMap(fprop)
 			n.ensureBlockIsDelivered(&ep.ExtBlock)
-			// Vote for the forward proposal
 			go func() {
-				n.voteForBlock(ep)
+				//malicious vote injection!
+				if n.GetID() == 0 && n.maliciousVoteInject {
+					n.voteForNonLeaderBlk()
+					n.maliciousVoteInject = false
+				} else {
+					// Vote for the forward proposal
+					n.voteForBlock(ep)
+				}
 			}()
+
 		} else {
 			//leader only need to vote
 			n.voteForBlock(ep)

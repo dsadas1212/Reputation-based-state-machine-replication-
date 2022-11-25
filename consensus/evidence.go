@@ -74,6 +74,7 @@ func (shs *SyncHS) sendMalivoteEvidence(v *msg.Vote) {
 	malivoteEvidence.Evidence = &msg.Evidence{}
 	malivoteEvidence.Evidence.EvidenceData = &msg.EvidenceData{}
 	malivoteEvidence.Evidence.EvidenceData.MisbehaviourTarget = v.ProtoVoteBody.GetVoter()
+	malivoteEvidence.Evidence.EvidenceData.View = shs.view
 	malivoteEvidence.Evidence.EvOrigin = shs.GetID()
 	malivoteEvidence.E = v.ToProto()
 	data, err := pb.Marshal(malivoteEvidence.Evidence.EvidenceData)

@@ -89,6 +89,24 @@ func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
 
 }
 
+// malicious vote case
+func (n *SyncHS) startConsensusTimerWithMaliciousVote() {
+
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
+
+	go func() {
+		if n.GetID() == n.leader {
+			n.Propose()
+		} else {
+			if n.GetID() == 0 {
+				n.maliciousVoteInject = true
+			}
+		}
+
+	}()
+}
+
 // malicious vote case need to change the step in forwardhandler
 func (n *SyncHS) Equivocationpropose() {
 	log.Info("leader", n.GetID(), "equivocating block in view(round)", n.view)
