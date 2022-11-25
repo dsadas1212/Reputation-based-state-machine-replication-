@@ -201,7 +201,6 @@ func (shs *SyncHS) MaliciousVoteEvidenceHandler() {
 			log.Debugln("Received an invalid Malicious vote evidence message")
 			continue
 		}
-		shs.voteMaliLock.RLock()
 		maliVoterMap, exists := shs.voteMaliMap[shs.view]
 		if exists {
 			for i := range maliVoterMap {
@@ -222,7 +221,6 @@ func (shs *SyncHS) MaliciousVoteEvidenceHandler() {
 				continue
 			}
 		}
-		shs.voteMaliLock.RUnlock()
 		shs.addMaliVotetoMap(maliVoteEvidence.E)
 	}
 }
