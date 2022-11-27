@@ -43,23 +43,23 @@ func (n *SyncHS) protocol() {
 			} else {
 				n.proposeChannel <- prop
 			}
-		case *msg.SyncHSMsg_Eqevidence:
-			eqEvidence := msgIn.GetEqevidence()
-			go func() {
-				n.eqEvidenceChannel <- eqEvidence
-			}()
+		// case *msg.SyncHSMsg_Eqevidence:
+		// 	eqEvidence := msgIn.GetEqevidence()
+		// 	go func() {
+		// 		n.eqEvidenceChannel <- eqEvidence
+		// 	}()
 
-		case *msg.SyncHSMsg_Mpevidence:
-			maliProEvidence := msgIn.GetMpevidence()
-			go func() {
-				n.maliProEvidenceChannel <- maliProEvidence
-			}()
+		// case *msg.SyncHSMsg_Mpevidence:
+		// 	maliProEvidence := msgIn.GetMpevidence()
+		// 	go func() {
+		// 		n.maliProEvidenceChannel <- maliProEvidence
+		// 	}()
 
-		case *msg.SyncHSMsg_Mvevidence:
-			maliVoteEvidence := msgIn.GetMvevidence()
-			go func() {
-				n.maliVoteEvidenceChannel <- maliVoteEvidence
-			}()
+		// case *msg.SyncHSMsg_Mvevidence:
+		// 	maliVoteEvidence := msgIn.GetMvevidence()
+		// 	go func() {
+		// 		n.maliVoteEvidenceChannel <- maliVoteEvidence
+		// 	}()
 		case *msg.SyncHSMsg_Vote:
 			pvote := msgIn.GetVote()
 			vote := &msg.Vote{}
