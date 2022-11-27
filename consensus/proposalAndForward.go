@@ -14,14 +14,16 @@ import (
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
 func (n *SyncHS) startConsensusTimer() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-	}()
+
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
 
 	go func() {
 		if n.leader == n.GetID() {
 			n.Propose()
+		} else {
+			//non leader node update its command pool
+			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 		}
 
 	}()

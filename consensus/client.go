@@ -90,7 +90,8 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 
 func (n *SyncHS) setConsensusTimer() {
 	n.timer.SetCallAndCancel(n.callback)
-	n.timer.SetTime(20 * time.Second)
+	//+ 150*time.Millisecond
+	n.timer.SetTime(4 * time.Second)
 
 }
 

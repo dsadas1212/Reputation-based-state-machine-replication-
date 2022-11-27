@@ -140,10 +140,10 @@ func (shs *SyncHS) Start() {
 	go shs.forwardProposalHandler()
 	// Second, start vote handler concurrently
 	go shs.voteHandler()
-	go shs.MaliciousPropsoalHandler()
-	go shs.EquivocationEvidenceHandler()
-	go shs.MaliciousVoteEvidenceHandler()
-	go shs.MaliciousProposalEvidenceHandler()
+	// go shs.MaliciousPropsoalHandler()
+	// go shs.EquivocationEvidenceHandler()
+	// go shs.MaliciousVoteEvidenceHandler()
+	// go shs.MaliciousProposalEvidenceHandler()
 
 	// Start E2C Protocol - Start message handler
 	shs.protocol()
