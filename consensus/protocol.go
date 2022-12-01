@@ -140,6 +140,7 @@ func (shs *SyncHS) Start() {
 	go shs.forwardProposalHandler()
 	// Second, start vote handler concurrently
 	go shs.voteHandler()
+	// Third, Start misbehavioushandler
 	// go shs.MaliciousPropsoalHandler()
 	// go shs.EquivocationEvidenceHandler()
 	// go shs.MaliciousVoteEvidenceHandler()
