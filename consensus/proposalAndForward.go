@@ -11,6 +11,7 @@ import (
 	pb "github.com/golang/protobuf/proto"
 )
 
+// !!!!!! lock and unlock can be use for the security of thread
 // In reputation-based SMR all things begin with Timer!
 // ！！version1 use timer
 func (n *SyncHS) startConsensusTimer() {
@@ -34,8 +35,8 @@ func (n *SyncHS) Propose() {
 
 	log.Debug("Starting a propose step")
 	// Do we have a certificate?
-	n.bc.Mu.Lock()
-	defer n.bc.Mu.Unlock()
+	// n.bc.Mu.Lock()
+	// defer n.bc.Mu.Unlock()
 	head := n.bc.Head
 	cert, exists := n.getCertForBlockIndex(head)
 	if !exists {
@@ -269,26 +270,26 @@ func (n *SyncHS) ensureBlockIsDelivered(blk *chain.ExtBlock) {
 
 func (n *SyncHS) addNewBlock(blk *chain.ExtBlock) {
 	// Otherwise, add the current block to map
-	n.bc.Mu.Lock()
+	// n.bc.Mu.Lock()
 	n.bc.BlocksByHeight[blk.GetHeight()] = blk
 	n.bc.BlocksByHash[blk.GetBlockHash()] = blk
-	n.bc.Mu.Unlock()
+	// n.bc.Mu.Unlock()
 }
 
 // Note that, there may be many many nodes to do this in same roound, so this case is same with votecase
 func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
-	n.malipropLock.Lock()
+	// n.malipropLock.Lock()
 	if _, exists := n.maliproposalMap[n.view]; exists {
 		n.maliproposalMap[n.view][prop.Miner] = 1
 	} else {
 		n.maliproposalMap[n.view] = make(map[uint64]uint64)
 		n.maliproposalMap[n.view][prop.Miner] = 1
 	}
-	n.malipropLock.Unlock()
+	// n.malipropLock.Unlock()
 	log.Debug("malipropsoalMAP IN VIEW", n.view, "is", n.maliproposalMap[n.view])
 }
 func (n *SyncHS) addEquiProposaltoMap() {
-	n.equipropLock.Lock()
+	// n.equipropLock.Lock()
 	value, exists := n.equiproposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug("equivocation propsoal of this leader in this view has been recorded")
@@ -297,11 +298,11 @@ func (n *SyncHS) addEquiProposaltoMap() {
 	equiSenderMap := make(map[uint64]uint64)
 	equiSenderMap[n.leader] = 1
 	n.equiproposalMap[n.view] = equiSenderMap
-	n.equipropLock.Unlock()
+	// n.equipropLock.Unlock()
 }
 
 func (n *SyncHS) addWitholdProposaltoMap() {
-	n.withpropoLock.Lock()
+	// n.withpropoLock.Lock()
 	value, exists := n.withproposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug("withholding propsoal of this leader in this view has been recorded")
@@ -310,10 +311,10 @@ func (n *SyncHS) addWitholdProposaltoMap() {
 	withSenderMap := make(map[uint64]uint64)
 	withSenderMap[n.leader] = 1
 	n.withproposalMap[n.view] = withSenderMap
-	n.withpropoLock.Unlock()
+	// n.withpropoLock.Unlock()
 }
 func (n *SyncHS) addProposaltoMap() {
-	n.propMapLock.Lock()
+	// n.propMapLock.Lock()
 	value, exists := n.proposalMap[n.view][n.leader]
 	if exists && value == 1 {
 		log.Debug(n.GetID(), " has been recorded the propsoal of this leader in this round")
@@ -322,13 +323,13 @@ func (n *SyncHS) addProposaltoMap() {
 	senderMap := make(map[uint64]uint64)
 	senderMap[n.leader] = 1
 	n.proposalMap[n.view] = senderMap
-	n.propMapLock.Unlock()
+	// n.propMapLock.Unlock()
 }
 
 func (n *SyncHS) addProposaltoViewMap(prop *msg.Proposal) {
-	n.proposalByviewLock.Lock()
+	// n.proposalByviewLock.Lock()
 	n.proposalByviewMap[n.view] = prop
-	n.proposalByviewLock.Unlock()
+	// n.proposalByviewLock.Unlock()
 }
 
 // NewCandidateProposal returns a proposal message built using commands

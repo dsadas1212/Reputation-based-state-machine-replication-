@@ -6,8 +6,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.pendingCommands = append(n.pendingCommands, cmd)
 	// .pendingCommands.PushBack(cmd)
 	//&& n.GetID() == n.leader
-	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() { //Sufficient Commands start our timer!
-		// change the condition of this: 1. if this block is gensis block start timer directly
+	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {
 		if n.gcallFuncFinish {
 			// n.startConsensusTimerWithWithhold()
 			n.startConsensusTimer()
@@ -19,12 +18,6 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			// time.Sleep(time.Second * 5)
 			n.startConsensusTimer()
 		}
-		// go n.startConsensusTimer()
-		// if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {
-		// 	go n.gnerateCandidateBlock()
-		// }
-
-		// }
 	}
 }
 

@@ -18,10 +18,8 @@ import (
 // swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
 // withholding case
 func (n *SyncHS) startConsensusTimerWithWithhold() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
-	}()
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
 		if n.GetID() == n.leader {
 			// if n.GetID()%3 == 0 && n.GetID() != 0
@@ -36,6 +34,8 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			}
 
 		} else {
+			//non leader node update its command pool
+			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 			// if n.leader%3 == 0 && n.leader != 0
 			if n.leader == 2 {
 				n.withholdingProposalInject = true
@@ -50,10 +50,8 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 
 // equivocating case
 func (n *SyncHS) startConsensusTimerWithEquivocation() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
-	}()
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
 		if n.leader == n.GetID() {
 			// n.GetID()%3 == 0 && n.GetID() != 0
@@ -63,6 +61,9 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 				n.Propose()
 			}
 
+		} else {
+			//non leader node update its command pool
+			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 		}
 	}()
 
@@ -70,16 +71,16 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 
 // malicious prospoal case
 func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
-	go func() {
-		n.timer.Start()
-		log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 
-	}()
+	n.timer.Start()
+	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
 		if n.GetID() == n.leader {
 			n.Propose()
 
 		} else {
+			//non leader node update its command pool
+			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 			if n.GetID() == 0 {
 				n.Maliciousproposalpropose()
 			}
@@ -94,11 +95,12 @@ func (n *SyncHS) startConsensusTimerWithMaliciousVote() {
 
 	n.timer.Start()
 	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
-
 	go func() {
 		if n.GetID() == n.leader {
 			n.Propose()
 		} else {
+			//non leader node update its command pool
+			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 			if n.GetID() == 0 {
 				n.maliciousVoteInject = true
 			}

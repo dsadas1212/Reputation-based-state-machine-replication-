@@ -145,7 +145,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			// If we commit the block for the first time, then ship off a new command to the server
 			if sendNewCommands { // will be triggered once when commitMap value changes
 				// 750*time.Microsecond
-				// <-time.After(5 * time.Millisecond)
+				<-time.After(2*time.Millisecond + 0*time.Microsecond)
 				cmd := <-cmdChannel
 				// log.Info("Sending command ", cmd, " to the servers")
 				go sendCommandToServer(cmd)
@@ -181,7 +181,7 @@ func main() {
 
 	confFile := flag.String("conf", "", "Path to client config file")
 	batch := flag.Uint64("batch", BufferCommands, "Number of commands to wait for")
-	payload := flag.Uint64("payload", 64, "Number of bytes to get as response")
+	payload := flag.Uint64("payload", 0, "Number of bytes to get as response")
 	count := flag.Uint64("metric", metricCount, "Number of metrics to collect before exiting")
 	var logLevelPtr = flag.Uint64("loglevel", uint64(log.DebugLevel),
 		"Loglevels are one of \n0 - PanicLevel\n1 - FatalLevel\n2 - ErrorLevel\n3 - WarnLevel\n4 - InfoLevel\n5 - DebugLevel\n6 - TraceLevel")
@@ -292,7 +292,7 @@ func main() {
 	// Then, run a goroutine that sends the first Blocksize requests to the nodes
 	for ; idx < blksize; idx++ {
 		//+ 750*time.Microsecond
-		// <-time.After(5 * time.Millisecond) //for 400
+		<-time.After(2*time.Millisecond + 0*time.Microsecond) //for 400
 		// Build a command
 		cmd := make([]byte, 8+*payload)
 		binary.LittleEndian.PutUint64(cmd, idx)
