@@ -77,8 +77,8 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 // }
 
 func (n *SyncHS) proposalNumCalculate(nodeID uint64) uint64 {
-	n.propMapLock.RLock()
-	defer n.propMapLock.RUnlock()
+	// n.propMapLock.RLock()
+	// defer n.propMapLock.RUnlock()
 	proposalnum = 0
 	for _, senderMap := range n.proposalMap {
 		num, exists := senderMap[nodeID]
@@ -92,8 +92,8 @@ func (n *SyncHS) proposalNumCalculate(nodeID uint64) uint64 {
 }
 
 func (n *SyncHS) voteNumCalculate(nodeID uint64) uint64 {
-	n.voteMapLock.RLock()
-	defer n.voteMapLock.RUnlock()
+	// n.voteMapLock.RLock()
+	// defer n.voteMapLock.RUnlock()
 	votenum = 0
 	for _, votermap := range n.voteMap {
 		num, exists := votermap[nodeID]
@@ -106,8 +106,8 @@ func (n *SyncHS) voteNumCalculate(nodeID uint64) uint64 {
 }
 
 func (n *SyncHS) maliproposalNumCalculate(nodeID uint64) uint64 {
-	n.malipropLock.RLock()
-	defer n.malipropLock.RUnlock()
+	// n.malipropLock.RLock()
+	// defer n.malipropLock.RUnlock()
 	maliproposalnum = 0
 	for _, maliSenderMap := range n.maliproposalMap {
 		num, exsits := maliSenderMap[nodeID]
@@ -120,8 +120,8 @@ func (n *SyncHS) maliproposalNumCalculate(nodeID uint64) uint64 {
 }
 
 func (n *SyncHS) withholdproposalNumCalculate(nodeID uint64) uint64 {
-	n.withpropoLock.RLock()
-	defer n.withpropoLock.RUnlock()
+	// n.withpropoLock.RLock()
+	// defer n.withpropoLock.RUnlock()
 	withpropsoalnum = 0
 	for _, withSenderMap := range n.withproposalMap {
 		num, exists := withSenderMap[nodeID]
@@ -135,8 +135,8 @@ func (n *SyncHS) withholdproposalNumCalculate(nodeID uint64) uint64 {
 }
 
 func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
-	n.equipropLock.RLock()
-	defer n.equipropLock.RUnlock()
+	// n.equipropLock.RLock()
+	// defer n.equipropLock.RUnlock()
 	equiprospoalnum = 0
 	for _, equiSenderMap := range n.equiproposalMap {
 		num, exists := equiSenderMap[nodeID]
@@ -150,8 +150,8 @@ func (n *SyncHS) equivocationproposalNumCalculate(nodeID uint64) uint64 {
 }
 
 func (n *SyncHS) malivoteNumCalculate(nodeID uint64) uint64 {
-	n.voteMaliLock.RLock()
-	defer n.voteMaliLock.RUnlock()
+	// n.voteMaliLock.RLock()
+	// defer n.voteMaliLock.RUnlock()
 	malivotenum = 0
 	for _, maliVoterMap := range n.voteMaliMap {
 		num, exists := maliVoterMap[nodeID]
@@ -193,8 +193,8 @@ func (n *SyncHS) maxValueCheckScore(a *big.Float) *big.Float {
 //calcute the score of each node in this round
 
 func (n *SyncHS) addNewViewReputaiontoMap() {
-	n.repMapLock.Lock()
-	defer n.repMapLock.Unlock()
+	// n.repMapLock.Lock()
+	// defer n.repMapLock.Unlock()
 	for i := uint64(0); i <= uint64(len(n.pMap)); i++ {
 		// n.reputationMapwithoutRound[i] = n.ReputationCalculateinCurrentRound(i)
 		if _, exists1 := n.reputationMap[n.view+1]; exists1 {

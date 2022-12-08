@@ -157,18 +157,18 @@ func (n *SyncHS) voteForBlock(exprop *msg.ExtProposal) {
 }
 
 func (n *SyncHS) addMaliVotetoMap(v *msg.ProtoVote) {
-	n.voteMaliLock.Lock()
+	// n.voteMaliLock.Lock()
 	if _, exists := n.voteMaliMap[n.view]; exists {
 		n.voteMaliMap[n.view][v.GetBody().Voter] = 1
 	} else {
 		n.voteMaliMap[n.view] = make(map[uint64]uint64)
 		n.voteMaliMap[n.view][v.GetBody().Voter] = 1
 	}
-	n.voteMaliLock.Unlock()
+	// n.voteMaliLock.Unlock()
 }
 
 func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
-	n.voteMapLock.Lock()
+	// n.voteMapLock.Lock()
 	// n.voterMap[v.GetBody().Voter] = 1
 	if _, exists := n.voteMap[n.view]; exists {
 		n.voteMap[n.view][v.GetBody().Voter] = 1
@@ -178,7 +178,7 @@ func (n *SyncHS) addVotetoMap(v *msg.ProtoVote) {
 	}
 	// log.Debug("Node", n.GetID(), "'S votemap is", n.voteMap)
 	// log.Debug("vote", n.voteMap)
-	n.voteMapLock.Unlock()
+	// n.voteMapLock.Unlock()
 }
 
 func (n *SyncHS) GetCertBenchMark(viewNum uint64) *big.Float {

@@ -1,10 +1,10 @@
-TESTDIR="testData/4-node-test800"
+TESTDIR="testData/4-node-test1600"
 
 # Start nodes
-./node/node -conf=$TESTDIR/nodes-0.txt -cpu=1 --loglevel=5 &
-./node/node -conf=$TESTDIR/nodes-1.txt -cpu=1 --loglevel=5 &
-./node/node -conf=$TESTDIR/nodes-2.txt -cpu=1 --loglevel=5 &
-./node/node -conf=$TESTDIR/nodes-3.txt -cpu=1 --loglevel=5 &
+./node/node -conf=$TESTDIR/nodes-0.txt -cpu=4 --loglevel=5 &
+./node/node -conf=$TESTDIR/nodes-1.txt -cpu=4 --loglevel=5 &
+./node/node -conf=$TESTDIR/nodes-2.txt -cpu=4 --loglevel=5 &
+./node/node -conf=$TESTDIR/nodes-3.txt -cpu=4 --loglevel=5 &
 # ./node/node -conf=$TESTDIR/nodes-4.txt -cpu=1 --loglevel=5 &
 # ./node/node -conf=$TESTDIR/nodes-5.txt -cpu=1 --loglevel=5 &
 # ./node/node -conf=$TESTDIR/nodes-6.txt -cpu=1 --loglevel=5 &
