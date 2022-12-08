@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package chain ;
 
-option go_package = "github.com/Reputation-based-state-machine-replication-/chain" ;
+option go_package = "/chain" ;
 
 message ProtoHeader {
     // Hash Pointer

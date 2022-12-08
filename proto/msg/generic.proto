@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package msg ;
 
-option go_package = "github.com/Reputation-based-state-machine-replication-/msg" ;
+option go_package = "/msg" ;
 
 import "msg/proposal.proto" ;
 import "msg/evidence.proto" ;

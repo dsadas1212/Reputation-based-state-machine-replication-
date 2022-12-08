@@ -1,7 +1,7 @@
 syntax = "proto3" ;
 package config ;
 
-option go_package = "github.com/Reputation-based-state-machine-replication-/config" ;
+option go_package = "/config" ;
 
 message ProtoInfo {
     uint64 NodeSize = 1 ;  // Number of nodes in the system

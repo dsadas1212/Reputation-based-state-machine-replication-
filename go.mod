@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/adithyabhatkajake/libchatter v0.0.0-20200829075232-4384baf678ed
 	github.com/ethereum/go-ethereum v1.9.20
-	github.com/golang/protobuf v1.5.0
 	github.com/libp2p/go-libp2p v0.11.0
 	github.com/libp2p/go-libp2p-core v0.6.1
 	github.com/multiformats/go-multiaddr v0.3.1
@@ -33,6 +32,7 @@ require (
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26 // indirect
 	github.com/google/gopacket v1.1.17 // indirect
 	github.com/google/uuid v1.1.1 // indirect

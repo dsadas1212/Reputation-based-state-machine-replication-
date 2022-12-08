@@ -14,6 +14,7 @@ import (
 // Implement how to talk to clients
 const (
 	ClientProtocolID = "synchs/client/0.0.1"
+	Delta            = 4*time.Second + 0*time.Millisecond
 )
 
 func (n *SyncHS) addClient(rw *bufio.ReadWriter) {
@@ -91,8 +92,7 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 func (n *SyncHS) setConsensusTimer() {
 	n.timer.SetCallAndCancel(n.callback)
 	//+ 150*time.Millisecond
-	n.timer.SetTime(4*time.Second + 0*time.Millisecond)
-
+	n.timer.SetTime(Delta)
 }
 
 func (n *SyncHS) callback() {
