@@ -6,7 +6,7 @@ import (
 
 	// "github.com/adithyabhatkajake/libsynchs/msg"
 	// msg "github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 //TODO chenge it to handler version!!!

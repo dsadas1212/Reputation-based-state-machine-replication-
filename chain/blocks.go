@@ -2,7 +2,7 @@ package chain
 
 import (
 	"github.com/adithyabhatkajake/libchatter/crypto"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // ComputeHash computes the hash for the block (i.e. the header)

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
-	pb "github.com/golang/protobuf/proto"
 	peerstore "github.com/libp2p/go-libp2p-core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // ClientConfig is an aggregation of all configs for the client in one place

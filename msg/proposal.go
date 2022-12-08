@@ -2,7 +2,7 @@ package msg
 
 import (
 	chain "github.com/adithyabhatkajake/libsynchs/chain"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type ExtProposal struct {

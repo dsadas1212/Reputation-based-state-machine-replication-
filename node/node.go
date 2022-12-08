@@ -20,7 +20,7 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 var logLevelPtr = flag.Uint64("loglevel", uint64(log.DebugLevel),
 	"Loglevels are one of \n0 - PanicLevel\n1 - FatalLevel\n2 - ErrorLevel\n3 - WarnLevel\n4 - InfoLevel\n5 - DebugLevel\n6 - TraceLevel")
 var configFileStrPtr = flag.String("conf", "", "Path to config file")
-var numCPU = flag.Int("cpu", 4, "number of cpu cores to use for the node")
+var numCPU = flag.Int("cpu", 2, "number of cpu cores to use for the node")
 
 func main() {
 	// Parse flags

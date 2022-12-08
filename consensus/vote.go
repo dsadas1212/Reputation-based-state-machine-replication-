@@ -7,7 +7,7 @@ import (
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/chain"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // Vote channel //TODO malicious vote and equivocation proposal detected!

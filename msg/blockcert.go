@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/adithyabhatkajake/libchatter/crypto"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // BlockCertificate implements PartCert and BlockCert

@@ -2,8 +2,8 @@ package config
 
 import (
 	"github.com/adithyabhatkajake/libchatter/crypto"
-	pb "github.com/golang/protobuf/proto"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // NodeConfig is an aggregation of all configs in one place

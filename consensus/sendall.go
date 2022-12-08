@@ -3,7 +3,7 @@ package consensus
 import (
 	"github.com/adithyabhatkajake/libchatter/log"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // Broadcast broadcasts a protocol message to all the nodes!!

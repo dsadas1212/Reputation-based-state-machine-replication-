@@ -25,11 +25,11 @@ import (
 	"github.com/adithyabhatkajake/libsynchs/consensus"
 	"github.com/adithyabhatkajake/libsynchs/msg"
 
-	pb "github.com/golang/protobuf/proto"
 	"github.com/libp2p/go-libp2p"
 	p2p "github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
+	pb "google.golang.org/protobuf/proto"
 )
 
 var (
@@ -145,7 +145,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			// If we commit the block for the first time, then ship off a new command to the server
 			if sendNewCommands { // will be triggered once when commitMap value changes
 				// 750*time.Microsecond
-				<-time.After(2*time.Millisecond + 0*time.Microsecond)
+				<-time.After(5*time.Millisecond + 0*time.Microsecond)
 				cmd := <-cmdChannel
 				// log.Info("Sending command ", cmd, " to the servers")
 				go sendCommandToServer(cmd)
@@ -292,7 +292,7 @@ func main() {
 	// Then, run a goroutine that sends the first Blocksize requests to the nodes
 	for ; idx < blksize; idx++ {
 		//+ 750*time.Microsecond
-		<-time.After(2*time.Millisecond + 0*time.Microsecond) //for 400
+		<-time.After(5*time.Millisecond + 0*time.Microsecond) //for 400
 		// Build a command
 		cmd := make([]byte, 8+*payload)
 		binary.LittleEndian.PutUint64(cmd, idx)

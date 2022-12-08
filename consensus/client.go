@@ -7,8 +7,8 @@ import (
 
 	"github.com/adithyabhatkajake/libchatter/log"
 	"github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
 	"github.com/libp2p/go-libp2p-core/network"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // Implement how to talk to clients
@@ -91,7 +91,7 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 func (n *SyncHS) setConsensusTimer() {
 	n.timer.SetCallAndCancel(n.callback)
 	//+ 150*time.Millisecond
-	n.timer.SetTime(3*time.Second + 0*time.Millisecond)
+	n.timer.SetTime(4*time.Second + 0*time.Millisecond)
 
 }
 

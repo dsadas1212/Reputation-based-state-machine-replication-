@@ -8,7 +8,7 @@ import (
 	"github.com/adithyabhatkajake/libchatter/util"
 	"github.com/adithyabhatkajake/libsynchs/chain"
 	msg "github.com/adithyabhatkajake/libsynchs/msg"
-	pb "github.com/golang/protobuf/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // !!!!!! lock and unlock can be use for the security of thread
