@@ -158,10 +158,12 @@ func (shs *SyncHS) ProtoMsgHandler(s network.Stream) {
 	// Event Handler
 	reader := bufio.NewReader(s)
 	for {
+		log.Info("receive message")
 		// Receive a message from anyone and process them
 		len, err := reader.Read(buf)
 		if err != nil {
-			return
+			panic(err)
+			// return
 		}
 		// Use a copy of the message and send it to off for processing
 		msgBuf := make([]byte, len)

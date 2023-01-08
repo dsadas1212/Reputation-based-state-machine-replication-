@@ -6,15 +6,17 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (n *SyncHS) react(m []byte) {
-	log.Trace("Received a message of size", len(m))
+func (n *SyncHS) react(m []byte) error {
+	log.Info("Received a message of size", len(m))
 	inMessage := &msg.SyncHSMsg{}
 	err := pb.Unmarshal(m, inMessage)
 	if err != nil {
 		log.Error("Received an invalid protocol message from client", err)
-		return
+		return err
 	}
 	n.msgChannel <- inMessage
+	log.Info("there are no error")
+	return nil
 }
 
 func (n *SyncHS) protocol() {

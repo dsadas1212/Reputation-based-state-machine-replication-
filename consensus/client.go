@@ -14,7 +14,7 @@ import (
 // Implement how to talk to clients
 const (
 	ClientProtocolID = "synchs/client/0.0.1"
-	Delta            = 4*time.Second + 0*time.Millisecond
+	Delta            = 5*time.Second + 0*time.Millisecond
 )
 
 func (n *SyncHS) addClient(rw *bufio.ReadWriter) {
@@ -187,6 +187,6 @@ func (n *SyncHS) initialReputationMap() {
 		}
 	}
 
-	log.Debug("finish repmap setting and  Node", n.GetID(), "'s repmap is", n.reputationMap[n.view])
+	log.Debug("finish repmap setting with Node", n.GetID(), "'s repmap is", n.reputationMap[n.view])
 
 }

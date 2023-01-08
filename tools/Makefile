@@ -3,7 +3,7 @@
 all: bin
 	@echo "Finished building tools"
 
-testfiles: bin test3 test10 b100 b400 b800 b2000 b5000 test41 test42 test43 test44 test45 test81 test82 test83 test84 test161 test162 test163 test164
+testfiles: bin test3 test10 b100 b400 b800 b2000 b5000 test41 test42 test43 test44 test45 test81 test82 test83 test84 test161 test162 test163 test164 testflaut
 	@echo "Built test files"
 
 bin: genConfig.go options.go
@@ -104,5 +104,8 @@ test324: bin
 	mkdir -p ../testData/32-node-test2000/
 	./genConfig -o ../testData/32-node-test2000/ -n32 -f0 -d50 -b2000
 
+testflaut: bin
+	mkdir -p ../testData/1-node-test2000/
+	./genConfig -o ../testData/1-node-test2000/ -n1 -f0 -d50 -b2000
 clean: 
 	rm -rf genConfig
