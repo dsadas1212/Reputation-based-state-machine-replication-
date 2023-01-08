@@ -35,8 +35,8 @@ func (n *SyncHS) Propose() {
 
 	log.Debug("Starting a propose step")
 	// Do we have a certificate?
-	// n.bc.Mu.Lock()
-	// defer n.bc.Mu.Unlock()
+	n.bc.Mu.Lock()
+	defer n.bc.Mu.Unlock()
 	head := n.bc.Head
 	cert, exists := n.getCertForBlockIndex(head)
 	if !exists {
