@@ -37,13 +37,14 @@ const (
 // we need to find what fault cause it
 func TestProtoMsgHandler(t *testing.T) {
 	//First we mock client send message to nodes, Note that, there are four nodes and a client
-	//step 1 : we start a client and one node
-	//client
+	//step 1 : we start a client and 4 node
+	//4 node
 	go startaNodeForConsensus(0)
 	go startaNodeForConsensus(1)
 	go startaNodeForConsensus(2)
 	go startaNodeForConsensus(3)
 	time.Sleep(2 * time.Second)
+	//client
 	log.Info("I am the client")
 	ctx := context.Background()
 	// Get client config

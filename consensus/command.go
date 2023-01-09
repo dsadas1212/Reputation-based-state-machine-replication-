@@ -4,9 +4,10 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	n.cmdMutex.Lock()
 	defer n.cmdMutex.Unlock()
 	n.pendingCommands = append(n.pendingCommands, cmd)
-	// .pendingCommands.PushBack(cmd)
+	// n.pendingCommands.PushBack(cmd)
 	//&& n.GetID() == n.leader
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {
+		// log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
 		if n.gcallFuncFinish {
 			// n.startConsensusTimerWithWithhold()
 			n.startConsensusTimer()
@@ -19,6 +20,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			n.startConsensusTimer()
 		}
 	}
+	//
 }
 
 // !!TODO all pengdingCommands should be change not only  leader?

@@ -22,10 +22,13 @@ func (n *SyncHS) startConsensusTimer() {
 	go func() {
 		if n.leader == n.GetID() {
 			n.Propose()
-		} else {
-			//non leader node update its command pool
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 		}
+		// } else {
+		// 	//non leader node update its command pool
+		// 	n.cmdMutex.Lock()
+		// 	defer n.cmdMutex.Unlock()
+		// 	n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+		// }
 
 	}()
 
@@ -65,7 +68,7 @@ func (n *SyncHS) Propose() {
 	relayMsg := &msg.SyncHSMsg{}
 	relayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
 	//prop.String()
-	log.Debug("Proposing block: 400cmd")
+	log.Debug("Proposing block: xxcmd")
 	go func() {
 		//Change itself proposal map
 		n.addProposaltoMap()
