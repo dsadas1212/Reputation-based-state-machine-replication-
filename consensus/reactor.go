@@ -7,7 +7,7 @@ import (
 )
 
 func (n *SyncHS) react(m []byte) error {
-	log.Info("Received a message of size", len(m))
+	log.Trace("Received a message of size", len(m))
 	inMessage := &msg.SyncHSMsg{}
 	err := pb.Unmarshal(m, inMessage)
 	if err != nil {
@@ -15,7 +15,7 @@ func (n *SyncHS) react(m []byte) error {
 		return err
 	}
 	n.msgChannel <- inMessage
-	log.Info("there are no error")
+	log.Trace("there are no error")
 	return nil
 }
 

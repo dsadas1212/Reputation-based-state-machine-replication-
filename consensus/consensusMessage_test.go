@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	TxInterval = 2*time.Millisecond + 0*time.Microsecond
+	TxInterval = 0*time.Millisecond + 0*time.Microsecond
 	payload    = uint64(0)
 )
 
@@ -49,7 +49,7 @@ func TestProtoMsgHandler(t *testing.T) {
 	ctx := context.Background()
 	// Get client config
 	confData := &config.ClientConfig{}
-	io.ReadFromFile(confData, "/root/github.com/Reputation-based-state-machine-replication-/testData/4-node-test2000/client.txt")
+	io.ReadFromFile(confData, "../testData/4-node-test2000/client.txt")
 	// Start networking stack
 	node, err := p2p.New(ctx,
 		libp2p.Identity(confData.GetMyKey()),
@@ -111,7 +111,7 @@ func TestProtoMsgHandler(t *testing.T) {
 func startaNodeForConsensus(num uint64) {
 	log.Info("I am the replica" + strconv.FormatUint(num, 10))
 	Config := &config.NodeConfig{}
-	io.ReadFromFile(Config, "/root/github.com/Reputation-based-state-machine-replication-/testData/4-node-test2000/nodes-"+strconv.FormatUint(num, 10)+".txt")
+	io.ReadFromFile(Config, "../testData/4-node-test2000/nodes-"+strconv.FormatUint(num, 10)+".txt")
 	netw := net.Setup(Config, Config, Config)
 	netw.Connect()
 	log.Info("Finished connection to all the nodes")

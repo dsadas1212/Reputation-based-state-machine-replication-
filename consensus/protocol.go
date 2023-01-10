@@ -158,7 +158,7 @@ func (shs *SyncHS) ProtoMsgHandler(s network.Stream) {
 	// Event Handler
 	reader := bufio.NewReader(s)
 	for {
-		log.Info("receive message")
+		log.Trace("receive message")
 		// Receive a message from anyone and process them
 		len, err := reader.Read(buf)
 		if err != nil {
