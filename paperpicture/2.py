@@ -37,7 +37,7 @@ dict1 = {'axes.axisbelow': True,  #轴在图形的下面
 'grid.color': 'white',
 'grid.linestyle': '--',
 'image.cmap': 'Greys',
-'legend.frameon': False,
+'legend.frameon': True,
 'legend.numpoints': 1,
 'legend.scatterpoints': 1,
 'lines.solid_capstyle': 'round',
@@ -49,19 +49,31 @@ dict1 = {'axes.axisbelow': True,  #轴在图形的下面
 'ytick.color': 'black',
 'ytick.direction': 'out',
 'ytick.major.size': 0.0,
-'ytick.minor.size': 0.0}
+'ytick.minor.size': 0.0
+}
 sns.set(context='paper', 
 palette='deep', font='sans-serif', font_scale=1, 
 color_codes=True, rc=dict1)
-sns.despine(offset=15)
 sns.despine(fig=None, ax=None,
  top=True, right=True, left=True, bottom=True,
   offset=None, trim=False)
-fig = sns.lineplot(data=flights,x='Throughput (Kops/sec)',y='Latency(ms)',dashes=False,sort=True,
-errorbar=None,hue='BlockSize',style='BlockSize',markers=['^'],orient='y')
-fig.set_xlim(10,310) 
-fig.set_ylim(100,200)
-plt.yscale('log')
+palette = sns.color_palette("bright")
+sns.set_palette(palette)
+fig = sns.lineplot(data=flights,x='Throughput (Ops/s)',y='Latency(ms)',dashes=False,sort=True,
+errorbar=None,hue='BlockSize',style='BlockSize',markers=['^','s','o'] ,linewidth = 0.7,
+orient='y', markeredgecolor = 'none',alpha = 0.6)
+#alpha 设置透明度
+#mark空心，mark见matlop
+#markerfacecolor='none'
+fig.set_xlim(10,650) 
+fig.set_ylim(3000,4500)
+#设置x,y轴label大小
+# fig.xaxis.label.set_size(15)
+#科学计数法
+# plt.yscale('log')
+plt.setp(fig.get_legend().get_texts(), fontsize='5') # for legend text
+
+plt.setp(fig.get_legend().get_title(), fontsize='5') # for legend title
 lineplot_figure = fig.get_figure()
 lineplot_figure.savefig(fig_path, dpi = 400)
 plt.show()

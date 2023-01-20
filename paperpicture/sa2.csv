@@ -1,0 +1,12 @@
+Throughput (Ops/s),BlockSize,Latency(ms)
+14.7,Reputation-based-SMR-b800,4000
+25.2,Reputation-based-SMR-b800,4001
+33.2,Reputation-based-SMR-b800,4002
+52.4,Reputation-based-SMR-b800,4003
+82.1,Reputation-based-SMR-b800,4004
+175.6,Reputation-based-SMR-b800,4005
+180.4,Reputation-based-SMR-b800,4035
+179.3,Reputation-based-SMR-b800,4140
+173.8,Reputation-based-SMR-b800,4300
+161,Reputation-based-SMR-b800,4400
+
