@@ -1,4 +1,4 @@
-TESTDIR="testData/4-node-test2000"
+TESTDIR="testData/4-node-test1600"
 
 # Start nodes
 ./node/node -conf=$TESTDIR/nodes-0.txt -cpu=1 --loglevel=5 &
