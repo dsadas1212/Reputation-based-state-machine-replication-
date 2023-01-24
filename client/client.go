@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	TxInterval = 0*time.Millisecond + 0*time.Microsecond
+	TxInterval = 4*time.Millisecond + 0*time.Microsecond
 )
 
 var (

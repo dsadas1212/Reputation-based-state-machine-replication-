@@ -9,7 +9,9 @@ import (
 func (n *SyncHS) react(m []byte) error {
 	log.Trace("Received a message of size", len(m))
 	inMessage := &msg.SyncHSMsg{}
+	// n.netMutex.Lock()
 	err := pb.Unmarshal(m, inMessage)
+	// n.netMutex.Unlock()
 	if err != nil {
 		log.Error("Received an invalid protocol message", err)
 		return err

@@ -4,7 +4,6 @@ package consensus
 import (
 	"math"
 	"math/big"
-	"sync"
 
 	"github.com/adithyabhatkajake/libchatter/log"
 )
@@ -31,19 +30,19 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 	//first we get the correct proposal/vote from map
 	//get current various proposal/vote number
 	// roundnum := n.view
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		n.proposalNumCalculate(nodeID)
-		n.voteNumCalculate(nodeID)
-		n.withholdproposalNumCalculate(nodeID)
-		n.maliproposalNumCalculate(nodeID)
-		n.equivocationproposalNumCalculate(nodeID)
-		n.malivoteNumCalculate(nodeID)
+	// wg := &sync.WaitGroup{}
+	// wg.Add(1)
+	// go func() {
+	// 	defer wg.Done()
+	n.proposalNumCalculate(nodeID)
+	n.voteNumCalculate(nodeID)
+	n.withholdproposalNumCalculate(nodeID)
+	n.maliproposalNumCalculate(nodeID)
+	n.equivocationproposalNumCalculate(nodeID)
+	n.malivoteNumCalculate(nodeID)
 
-	}()
-	wg.Wait()
+	// }()
+	// wg.Wait()
 	// log.Info("calculate reputation for node", nodeID)
 	proposalsc := new(big.Float).SetUint64(proposalnum)
 	// log.Debug("Node", n.GetID(), "'S prospoalsc is", proposalsc)

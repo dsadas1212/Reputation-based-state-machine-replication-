@@ -3,7 +3,7 @@
 all: bin
 	@echo "Finished building tools"
 
-testfiles: bin test3 test10 b100 b400 b800 b2000 b5000 test41 test42 test43 test44 test45 test46 test47 test81 test82 test83 test84 test161 test162 test163 test164 testflaut
+testfiles: bin test3 test10 b100 b400 b800 b2000 b5000 test41 test42 test43 test44 test45 test46 test47 test9 test7 test33 test65
 	@echo "Built test files"
 
 bin: genConfig.go options.go
@@ -65,56 +65,22 @@ test47: bin
 	mkdir -p ../testData/4-node-test3000/
 	./genConfig -o ../testData/4-node-test3000/ -n4 -f0 -d50 -b3000
 
-test81: bin
-	mkdir -p ../testData/8-node-test100/
-	./genConfig -o ../testData/8-node-test100/ -n8 -f0 -d50 -b100
+#test performance in faluty nodes(4/9/17/33/65)
 
-test82: bin
-	mkdir -p ../testData/8-node-test400/
-	./genConfig -o ../testData/8-node-test400/ -n8 -f0 -d50 -b400
+test9: bin
+	mkdir -p ../testData/9-node-test1600/
+	./genConfig -o ../testData/9-node-test1600/ -n9 -f4 -d50 -b1600
 
-test83: bin
-	mkdir -p ../testData/8-node-test800/
-	./genConfig -o ../testData/8-node-test800/ -n8 -f0 -d50 -b800
-	
-test84: bin
-	mkdir -p ../testData/8-node-test2000/
-	./genConfig -o ../testData/8-node-test2000/ -n8 -f0 -d50 -b2000
+test17: bin
+	mkdir -p ../testData/17-node-test1600/
+	./genConfig -o ../testData/17-node-test1600/ -n17 -f8 -d50 -b1600
 
-test161: bin
-	mkdir -p ../testData/16-node-test100/
-	./genConfig -o ../testData/16-node-test100/ -n16 -f0 -d50 -b100
+test33: bin
+	mkdir -p ../testData/33-node-test1600/
+	./genConfig -o ../testData/33-node-test1600/ -n33 -f16 -d50 -b1600
 
-test162: bin
-	mkdir -p ../testData/16-node-test400/
-	./genConfig -o ../testData/16-node-test400/ -n16 -f0 -d50 -b400
-
-test163: bin
-	mkdir -p ../testData/16-node-test800/
-	./genConfig -o ../testData/16-node-test800/ -n16 -f0 -d50 -b800
-
-test164: bin
-	mkdir -p ../testData/16-node-test2000/
-	./genConfig -o ../testData/16-node-test2000/ -n16 -f0 -d50 -b2000
-
-test321: bin
-	mkdir -p ../testData/32-node-test100/
-	./genConfig -o ../testData/32-node-test100/ -n32 -f0 -d50 -b100
-
-test322: bin
-	mkdir -p ../testData/32-node-test400/
-	./genConfig -o ../testData/32-node-test400/ -n32 -f0 -d50 -b400
-
-test323: bin
-	mkdir -p ../testData/32-node-test800/
-	./genConfig -o ../testData/32-node-test800/ -n32 -f0 -d50 -b800
-
-test324: bin
-	mkdir -p ../testData/32-node-test2000/
-	./genConfig -o ../testData/32-node-test2000/ -n32 -f0 -d50 -b2000
-
-testflaut: bin
-	mkdir -p ../testData/1-node-test2000/
-	./genConfig -o ../testData/1-node-test2000/ -n1 -f0 -d50 -b2000
+test65: bin
+	mkdir -p ../testData/65-node-test1600/
+	./genConfig -o ../testData/65-node-test1600/ -n65 -f32 -d50 -b1600
 clean: 
 	rm -rf genConfig

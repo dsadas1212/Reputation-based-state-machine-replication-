@@ -22,14 +22,19 @@ func (n *SyncHS) startConsensusTimer() {
 	go func() {
 		if n.leader == n.GetID() {
 			n.Propose()
-
+			//falut number 1/4/8/16/32
 		} else {
-			//non leader node update its command pool
-			n.cmdMutex.Lock()
-			defer n.cmdMutex.Unlock()
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			if n.GetID()%2 != 0 && n.GetID() != n.leader {
+				time.Sleep(time.Second * 60)
+			}
+			// }
+			// } else {
+			// 	//non leader node update its command pool
+			// 	n.cmdMutex.Lock()
+			// 	defer n.cmdMutex.Unlock()
+			// 	n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			// }
 		}
-
 	}()
 
 }
