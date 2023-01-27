@@ -15,11 +15,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 # Load an example datase
 filepath = '/root/github.com/Reputation-based-state-machine-replication-/paperpicture'
-fig_name = 'scatterplot1.png'
+fig_name = 'scatterplot6.png'
 fig_path = filepath + '/' + fig_name
 # Create a visualization
 # 加载数据
-flights=pd.read_csv('sa1.csv')
+flights=pd.read_csv('sa6.csv')
 flights.head()
 # 长型数据多折线图
 dict1 = {'axes.axisbelow': True,  #轴在图形的下面
@@ -59,14 +59,14 @@ sns.despine(fig=None, ax=None,
   offset=None, trim=False)
 palette = sns.color_palette("bright")
 sns.set_palette(palette)
-fig = sns.lineplot(data=flights,x='Throughput(Ops/s)',y='Latency(ms)',dashes=False,sort=True,
-errorbar=None,hue='BlockSize',style='BlockSize',markers=['^','s','o','h','H','d','D'] ,linewidth = 0.7,
-orient='y', markeredgecolor = 'none',alpha = 0.6)
+fig = sns.lineplot(data=flights,x='Byzantine nodes',y='Throughput(Ops/s)',dashes=False,sort=True,
+errorbar=None,hue='Misbehaviour',style='Misbehaviour',markers=['h','D','^','s','H'] ,linewidth = 0.7,
+orient='x', markeredgecolor = 'none',alpha = 0.6)
 #alpha 设置透明度
 #mark空心，mark见matlop
 #markerfacecolor='none'
-fig.set_xlim(10,650) 
-fig.set_ylim(2900,4500)
+fig.set_xlim(1,70) 
+fig.set_ylim(1,400)
 #设置x,y轴label大小
 # fig.xaxis.label.set_size(15)
 #科学计数法

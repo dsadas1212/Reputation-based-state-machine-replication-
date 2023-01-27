@@ -1,4 +1,4 @@
-Throughput (Ops/s),BlockSize,Latency(ms)
+Throughput(Ops/s),BlockSize,Latency(ms)
 11.8,Reputation-based-SMR-b400,4000
 16.5,Reputation-based-SMR-b400,4001
 23.1,Reputation-based-SMR-b400,4002
