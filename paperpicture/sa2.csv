@@ -10,3 +10,25 @@ Throughput (Ops/s),BlockSize,Latency(ms)
 173.8,Reputation-based-SMR-b800,4300
 161,Reputation-based-SMR-b800,4400
 
+12.72,Reputation-based-SMR-b2000,4000
+82.1,Reputation-based-SMR-b2000,4001
+106.5,Reputation-based-SMR-b2000,4002
+302.5,Reputation-based-SMR-b2000,4004
+366.2,Reputation-based-SMR-b2000,4005
+442.3,Reputation-based-SMR-b2000,4006
+445.7,Reputation-based-SMR-b2000,4040
+443.3,Reputation-based-SMR-b2000,4150
+444.4,Reputation-based-SMR-b2000,4200
+423.9,Reputation-based-SMR-b2000,4400
+
+9.66,Sync-Hotstuff-b2000,3001
+23.06,Sync-Hotstuff-b2000,3002
+49.20,Sync-Hotstuff-b2000,3002.5
+176.33,Sync-Hotstuff-b2000,3003
+365.38,Sync-Hotstuff-b2000,3003.5
+460.18,Sync-Hotstuff-b2000,3004
+583.65,Sync-Hotstuff-b2000,3004.5
+616,Sync-Hotstuff-b2000,3005
+583.2,Sync-Hotstuff-b2000,3150
+550.01,Sync-Hotstuff-b2000,3350
+545.01,Sync-Hotstuff-b2000,3500

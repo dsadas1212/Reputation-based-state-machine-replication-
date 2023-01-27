@@ -60,7 +60,7 @@ sns.despine(fig=None, ax=None,
 palette = sns.color_palette("bright")
 sns.set_palette(palette)
 fig = sns.lineplot(data=flights,x='Throughput (Ops/s)',y='Latency(ms)',dashes=False,sort=True,
-errorbar=None,hue='BlockSize',style='BlockSize',markers=['^','s','o','h','H','d','D'] ,linewidth = 0.7,
+errorbar=None,hue='BlockSize',style='BlockSize',markers=['H','d','D'] ,linewidth = 0.7,
 orient='y', markeredgecolor = 'none',alpha = 0.6)
 #alpha 设置透明度
 #mark空心，mark见matlop
