@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	TxInterval = 4*time.Millisecond + 0*time.Microsecond
+	TxInterval = 0*time.Millisecond + 50*time.Microsecond
 )
 
 var (
@@ -114,9 +114,9 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			log.Error("vote channel closed")
 			return
 		}
-		if ack == nil {
-			continue
-		}
+		// if ack == nil {
+		// 	continue
+		// }
 		bhash := crypto.ToHash(ack.GetBlock().GetBlockHash())
 		_, exists := voteMap[bhash]
 		if !exists {

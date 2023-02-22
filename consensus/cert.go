@@ -68,7 +68,7 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 }
 
 func (n *SyncHS) addCert(bc *msg.BlockCertificate, blockNum uint64) {
-	log.Debug("Adding certificate to block ", blockNum)
+	log.Debug(n.GetID(), "Adding certificate to block ", blockNum)
 	n.certMapLock.Lock()
 	n.certMap[blockNum] = bc
 	n.certMapLock.Unlock()

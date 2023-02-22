@@ -2,7 +2,7 @@ package consensus
 
 var (
 	// DefaultLeaderID is the ID of the Replica that the protocol starts with
-	DefaultLeaderID uint64 = 1
+	DefaultLeaderID uint64 = 0
 )
 
 func (shs *SyncHS) changeLeader() {

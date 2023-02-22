@@ -18,23 +18,30 @@ func (n *SyncHS) startConsensusTimer() {
 
 	n.timer.Start()
 	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now())
-
 	go func() {
+		// if n.GetID()%2 != 0 {
+		// 	// n.cmdMutex.Lock()
+		// 	// defer n.cmdMutex.Unlock()
+		// 	// n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+		// 	time.Sleep(time.Second * 120)
+		// 	return
+		// } else {
 		if n.leader == n.GetID() {
 			n.Propose()
 			//falut number 1/4/8/16/32
-		} else {
-			if n.GetID()%2 != 0 && n.GetID() != n.leader {
-				time.Sleep(time.Second * 60)
-			}
-			// }
-			// } else {
-			// 	//non leader node update its command pool
-			// 	n.cmdMutex.Lock()
-			// 	defer n.cmdMutex.Unlock()
-			// 	n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
-			// }
 		}
+
+		// else {
+		// 	//non leader node update its command pool
+		// 	n.cmdMutex.Lock()
+		// 	defer n.cmdMutex.Unlock()
+		// 	n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+		// }
+
+		// }
+
+		// }
+		//
 	}()
 
 }

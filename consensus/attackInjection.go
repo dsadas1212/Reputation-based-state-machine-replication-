@@ -16,16 +16,17 @@ import (
 // But the other two cases(malicious) are just the opposite
 
 // swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
-// withholding case
+// withholding case = normal case
 func (n *SyncHS) startConsensusTimerWithWithhold() {
 	n.timer.Start()
 	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
 		if n.GetID() == n.leader {
 			// if n.GetID()%3 == 0 && n.GetID() != 0
-			if n.GetID() == 2 {
+			if n.GetID()%2 != 0 {
 				n.Withholdingpropose()
 				n.withholdingProposalInject = true
+				// time.After(time.Second)
 				n.handleWithholdingProposal()
 
 			} else {
@@ -35,10 +36,13 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 
 		} else {
 			//non leader node update its command pool
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			// n.cmdMutex.Lock()
+			// n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			// n.cmdMutex.Unlock()
 			// if n.leader%3 == 0 && n.leader != 0
-			if n.leader == 2 {
+			if n.leader%2 != 0 {
 				n.withholdingProposalInject = true
+				// time.After(time.Second)
 				n.handleWithholdingProposal()
 			} else {
 				n.withholdingProposalInject = false

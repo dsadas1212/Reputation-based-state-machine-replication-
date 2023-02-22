@@ -10,14 +10,14 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 		// log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
 		if n.gcallFuncFinish {
 			// n.startConsensusTimerWithWithhold()
-			n.startConsensusTimer()
+			n.startConsensusTimerWithWithhold()
 			n.gcallFuncFinish = false
 		}
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
 			// time.Sleep(time.Second * 5)
-			n.startConsensusTimer()
+			n.startConsensusTimerWithWithhold()
 		}
 	}
 	//

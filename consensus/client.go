@@ -77,7 +77,8 @@ func (n *SyncHS) ClientBroadcast(m *msg.SyncHSMsg) {
 	data, err := pb.Marshal(m)
 	if err != nil {
 		log.Error("Failed to send message", m, "to client")
-		return
+		panic(err)
+		// return
 	}
 	n.cliMutex.Lock()
 	defer n.cliMutex.Unlock()
@@ -101,6 +102,7 @@ func (n *SyncHS) callback() {
 	if n.withholdingProposalInject {
 		log.Info("In round", n.view, "withholding block have been detected")
 		//Handle withholding behaviour
+		// n.handleWithholdingProposal()
 		n.addNewViewReputaiontoMap()
 		synchsmsg := &msg.SyncHSMsg{}
 		ack := &msg.SyncHSMsg_Ack{}
@@ -151,7 +153,7 @@ func (n *SyncHS) callback() {
 	log.Debug(n.GetID(), "node Blockchain height and view number is", n.bc.Head, "AND", n.view)
 	_, exist := n.getCertForBlockIndex(n.view)
 	if !exist {
-		log.Debug("fail to generate certificate")
+		log.Debug("fail to generate certificate in round", n.view)
 		n.SyncChannel <- true
 		return
 	}
