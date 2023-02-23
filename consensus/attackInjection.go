@@ -26,7 +26,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			if n.GetID()%2 != 0 {
 				n.Withholdingpropose()
 				n.withholdingProposalInject = true
-				// time.After(time.Second)
+				time.After(time.Second * 2)
 				n.handleWithholdingProposal()
 
 			} else {
@@ -42,7 +42,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			// if n.leader%3 == 0 && n.leader != 0
 			if n.leader%2 != 0 {
 				n.withholdingProposalInject = true
-				// time.After(time.Second)
+				time.After(time.Second * 2)
 				n.handleWithholdingProposal()
 			} else {
 				n.withholdingProposalInject = false
@@ -59,7 +59,7 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 	go func() {
 		if n.leader == n.GetID() {
 			// n.GetID()%3 == 0 && n.GetID() != 0
-			if n.GetID() == 2 {
+			if n.GetID()%2 != 0 {
 				n.Equivocationpropose()
 			} else {
 				n.Propose()

@@ -92,5 +92,5 @@ func main() {
 	shs.Start()
 
 	// Disconnect
-	netw.ShutDown()
+	// netw.ShutDown()
 }

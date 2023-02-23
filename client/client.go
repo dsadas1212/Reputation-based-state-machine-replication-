@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	TxInterval = 0*time.Millisecond + 50*time.Microsecond
+	TxInterval = 2*time.Millisecond + 0*time.Microsecond
 )
 
 var (
@@ -103,8 +103,9 @@ func ackMsgHandler(s network.Stream, serverID uint64) {
 }
 
 func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
-	voteMap := make(map[crypto.Hash]uint64)
-	commitMap := make(map[crypto.Hash]bool)
+	//change it to round:hash:votenumber or bool
+	voteMap := make(map[uint64]map[crypto.Hash]uint64)
+	commitMap := make(map[uint64]map[crypto.Hash]bool)
 	for {
 		// Get Acknowledgements from nodes after consensus
 		ack, ok := <-voteChannel
@@ -114,48 +115,68 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			log.Error("vote channel closed")
 			return
 		}
-		// if ack == nil {
-		// 	continue
-		// }
+		if ack == nil {
+			log.Debug("nil")
+			continue
+		}
 		bhash := crypto.ToHash(ack.GetBlock().GetBlockHash())
-		_, exists := voteMap[bhash]
-		if !exists {
-			voteMap[bhash] = 1       // 1 means we have seen one vote so far.
-			commitMap[bhash] = false // To say that we have not yet committed this value
+		log.Debug("Processing block",
+			ack.GetBlock().GetHeader().GetHeight(), "'s hash is", bhash)
+
+		if _, exists := voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash]; !exists {
+			voteSmallMap := make(map[crypto.Hash]uint64)
+			voteSmallMap[bhash] = 1
+			voteMap[ack.GetBlock().GetHeader().GetHeight()] = voteSmallMap
+			commitSmallMap := make(map[crypto.Hash]bool)
+			commitSmallMap[bhash] = false                                      // 1 means we have seen one vote so far.
+			commitMap[ack.GetBlock().GetHeader().GetHeight()] = commitSmallMap // To say that we have not yet committed this value
 		} else {
-			voteMap[bhash]++ // Add another vote
+			voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash]++ // Add another vote
 		}
 		// To ensure this is executed only once, check old committed state
-		old := commitMap[bhash]
-		if voteMap[bhash] <= f {
+		old := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
+		//f
+		if voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash] <= 1 {
 			// Not enough votes for this block
 			// So this is not yet committed
 			// Deal with it later
-			return
+			log.Debug("Not enough votes for this block")
+			continue
 		}
-		commitMap[bhash] = true
-		new := commitMap[bhash]
+		commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash] = true
+		new := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
 		//need change the timereceive!!
-		log.Trace("Committed block. Processing block",
+		log.Debug("Committed block. Processing block",
 			ack.GetBlock().GetHeader().GetHeight())
 		sendNewCommands := old != new
+		log.Debug("SENDnewcommds", sendNewCommands)
 		txs := ack.GetBlock().GetBody().GetTxs()
-		for _, tx := range txs {
-			cmdHash := crypto.DoHash(tx)
-			condLock.Lock()
-			commitTimeMetric[cmdHash] = timeReceived.Sub(timeMap[cmdHash])
-			// Time from sending to getting back in some block
-			condLock.Unlock()
-			// If we commit the block for the first time, then ship off a new command to the server
-			if sendNewCommands { // will be triggered once when commitMap value changes
-				// 750*time.Microsecond
-				<-time.After(TxInterval)
-				cmd := <-cmdChannel
-				// log.Info("Sending command ", cmd, " to the servers")
-				go sendCommandToServer(cmd)
+		//empty block case
+		if len(txs) == 0 && sendNewCommands {
+			<-time.After(TxInterval)
+			cmd := <-cmdChannel
+			// log.Info("Sending command ", cmd, " to the servers")
+			go sendCommandToServer(cmd)
+		} else {
+			for _, tx := range txs {
+				cmdHash := crypto.DoHash(tx)
+				condLock.Lock()
+				commitTimeMetric[cmdHash] = timeReceived.Sub(timeMap[cmdHash])
+				// Time from sending to getting back in some block
+				condLock.Unlock()
+				// If we commit the block for the first time, then ship off a new command to the server
+				if sendNewCommands { // will be triggered once when commitMap value changes
+					// 750*time.Microsecond
+					<-time.After(TxInterval)
+					cmd := <-cmdChannel
+					// log.Info("Sending command ", cmd, " to the servers")
+					go sendCommandToServer(cmd)
+				}
 			}
+
 		}
 	}
+
 }
 
 func printMetrics() {

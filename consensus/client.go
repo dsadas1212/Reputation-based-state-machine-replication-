@@ -62,11 +62,11 @@ func (n *SyncHS) ClientMsgHandler(s network.Stream) {
 		}
 		var cmd []byte
 		if cmd = inMsg.GetTx(); cmd == nil {
-			log.Error("Invalid command received from client")
+			log.Error("invalid command received from client")
 			continue
 		}
 		// Add command
-
+		// log.Debug("now round is", n.view)
 		go n.addCmdsAndStartTimerIfSufficientCommands(cmd)
 
 	}
@@ -119,7 +119,7 @@ func (n *SyncHS) callback() {
 		n.view++
 		n.changeLeader()
 		n.SyncChannel <- true
-		log.Debug(len(n.SyncChannel))
+		log.Debug(len(n.SyncChannel), "the next leader is", n.leader)
 		return
 	}
 	if n.equivocatingProposalInject {

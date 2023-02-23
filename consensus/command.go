@@ -1,25 +1,32 @@
 package consensus
 
+import "github.com/adithyabhatkajake/libchatter/log"
+
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
+	// log.Debug("procedure in this step in round", n.view)
 	n.cmdMutex.Lock()
-	defer n.cmdMutex.Unlock()
 	n.pendingCommands = append(n.pendingCommands, cmd)
+	n.cmdMutex.Unlock()
 	// n.pendingCommands.PushBack(cmd)
 	//&& n.GetID() == n.leader
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {
-		// log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
 		if n.gcallFuncFinish {
-			// n.startConsensusTimerWithWithhold()
 			n.startConsensusTimerWithWithhold()
+			// n.startConsensusTimer()
 			n.gcallFuncFinish = false
 		}
 		//16
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
+			log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
 			// time.Sleep(time.Second * 5)
 			n.startConsensusTimerWithWithhold()
+			// n.startConsensusTimer()
 		}
 	}
+	// else {
+	// 	log.Debug("node", n.GetID(), "not enough commands for block")
+	// }
 	//
 }
 

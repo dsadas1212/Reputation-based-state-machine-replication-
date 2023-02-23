@@ -238,8 +238,9 @@ func (shs *SyncHS) handleWithholdingProposal() {
 	shs.bc.Head++
 	newHeight := shs.bc.Head
 	//CREATE non-cmds block and proposal
-	blksize := shs.GetBlockSize()
-	emptyCmds := make([][]byte, blksize)
+	// blksize := shs.GetBlockSize()
+	emptyCmds := make([][]byte, 0)
+	// emptyCmds[0] = []byte{'M'}
 	// withholdProp := shs.NewCandidateProposal(emptyCmds, cert, newHeight, []byte{'E'})
 	exemptyblock := shs.createAnEmptyBlock(emptyCmds, cert, newHeight, []byte{'E'})
 	// Add this block to the chain
