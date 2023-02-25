@@ -141,7 +141,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			// So this is not yet committed
 			// Deal with it later
 			log.Debug("Not enough votes for this block")
-			continue
+			return
 		}
 		commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash] = true
 		new := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
@@ -158,6 +158,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 			// log.Info("Sending command ", cmd, " to the servers")
 			go sendCommandToServer(cmd)
 		} else {
+			log.Debug("valid block", ack.GetBlock().GetHeader().GetHeight())
 			for _, tx := range txs {
 				cmdHash := crypto.DoHash(tx)
 				condLock.Lock()

@@ -65,9 +65,6 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 				n.Propose()
 			}
 
-		} else {
-			//non leader node update its command pool
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
 		}
 	}()
 
@@ -83,9 +80,9 @@ func (n *SyncHS) startConsensusTimerWithMaliciousPropsoal() {
 			n.Propose()
 
 		} else {
-			//non leader node update its command pool
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
-			if n.GetID() == 0 {
+			// //non leader node update its command pool
+			// n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			if n.GetID()%2 != 0 {
 				n.Maliciousproposalpropose()
 			}
 		}
@@ -103,9 +100,9 @@ func (n *SyncHS) startConsensusTimerWithMaliciousVote() {
 		if n.GetID() == n.leader {
 			n.Propose()
 		} else {
-			//non leader node update its command pool
-			n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
-			if n.GetID() == 0 {
+			// //non leader node update its command pool
+			// n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
+			if n.GetID()%2 != 0 {
 				n.maliciousVoteInject = true
 			}
 		}

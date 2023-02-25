@@ -217,7 +217,7 @@ func (n *SyncHS) forwardProposalHandler() {
 			n.ensureBlockIsDelivered(&ep.ExtBlock)
 			go func() {
 				//malicious vote injection!
-				if n.GetID() == 0 && n.maliciousVoteInject {
+				if n.GetID()%2 != 0 && n.maliciousVoteInject {
 					n.voteForNonLeaderBlk()
 					n.maliciousVoteInject = false
 				} else {
