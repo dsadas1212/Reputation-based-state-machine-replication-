@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	TxInterval = 2*time.Millisecond + 0*time.Microsecond
+	TxInterval = 5*time.Millisecond + 0*time.Microsecond
 )
 
 var (
@@ -136,12 +136,12 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 		// To ensure this is executed only once, check old committed state
 		old := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
 		//f
-		if voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash] <= 1 {
+		if voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash] <= 4 {
 			// Not enough votes for this block
 			// So this is not yet committed
 			// Deal with it later
 			log.Debug("Not enough votes for this block")
-			return
+			continue
 		}
 		commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash] = true
 		new := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
@@ -153,12 +153,13 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 		txs := ack.GetBlock().GetBody().GetTxs()
 		//empty block case
 		if len(txs) == 0 && sendNewCommands {
+			log.Debug("Empty block", ack.GetBlock().GetHeader().GetHeight())
 			<-time.After(TxInterval)
 			cmd := <-cmdChannel
 			// log.Info("Sending command ", cmd, " to the servers")
 			go sendCommandToServer(cmd)
 		} else {
-			log.Debug("valid block", ack.GetBlock().GetHeader().GetHeight())
+			log.Debug("valid block", ack.GetBlock().GetHeader().GetHeight(), "cmd len is", len(txs))
 			for _, tx := range txs {
 				cmdHash := crypto.DoHash(tx)
 				condLock.Lock()

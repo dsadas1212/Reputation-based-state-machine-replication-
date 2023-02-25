@@ -25,6 +25,10 @@ func (n *SyncHS) voteHandler() {
 			log.Error("Vote channel error")
 			continue
 		}
+		// if len(n.voteChannel) <= 0 {
+		// 	log.Trace("NODES DON'T ACCESS TO VOTESTEP WAIT")
+		// 	continue
+		// }
 		if v.Owner != n.leader {
 			log.Warn(v.GetVoter(), "'s Malicious vote have been detected.", "Owner is", v.Owner, "leader is", n.leader)
 			go n.sendMalivoteEvidence(v)

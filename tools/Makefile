@@ -15,11 +15,11 @@ test3: bin
 
 test31: bin
 	mkdir -p ../testData/3-node-test1600/
-	./genConfig -o ../testData/3-node-test1600/ -n3 -f0 -d50 -b1600
+	./genConfig -o ../testData/3-node-test1600/ -n3 -f1 -d50 -b1600
 
 test32: bin
 	mkdir -p ../testData/3-node-test800/
-	./genConfig -o ../testData/3-node-test800/ -n3 -f0 -d50 -b800
+	./genConfig -o ../testData/3-node-test800/ -n3 -f1 -d50 -b800
 
 test10: bin
 	mkdir -p ../testData/10-node-test/
@@ -77,7 +77,10 @@ test47: bin
 
 test9: bin
 	mkdir -p ../testData/9-node-test1600/
-	./genConfig -o ../testData/9-node-test1600/ -n9 -f4 -d50 -b1600
+	./genConfig -o ../testData/9-node-test1600/ -n9 -f4 -d50 -b800
+test91: bin
+	mkdir -p ../testData/9-node-test800/
+	./genConfig -o ../testData/9-node-test800/ -n9 -f4 -d50 -b800
 
 test17: bin
 	mkdir -p ../testData/17-node-test1600/

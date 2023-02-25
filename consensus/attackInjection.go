@@ -42,7 +42,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			// if n.leader%3 == 0 && n.leader != 0
 			if n.leader%2 != 0 {
 				n.withholdingProposalInject = true
-				time.After(time.Second * 2)
+				time.After(time.Second * 3)
 				n.handleWithholdingProposal()
 			} else {
 				n.withholdingProposalInject = false
