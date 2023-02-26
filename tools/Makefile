@@ -83,15 +83,15 @@ test91: bin
 	./genConfig -o ../testData/9-node-test800/ -n9 -f4 -d50 -b800
 
 test17: bin
-	mkdir -p ../testData/17-node-test1600/
-	./genConfig -o ../testData/17-node-test1600/ -n17 -f8 -d50 -b1600
+	mkdir -p ../testData/17-node-test800/
+	./genConfig -o ../testData/17-node-test800/ -n17 -f8 -d50 -b800
 
 test33: bin
-	mkdir -p ../testData/33-node-test1600/
-	./genConfig -o ../testData/33-node-test1600/ -n33 -f16 -d50 -b1600
+	mkdir -p ../testData/33-node-test800/
+	./genConfig -o ../testData/33-node-test800/ -n33 -f16 -d50 -b800
 
 test65: bin
-	mkdir -p ../testData/65-node-test1600/
-	./genConfig -o ../testData/65-node-test1600/ -n65 -f32 -d50 -b1600
+	mkdir -p ../testData/65-node-test800/
+	./genConfig -o ../testData/65-node-test800/ -n65 -f32 -d50 -b800
 clean: 
 	rm -rf genConfig

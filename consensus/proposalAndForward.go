@@ -147,8 +147,8 @@ func (n *SyncHS) forwardProposalHandler() {
 			log.Error("Proposal channel error")
 			continue
 		}
-		//check if equivocation have been detected
-		if n.equivocatingProposalInject {
+		//check if equivocation have been &&detected
+		if n.equivocatingProposalInject || n.withholdingProposalInject {
 			continue
 		}
 		log.Debug("NODE", n.GetID(), "Receive forwardSender", fprop.ForwardSender, "'s prospoal")

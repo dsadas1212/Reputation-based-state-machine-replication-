@@ -1,9 +1,5 @@
 package consensus
 
-import (
-	"time"
-)
-
 func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	// log.Debug("procedure in this step in round", n.view)
 	n.cmdMutex.Lock()
@@ -21,7 +17,7 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 		if len(n.SyncChannel) == 1 {
 			<-n.SyncChannel
 			// log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
-			time.Sleep(time.Second * 2)
+			// time.Sleep(time.Second * 2)
 			n.startConsensusTimerWithWithhold()
 			// n.startConsensusTimer()
 		}

@@ -4,8 +4,6 @@ package consensus
 import (
 	"math"
 	"math/big"
-
-	"github.com/adithyabhatkajake/libchatter/log"
 )
 
 const (
@@ -62,7 +60,7 @@ func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
 	behaviourSocre := new(big.Float).SetFloat64(math.Tanh(fltnum))
 	baseNodeSocre := new(big.Float).Add(behaviourSocre, calInitialNodescore)
 	nodeScore := n.maxValueCheckScore(baseNodeSocre)
-	log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
+	// log.Info("node", n.GetID(), "calculate the reputation of", nodeID, "is", nodeScore)
 	return nodeScore
 
 }

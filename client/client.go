@@ -34,6 +34,7 @@ import (
 
 const (
 	TxInterval = 5*time.Millisecond + 0*time.Microsecond
+	faultNum   = 16
 )
 
 var (
@@ -136,7 +137,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 		// To ensure this is executed only once, check old committed state
 		old := commitMap[ack.GetBlock().GetHeader().GetHeight()][bhash]
 		//f
-		if voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash] <= 4 {
+		if voteMap[ack.GetBlock().GetHeader().GetHeight()][bhash] <= faultNum {
 			// Not enough votes for this block
 			// So this is not yet committed
 			// Deal with it later
@@ -182,7 +183,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 }
 
 func printMetrics() {
-	printDuration, err := time.ParseDuration("60s")
+	printDuration, err := time.ParseDuration("120s")
 	if err != nil {
 		panic(err)
 	}
@@ -197,7 +198,7 @@ func printMetrics() {
 		}
 		fmt.Println("Metric")
 		fmt.Printf("%d cmds in %d milliseconds\n", num, count)
-		fmt.Printf("Throughput: %f\n", float64(num)/60.0)
+		fmt.Printf("Throughput: %f\n", float64(num)/120.0)
 		fmt.Printf("Latency: %f\n", float64(count)/float64(num))
 		condLock.RUnlock()
 	}
