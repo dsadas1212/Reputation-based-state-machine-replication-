@@ -35,11 +35,11 @@ func (n *SyncHS) protocol() {
 			prop := msgIn.GetProp()
 			if prop.ForwardSender == n.leader {
 				if prop.GetMiner() == n.leader {
-					log.Debug("Received a proposal from ", prop.GetMiner())
+					// log.Debug("Received a proposal from ", prop.GetMiner())
 					// Send proposal to forward step
 					go n.forward(prop)
 				} else {
-					log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
+					// log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
 					go func() {
 						n.maliPropseChannel <- prop
 					}()

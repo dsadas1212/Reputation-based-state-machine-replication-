@@ -26,7 +26,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			if n.GetID()%2 != 0 {
 				n.Withholdingpropose()
 				n.withholdingProposalInject = true
-				time.After(time.Second * 4)
+				time.After(time.Second * 0)
 				n.handleWithholdingProposal()
 
 			} else {
@@ -42,7 +42,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 			// if n.leader%3 == 0 && n.leader != 0
 			if n.leader%2 != 0 {
 				n.withholdingProposalInject = true
-				time.After(time.Second * 4)
+				time.After(time.Second * 0)
 				n.handleWithholdingProposal()
 			} else {
 				n.withholdingProposalInject = false
@@ -57,7 +57,7 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 	n.timer.Start()
 	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
-		if n.leader == n.GetID() {
+		if n.GetID() == n.leader {
 			// n.GetID()%3 == 0 && n.GetID() != 0
 			if n.GetID()%2 != 0 {
 				n.Equivocationpropose()
@@ -65,6 +65,8 @@ func (n *SyncHS) startConsensusTimerWithEquivocation() {
 				n.Propose()
 			}
 
+		} else {
+			log.Debug("follow the leader step")
 		}
 	}()
 
@@ -137,7 +139,7 @@ func (n *SyncHS) Equivocationpropose() {
 	relayMsg2 := &msg.SyncHSMsg{}
 	relayMsg1.Msg = &msg.SyncHSMsg_Prop{Prop: prop1}
 	relayMsg2.Msg = &msg.SyncHSMsg_Prop{Prop: prop2}
-	go n.EquivocatingBroadcast(relayMsg1, relayMsg2)
+	n.EquivocatingBroadcast(relayMsg1, relayMsg2)
 
 }
 
@@ -185,7 +187,7 @@ func (n *SyncHS) MaliciousPropsoalHandler() {
 			log.Error("MaliciousProposal channel error")
 			continue
 		}
-		log.Debug("Node", n.GetID(), "Receive ", malipro.GetMiner(), "'s MaliciousProposal in round", n.view)
+		// log.Debug("Node", n.GetID(), "Receive ", malipro.GetMiner(), "'s MaliciousProposal in round", n.view)
 		//this misbehaviour only ocur in propose step,so we only detect the sign of miner
 		data, _ := pb.Marshal(malipro.GetBlock().GetHeader())
 		correct, err := n.GetPubKeyFromID(malipro.GetMiner()).Verify(data, malipro.GetMiningProof())
@@ -196,7 +198,7 @@ func (n *SyncHS) MaliciousPropsoalHandler() {
 		//malicous proposal
 		n.maliciousProposalInject = malipro.Miner != n.leader
 		if !n.maliciousProposalInject {
-			log.Debug("There is an invalid mailiciouspropsoal")
+			// log.Debug("There is an invalid mailiciouspropsoal")
 			continue
 		}
 		log.Info("There is a malicious propsoal")

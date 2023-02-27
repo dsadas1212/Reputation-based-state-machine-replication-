@@ -41,7 +41,7 @@ func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) 
 }
 
 func (shs *SyncHS) sendMaliProEvidence(prop *msg.Proposal) {
-	log.Warn("sending an Malicous proposal evidence to all nodes")
+	// log.Warn("sending an Malicous proposal evidence to all nodes")
 	maliproEvidence := &msg.MalicousProposalEvidence{}
 	maliproEvidence.Evidence = &msg.Evidence{}
 	maliproEvidence.Evidence.EvidenceData = &msg.EvidenceData{}
@@ -128,8 +128,8 @@ func (shs *SyncHS) EquivocationEvidenceHandler() {
 		shs.bc.Head++
 		newHeight := shs.bc.Head
 		//CREATE non-cmds block and proposal
-		blksize := shs.GetBlockSize()
-		emptyCmds := make([][]byte, blksize)
+		// blksize := shs.GetBlockSize()
+		emptyCmds := make([][]byte, 0)
 		exemptyblock := shs.createAnEmptyBlock(emptyCmds, cert, newHeight, []byte{'E'})
 		// Add this block to the chain
 		shs.bc.BlocksByHeight[newHeight] = exemptyblock
@@ -151,10 +151,10 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 			log.Error("Malicous Propsal Evidence channel error")
 			continue
 		}
-		log.Warn("Received a Malicious proposal evidence!")
-		log.Debug("Received a Malicious proposal evidence against",
-			maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget, "from",
-			maliProEvidence.Evidence.EvOrigin)
+		// log.Warn("Received a Malicious proposal evidence!")
+		// log.Debug("Received a Malicious proposal evidence against",
+		// 	maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget, "from",
+		// 	maliProEvidence.Evidence.EvOrigin)
 		isValid := shs.isMalipEvidenceValid(maliProEvidence)
 		if !isValid {
 			log.Debugln("Received an invalid Malicious proposal evidence message")
@@ -164,9 +164,9 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 		if exists {
 			for i := range maliSenderMap {
 				if i == maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget {
-					log.Debugln("the malicious prospoal evidence of node",
-						maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget,
-						"in round", shs.view, "have been recorded!")
+					// log.Debugln("the malicious prospoal evidence of node",
+					// 	maliProEvidence.Evidence.EvidenceData.MisbehaviourTarget,
+					// 	"in round", shs.view, "have been recorded!")
 					shs.maliProspoalExists = true
 					break
 				}
@@ -175,7 +175,7 @@ func (shs *SyncHS) MaliciousProposalEvidenceHandler() {
 				shs.maliProspoalExists = false
 				continue
 			} else {
-				log.Debug("there is anthoner maliciouspropsoal have been recorded")
+				// log.Debug("there is anthoner maliciouspropsoal have been recorded")
 				shs.addMaliProposaltoMap(maliProEvidence.E)
 				shs.maliProspoalExists = false
 				continue
@@ -317,8 +317,8 @@ func (shs *SyncHS) isMalipEvidenceValid(ml *msg.MalicousProposalEvidence) bool {
 	}
 	//Check if the view is correct!
 	if ml.Evidence.EvidenceData.View != shs.view {
-		log.Debug("malipropsoal Invalid View. Found", ml.Evidence.EvidenceData.View,
-			",Expected:", shs.view)
+		// log.Debug("malipropsoal Invalid View. Found", ml.Evidence.EvidenceData.View,
+		// 	",Expected:", shs.view)
 		return false
 	}
 	//check the signature of sender

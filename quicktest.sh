@@ -34,6 +34,38 @@ TESTDIR="testData/33-node-test800"
 ./node/node -conf=$TESTDIR/nodes-30.txt -cpu=1 --loglevel=5 &
 ./node/node -conf=$TESTDIR/nodes-31.txt -cpu=1 --loglevel=5 &
 ./node/node -conf=$TESTDIR/nodes-32.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-33.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-34.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-35.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-36.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-37.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-38.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-39.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-40.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-41.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-42.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-43.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-44.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-45.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-46.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-47.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-48.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-49.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-50.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-51.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-52.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-53.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-54.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-55.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-56.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-57.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-58.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-59.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-60.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-61.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-62.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-63.txt -cpu=1 --loglevel=5 &
+# ./node/node -conf=$TESTDIR/nodes-64.txt -cpu=1 --loglevel=5 &
 
 
 sleep 2

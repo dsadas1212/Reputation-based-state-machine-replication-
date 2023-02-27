@@ -64,8 +64,9 @@ func (n *SyncHS) Propose() {
 		log.Debug("Insufficient commands, aborting the proposal")
 		return
 	}
-	n.bc.Head++
-	newHeight := n.bc.Head
+	// n.bc.Head++
+	// newHeight := n.bc.Head
+	newHeight := n.bc.Head + 1
 	log.Info("node", n.GetID(), "is proposing block")
 	prop := n.NewCandidateProposal(cmds, cert, newHeight, nil)
 	block := &chain.ExtBlock{}
@@ -80,10 +81,10 @@ func (n *SyncHS) Propose() {
 	relayMsg := &msg.SyncHSMsg{}
 	relayMsg.Msg = &msg.SyncHSMsg_Prop{Prop: prop}
 	//prop.String()
-	log.Debug("Proposing block: xxcmd")
+	log.Debug("Proposing block: ", n.GetBlockSize(), "cmd")
 	go func() {
 		//Change itself proposal map
-		n.addProposaltoMap()
+		// n.addProposaltoMap()
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
 	}()
@@ -92,7 +93,7 @@ func (n *SyncHS) Propose() {
 
 // TODO{Deal with the proposal(add the forward step)}
 func (n *SyncHS) forward(prop *msg.Proposal) {
-	log.Debug("Node", n.GetID(), "Receive ", prop.GetMiner(), "'s proposal, preparing forward")
+	// log.Debug("Node", n.GetID(), "Receive ", prop.GetMiner(), "'s proposal, preparing forward")
 	ht := prop.Block.GetHeader().GetHeight()
 	log.Debug("Handling leader proposal ", ht)
 	ep := &msg.ExtProposal{}
@@ -148,10 +149,10 @@ func (n *SyncHS) forwardProposalHandler() {
 			continue
 		}
 		//check if equivocation have been &&detected
-		if n.equivocatingProposalInject || n.withholdingProposalInject {
+		if n.equivocatingProposalInject {
 			continue
 		}
-		log.Debug("NODE", n.GetID(), "Receive forwardSender", fprop.ForwardSender, "'s prospoal")
+		// log.Debug("NODE", n.GetID(), "Receive forwardSender", fprop.ForwardSender, "'s prospoal")
 		ht := fprop.Block.GetHeader().GetHeight()
 		log.Trace("Handling forwardSender proposal ", ht)
 		ep := &msg.ExtProposal{}
@@ -188,8 +189,8 @@ func (n *SyncHS) forwardProposalHandler() {
 		n.equivocatingProposalInject = ep2.GetBlockHash() != ep.GetBlockHash()
 		//Faulty leader don't send his misbehavious
 		if n.equivocatingProposalInject {
-			log.Warn("Node", n.GetID(), " detect  Equivocation .", ep2.GetBlockHash(),
-				ep.GetBlockHash())
+			// log.Warn("Node", n.GetID(), " detect  Equivocation .", ep2.GetBlockHash(),
+			// 	ep.GetBlockHash())
 			if n.GetID() != n.leader {
 				go n.sendEqProEvidence(n.proposalByviewMap[n.view], fprop)
 				continue
@@ -207,29 +208,30 @@ func (n *SyncHS) forwardProposalHandler() {
 			log.Debug("NO enough forward prospoal have received")
 			continue
 		}
+		// log.Debug("enough forward prospoal !!")
 		//!!!!!!!!!!!
 		//set node2 votes for nonexists block
-		if n.GetID() != n.leader {
-			n.bc.Head++
-			n.addProposaltoMap()
-			n.addNewBlock(&ep.ExtBlock)
-			n.addProposaltoViewMap(fprop)
-			n.ensureBlockIsDelivered(&ep.ExtBlock)
-			go func() {
-				//malicious vote injection!
-				if n.GetID()%2 != 0 && n.maliciousVoteInject {
-					n.voteForNonLeaderBlk()
-					n.maliciousVoteInject = false
-				} else {
-					// Vote for the forward proposal
-					n.voteForBlock(ep)
-				}
-			}()
+		// if n.GetID() != n.leader {
+		n.bc.Head++
+		n.addProposaltoMap()
+		n.addNewBlock(&ep.ExtBlock)
+		n.addProposaltoViewMap(fprop)
+		n.ensureBlockIsDelivered(&ep.ExtBlock)
+		go func() {
+			//malicious vote injection!
+			if n.GetID()%2 != 0 && n.maliciousVoteInject {
+				n.voteForNonLeaderBlk()
+				n.maliciousVoteInject = false
+			} else {
+				// Vote for the forward proposal
+				n.voteForBlock(ep)
+			}
+		}()
 
-		} else {
-			//leader only need to vote
-			n.voteForBlock(ep)
-		}
+		// } else {
+		// 	//leader only need to vote
+		// 	n.voteForBlock(ep)
+		// }
 
 	}
 
@@ -301,7 +303,7 @@ func (n *SyncHS) addMaliProposaltoMap(prop *msg.Proposal) {
 		n.maliproposalMap[n.view][prop.Miner] = 1
 	}
 	// n.malipropLock.Unlock()
-	log.Debug("malipropsoalMAP IN VIEW", n.view, "is", n.maliproposalMap[n.view])
+	// log.Debug("malipropsoalMAP IN VIEW", n.view, "is", n.maliproposalMap[n.view])
 }
 func (n *SyncHS) addEquiProposaltoMap() {
 	// n.equipropLock.Lock()
