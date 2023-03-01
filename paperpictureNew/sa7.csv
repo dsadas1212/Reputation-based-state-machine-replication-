@@ -1,0 +1,22 @@
+Byzantine nodes,Misbehaviour,Throughput(Ops/s)
+1,Withholding block,124.950000
+4,Withholding block,96.433333
+8,Withholding block,56.383333
+16,Withholding block,40.033333
+
+1,Equivocating block,119.150000
+4,Equivocating block,85.866667
+8,Equivocating block, 53.366667
+16,Equivocating block, 40.033333
+
+1,Malicious block,168.733333
+4,Malicious block,140.750000
+8,Malicious block,106.616667
+16,Malicious block, 53.350000
+
+1,Malicious vote,177.366667
+4,Malicious vote,154.566667
+8,Malicious vote,106.683333
+16,Malicious vote, 58.460000
+
+
