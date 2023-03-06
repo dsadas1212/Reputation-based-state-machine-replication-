@@ -71,8 +71,8 @@ fig.set_ylim(1,200)
 # fig.xaxis.label.set_size(15)
 #科学计数法
 # plt.yscale('log')
-fig.xaxis.label.set_size(15)
-fig.yaxis.label.set_size(15)
+fig.xaxis.label.set_size(18)
+fig.yaxis.label.set_size(18)
 #设zhi刻度大小
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)

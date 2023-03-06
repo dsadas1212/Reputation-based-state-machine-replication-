@@ -6243,7 +6243,7 @@ time="2023-02-26T22:14:36+08:00" level=debug msg="4Adding certificate to block 1
 time="2023-02-26T22:14:36+08:00" level=debug msg="0Adding certificate to block 17"
 Metric
 4826 cmds in 9223424554829 milliseconds
-Throughput: 80.433333
+Throughput: 96.433333
 Latency: 1911194478.829051
 time="2023-02-26T22:14:36+08:00" level=error msg="Error receiving a message from the client-stream reset"
 time="2023-02-26T22:14:36+08:00" level=error msg="Error receiving a message from the client-stream reset"

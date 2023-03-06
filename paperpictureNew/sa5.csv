@@ -20,7 +20,7 @@ Byzantine nodes,Misbehaviour,Latency(ms)
 1,Malicious vote,4000
 4,Malicious vote,4013
 8,Malicious vote,6528
-16,Malicious vote,8034
+16,Malicious vote,8130
 
 
 

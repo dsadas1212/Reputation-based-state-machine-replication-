@@ -1762,7 +1762,7 @@ time="2023-02-27T21:30:28+08:00" level=debug msg="2Adding certificate to block 3
 time="2023-02-27T21:30:28+08:00" level=info msg="NODE0is voting for2's block"
 Metric
 7563 cmds in 9223480647432 milliseconds
-Throughput: 63.025000
+Throughput: 123.025000
 Latency: 1219553173.004363
 time="2023-02-27T21:30:32+08:00" level=error msg="Error receiving a message from the client-stream reset"
 time="2023-02-27T21:30:32+08:00" level=error msg="Error receiving a message from the client-stream reset"

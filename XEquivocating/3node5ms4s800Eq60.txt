@@ -991,7 +991,7 @@ time="2023-02-27T21:33:06+08:00" level=debug msg="Received a Equivocation propos
 time="2023-02-27T21:33:06+08:00" level=debug msg="the equivocation evidence of leader in round17have been recorded!"
 Metric
 4149 cmds in 9223423734655 milliseconds
-Throughput: 69.150000
+Throughput: 119.150000
 Latency: 2223047417.366836
 time="2023-02-27T21:33:06+08:00" level=error msg="Error receiving a message from the client-stream reset"
 time="2023-02-27T21:33:06+08:00" level=error msg="Error receiving a message from the client-stream reset"

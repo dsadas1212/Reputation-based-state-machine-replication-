@@ -68,8 +68,8 @@ orient='x', markeredgecolor = 'none',alpha = 0.6)
 fig.set_xlim(1,34) 
 fig.set_ylim(4000,8500)
 #设置x,y轴label大小
-fig.xaxis.label.set_size(15)
-fig.yaxis.label.set_size(15)
+fig.xaxis.label.set_size(18)
+fig.yaxis.label.set_size(18)
 #设zhi刻度大小
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
@@ -77,8 +77,8 @@ plt.yticks(fontsize=15, rotation=0)
 # fig.set_axis_labels(fontsize=20)
 #科学计数法
 # plt.yscale('log')
-plt.setp(fig.get_legend().get_texts(), fontsize='15') # for legend text
-plt.setp(fig.get_legend().get_title(), fontsize='15') # for legend title
+plt.setp(fig.get_legend().get_texts(), fontsize='12') # for legend text
+plt.setp(fig.get_legend().get_title(), fontsize='12') # for legend title
 lineplot_figure = fig.get_figure()
 lineplot_figure.savefig(fig_path, dpi = 700)
 plt.show()
