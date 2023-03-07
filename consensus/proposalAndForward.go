@@ -64,9 +64,9 @@ func (n *SyncHS) Propose() {
 		log.Debug("Insufficient commands, aborting the proposal")
 		return
 	}
-	n.bc.Head++
-	newHeight := n.bc.Head
-	// newHeight := n.bc.Head + 1
+	// n.bc.Head++
+	// newHeight := n.bc.Head
+	newHeight := n.bc.Head + 1
 	log.Info("node", n.GetID(), "is proposing block")
 	prop := n.NewCandidateProposal(cmds, cert, newHeight, nil)
 	block := &chain.ExtBlock{}
@@ -84,7 +84,7 @@ func (n *SyncHS) Propose() {
 	log.Debug("Proposing block: ", n.GetBlockSize(), "cmd")
 	go func() {
 		//Change itself proposal map
-		n.addProposaltoMap()
+		// n.addProposaltoMap()
 		// Leader sends new block to all the other nodes
 		n.Broadcast(relayMsg)
 	}()
@@ -211,27 +211,27 @@ func (n *SyncHS) forwardProposalHandler() {
 		// log.Debug("enough forward prospoal !!")
 		//!!!!!!!!!!!
 		//set node2 votes for nonexists block
-		if n.GetID() != n.leader {
-			n.bc.Head++
-			n.addProposaltoMap()
-			n.addNewBlock(&ep.ExtBlock)
-			n.addProposaltoViewMap(fprop)
-			n.ensureBlockIsDelivered(&ep.ExtBlock)
-			go func() {
-				//malicious vote injection!
-				if n.GetID()%2 != 0 && n.maliciousVoteInject {
-					n.voteForNonLeaderBlk()
-					n.maliciousVoteInject = false
-				} else {
-					// Vote for the forward proposal
-					n.voteForBlock(ep)
-				}
-			}()
+		// if n.GetID() != n.leader {
+		n.bc.Head++
+		n.addProposaltoMap()
+		n.addNewBlock(&ep.ExtBlock)
+		n.addProposaltoViewMap(fprop)
+		n.ensureBlockIsDelivered(&ep.ExtBlock)
+		go func() {
+			//malicious vote injection!
+			if n.GetID()%2 != 0 && n.maliciousVoteInject {
+				n.voteForNonLeaderBlk()
+				n.maliciousVoteInject = false
+			} else {
+				// Vote for the forward proposal
+				n.voteForBlock(ep)
+			}
+		}()
 
-		} else {
-			//leader only need to vote
-			n.voteForBlock(ep)
-		}
+		// } else {
+		// 	//leader only need to vote
+		// 	n.voteForBlock(ep)
+		// }
 
 	}
 

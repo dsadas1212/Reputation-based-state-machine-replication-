@@ -143,8 +143,8 @@ func (shs *SyncHS) Start() {
 	//(start*)
 	// Third, Start misbehavioushandler
 	// go shs.MaliciousPropsoalHandler()
-	go shs.EquivocationEvidenceHandler()
-	// go shs.MaliciousVoteEvidenceHandler()
+	// go shs.EquivocationEvidenceHandler()
+	go shs.MaliciousVoteEvidenceHandler()
 	// go shs.MaliciousProposalEvidenceHandler()
 
 	// Start E2C Protocol - Start message handler
