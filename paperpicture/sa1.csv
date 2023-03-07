@@ -4,7 +4,7 @@ Throughput(Ops/s),BlockSize,Latency(ms)
 23.1,Reputation-based-SMR-b400,4002
 49.4,Reputation-based-SMR-b400,4003
 89.8,Reputation-based-SMR-b400,4004
-91,Reputation-based-SMR-b400,4045
+92.5,Reputation-based-SMR-b400,4045
 89.8,Reputation-based-SMR-b400,4100
 86.6,Reputation-based-SMR-b400,4250
 86.0,Reputation-based-SMR-b400,4400

@@ -21,6 +21,22 @@ test32: bin
 	mkdir -p ../testData/3-node-test800/
 	./genConfig -o ../testData/3-node-test800/ -n3 -f1 -d50 -b800
 
+test343: bin
+	mkdir -p ../testData/3-node-test400/
+	./genConfig -o ../testData/3-node-test400/ -n3 -f0 -d50 -b400
+
+test344: bin
+	mkdir -p ../testData/9-node-test400/
+	./genConfig -o ../testData/9-node-test400/ -n9 -f0 -d50 -b400
+
+test345: bin
+	mkdir -p ../testData/17-node-test400/
+	./genConfig -o ../testData/17-node-test400/ -n17 -f0 -d50 -b400
+
+test346: bin
+	mkdir -p ../testData/33-node-test400/
+	./genConfig -o ../testData/33-node-test400/ -n33 -f0 -d50 -b400
+
 test10: bin
 	mkdir -p ../testData/10-node-test/
 	./genConfig -o ../testData/10-node-test/ -n10 -d50

@@ -34,7 +34,7 @@ import (
 
 const (
 	TxInterval = 5*time.Millisecond + 0*time.Microsecond
-	faultNum   = 16
+	faultNum   = 1
 )
 
 var (
@@ -183,7 +183,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 }
 
 func printMetrics() {
-	printDuration, err := time.ParseDuration("40s")
+	printDuration, err := time.ParseDuration("60s")
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func printMetrics() {
 		}
 		fmt.Println("Metric")
 		fmt.Printf("%d cmds in %d milliseconds\n", num, count)
-		fmt.Printf("Throughput: %f\n", float64(num)/40.0)
+		fmt.Printf("Throughput: %f\n", float64(num)/60.0)
 		fmt.Printf("Latency: %f\n", float64(count)/float64(num))
 		condLock.RUnlock()
 	}

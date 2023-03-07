@@ -9,10 +9,10 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 	//&& n.GetID() == n.leader
 	if uint64(len(n.pendingCommands)) >= n.GetBlockSize() {
 		if n.gcallFuncFinish {
-			// n.startConsensusTimerWithEquivocation()
+			n.startConsensusTimerWithEquivocation()
 			// n.startConsensusTimerWithWithhold()
 			// n.startConsensusTimerWithMaliciousPropsoal()
-			n.startConsensusTimer()
+			// n.startConsensusTimer()
 			// n.startConsensusTimerWithMaliciousVote()
 			n.gcallFuncFinish = false
 		}
@@ -21,10 +21,11 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			<-n.SyncChannel
 			// log.Info("node", n.GetID(), "'s pendingCommands len is", len(n.pendingCommands))
 			// time.Sleep(time.Second * 2)
-			// n.startConsensusTimerWithEquivocation()
+			n.startConsensusTimerWithEquivocation()
 			// n.startConsensusTimerWithMaliciousPropsoal()
 			// n.startConsensusTimerWithMaliciousVote()
-			n.startConsensusTimer()
+			// n.startConsensusTimer()
+			// n.startConsensusTimerWithWithhold()
 		}
 	}
 	// else {

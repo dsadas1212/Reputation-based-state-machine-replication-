@@ -143,7 +143,7 @@ func (shs *SyncHS) Start() {
 	//(start*)
 	// Third, Start misbehavioushandler
 	// go shs.MaliciousPropsoalHandler()
-	// go shs.EquivocationEvidenceHandler()
+	go shs.EquivocationEvidenceHandler()
 	// go shs.MaliciousVoteEvidenceHandler()
 	// go shs.MaliciousProposalEvidenceHandler()
 
