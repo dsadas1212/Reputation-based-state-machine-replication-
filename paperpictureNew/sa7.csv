@@ -1,4 +1,4 @@
-Byzantine nodes,Misbehaviour,Throughput(Ops/s)
+Byzantine nodes,Misbehaviour under b800,Throughput(Ops/s)
 1,Withholding block,124.950000
 4,Withholding block,96.433333
 8,Withholding block,56.383333
@@ -18,5 +18,7 @@ Byzantine nodes,Misbehaviour,Throughput(Ops/s)
 4,Malicious vote,154.566667
 8,Malicious vote,106.683333
 16,Malicious vote, 58.460000
+
+
 
 

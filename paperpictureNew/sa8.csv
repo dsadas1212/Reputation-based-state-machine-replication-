@@ -1,0 +1,22 @@
+Byzantine nodes,Misbehaviour under b400,Throughput(Ops/s)
+1,Withholding block,62.616667
+4,Withholding block,50.050000
+8,Withholding block,26.700000
+16,Withholding block,20.225000
+
+1,Equivocating block,62.600000
+4,Equivocating block,48.250000
+8,Equivocating block,24.900000
+16,Equivocating block,19.525000
+
+1,Malicious block,92.516667
+4,Malicious block,92.216667
+8,Malicious block,53.366667
+16,Malicious block,26.63333
+
+1,Malicious vote,92.566667
+4,Malicious vote,92.400000
+8,Malicious vote,55.350000
+16,Malicious vote,30.025000
+
+
