@@ -23,3 +23,11 @@ strate the practicality, we combine our reputation mechanism to
 the Sync-HotStuff SMR protocol, yielding a simple and efficient
 reputation-based SMR at the cost of only an extra ∆ in latency,
 where ∆ is the maximum delay in synchronous networks.
+****************************************************************
+This paper have been accepted by 2022 IEEE 21st International Symposium on Network Computing and Applications (NCA).
+****************************************************************
+QUICK START
+1. sh quicktest.sh.
+2. Replace n.startConsensusTimer() in ../consensus/command.go with different misbehaviors in attackInjection.go to simulate different misbehaviors.
+3. ../tools adjust block size, node num.
+
