@@ -42,8 +42,8 @@ func (n *SyncHS) EquivocatingBroadcast(m1 *msg.SyncHSMsg, m2 *msg.SyncHSMsg) (e1
 	}
 	// If we fail to send a message to someone, continue
 	for idx, s := range n.streamMap {
-		//example for 3node is id == 0
-		if idx%2 == 0 {
+		//example for 3node is id == 0 else idx%2 == 0
+		if idx == 0 {
 			_, err1 = s.Write(data1)
 			if err1 != nil {
 				log.Error("Error while sending to node", idx)

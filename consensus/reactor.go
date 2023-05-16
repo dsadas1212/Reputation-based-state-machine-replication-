@@ -47,7 +47,7 @@ func (n *SyncHS) protocol() {
 			} else {
 				n.proposeChannel <- prop
 			}
-			//(start*)
+		//(start*)
 		// case *msg.SyncHSMsg_Eqevidence:
 		// 	eqEvidence := msgIn.GetEqevidence()
 		// 	go func() {

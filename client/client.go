@@ -34,7 +34,7 @@ import (
 
 const (
 	TxInterval = 5*time.Millisecond + 0*time.Microsecond
-	faultNum   = 16
+	faultNum   = 1
 )
 
 var (
@@ -183,7 +183,7 @@ func handleVotes(cmdChannel chan *msg.SyncHSMsg) {
 }
 
 func printMetrics() {
-	printDuration, err := time.ParseDuration("40s")
+	printDuration, err := time.ParseDuration("60s")
 	if err != nil {
 		panic(err)
 	}
