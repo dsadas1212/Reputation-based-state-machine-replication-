@@ -22,7 +22,7 @@ func (n *SyncHS) react(m []byte) error {
 }
 
 func (n *SyncHS) protocol() {
-	// Process protocol messages
+	// 处理协议中产生的信息
 	for {
 		msgIn, ok := <-n.msgChannel
 		if !ok {
@@ -31,15 +31,16 @@ func (n *SyncHS) protocol() {
 		}
 		log.Trace("Received msg", msgIn.String())
 		switch x := msgIn.Msg.(type) {
+		//区块提议
 		case *msg.SyncHSMsg_Prop:
 			prop := msgIn.GetProp()
 			if prop.ForwardSender == n.leader {
 				if prop.GetMiner() == n.leader {
-					// log.Debug("Received a proposal from ", prop.GetMiner())
-					// Send proposal to forward step
+					log.Debug("Received a proposal from ", prop.GetMiner())
+					// 将区块提议转发
 					go n.forward(prop)
 				} else {
-					// log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
+					log.Debug("Received a Malicious proposal from ", prop.GetMiner(), "in round ", n.view)
 					go func() {
 						n.maliPropseChannel <- prop
 					}()
@@ -47,24 +48,25 @@ func (n *SyncHS) protocol() {
 			} else {
 				n.proposeChannel <- prop
 			}
-		//(start*)
+		// (start*)
+		//歧义化提议证据
 		// case *msg.SyncHSMsg_Eqevidence:
 		// 	eqEvidence := msgIn.GetEqevidence()
 		// 	go func() {
 		// 		n.eqEvidenceChannel <- eqEvidence
 		// 	}()
-
+		// 	//恶意区块提议证据
 		// case *msg.SyncHSMsg_Mpevidence:
 		// 	maliProEvidence := msgIn.GetMpevidence()
 		// 	go func() {
 		// 		n.maliProEvidenceChannel <- maliProEvidence
 		// 	}()
-
-		case *msg.SyncHSMsg_Mvevidence:
-			maliVoteEvidence := msgIn.GetMvevidence()
-			go func() {
-				n.maliVoteEvidenceChannel <- maliVoteEvidence
-			}()
+		// 	//恶意投票证据
+		// case *msg.SyncHSMsg_Mvevidence:
+		// 	maliVoteEvidence := msgIn.GetMvevidence()
+		// 	go func() {
+		// 		n.maliVoteEvidenceChannel <- maliVoteEvidence
+		// 	}()
 		case *msg.SyncHSMsg_Vote:
 			pvote := msgIn.GetVote()
 			vote := &msg.Vote{}

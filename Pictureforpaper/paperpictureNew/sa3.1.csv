@@ -1,5 +1,15 @@
-Nodes,SMR protocol,Latency(ms)
-3,Reputation-based-SMR-b800,4015
-9,Reputation-based-SMR-b800,4018
-17,Reputation-based-SMR-b800,6502
-33,Reputation-based-SMR-b800,8127
+路侧单元数量,共识协议,共识时延/ms
+5,Sync-HotStuff-b800,750
+9,Sync-HotStuff-b800,773
+17,Sync-HotStuff-b800,1130
+33,Sync-HotStuff-b800,1590.25
+
+5,Reputation-based-SMR-b800,1013
+9,Reputation-based-SMR-b800,1028
+17,Reputation-based-SMR-b800,1502
+33,Reputation-based-SMR-b800,2127
+
+5,基于声誉的片内共识协议-b800(本文),1015
+9,基于声誉的片内共识协议-b800(本文),1014
+17,基于声誉的片内共识协议-b800(本文),1102
+33,基于声誉的片内共识协议-b800(本文),1627

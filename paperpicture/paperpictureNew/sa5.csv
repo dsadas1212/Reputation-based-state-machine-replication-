@@ -1,0 +1,30 @@
+Byzantine nodes,Misbehaviour,Latency(ms)
+1,Equivocating block,4002
+4,Equivocating block,4016
+8,Equivocating block,6506
+16,Equivocating block,8195
+
+
+1,Withholding block,4004
+4,Withholding block,4014
+8,Withholding block,6507
+16,Withholding block,8136
+
+
+1,Malicious block,4007
+4,Malicious block,4018
+8,Malicious block,6514
+16,Malicious block,8210
+
+
+1,Malicious vote,4000
+4,Malicious vote,4013
+8,Malicious vote,6528
+16,Malicious vote,8130
+
+
+
+
+
+
+

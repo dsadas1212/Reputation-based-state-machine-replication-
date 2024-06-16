@@ -34,7 +34,7 @@ import (
 
 const (
 	TxInterval = 5*time.Millisecond + 0*time.Microsecond
-	faultNum   = 1
+	faultNum   = 0
 )
 
 var (
@@ -259,13 +259,14 @@ func main() {
 	// Handle all messages received using ackMsgHandler
 	// node.SetStreamHandler(e2cconsensus.ClientProtocolID, ackMsgHandler)
 	// Setting stream handler is useless :/
-
+	//为以设定好数量的节点建立节点序号与节点地址的映射关系
 	pMap := make(map[uint64]peer.AddrInfo)
+	//为每个节点设置通讯流映射关系
 	streamMap := make(map[uint64]network.Stream) //libp2p!!!
 	connectedNodes := uint64(0)
 	wg := &sync.WaitGroup{}
 	updateLock := &sync.Mutex{}
-
+	//连接每个节点并为每个节点设置读写流
 	for i := uint64(0); i < confData.GetNumNodes(); i++ {
 		wg.Add(1)
 		go func(i uint64, peer peer.AddrInfo) {

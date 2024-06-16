@@ -21,29 +21,26 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// All configuration aggregated here
+// 领导者提议结构体定义。
 type Proposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// A proposal contains the following
-	// The block being proposed
+	// 一个区块提议包括以下内容
+	// 正在进行共识的区块
 	Block *chain.ProtoBlock `protobuf:"bytes,1,opt,name=Block,proto3" json:"Block,omitempty"`
-	//The forward sender of this propsoal innitial value is nil
+	//区块转发者，提议时为空
 	ForwardSender uint64 `protobuf:"varint,2,opt,name=ForwardSender,proto3" json:"ForwardSender,omitempty"`
-	//The signature of sender
+	//转发者签名
 	ForwardSig []byte `protobuf:"bytes,3,opt,name=ForwardSig,proto3" json:"ForwardSig,omitempty"`
-	// The miner of the block
+	// 区块产生者
 	Miner uint64 `protobuf:"varint,4,opt,name=Miner,proto3" json:"Miner,omitempty"`
-	// The signature for the block
+	// 区块产生证明
 	MiningProof []byte `protobuf:"bytes,5,opt,name=MiningProof,proto3" json:"MiningProof,omitempty"`
-	// The view number
+	// 视图号
 	View uint64 `protobuf:"varint,6,opt,name=View,proto3" json:"View,omitempty"`
-	// Propose Evidence - Evidence why this node should propose this block
-	// Can be a plain signature for closed world systems
-	// Can be certificate for previous block as in Sync HotStuff/HotStuff
-	// Can be a nonce in PoW systems
+	// 提议证明，为什么这个节点有权利出块
 	ProposeEvidence []byte `protobuf:"bytes,7,opt,name=ProposeEvidence,proto3" json:"ProposeEvidence,omitempty"`
 }
 

@@ -14,8 +14,8 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 # Load an example datase
-filepath = '/root/github.com/Reputation-based-state-machine-replication-/paperpicture'
-fig_name = 'scatterplot4.png'
+filepath = '/root/Reputation-based-state-machine-replication-/Pictureforpaper'
+fig_name = 'scatterplot4.pdf'
 fig_path = filepath + '/' + fig_name
 # Create a visualization
 # 加载数据
@@ -60,7 +60,7 @@ sns.despine(fig=None, ax=None,
 palette = sns.color_palette("bright")
 sns.set_palette(palette)
 fig = sns.lineplot(data=flights,x='Byzantine nodes',y='Latency(ms)',dashes=False,sort=True,
-errorbar=None,hue='SMR protocol',style='SMR protocol',markers=['s','o','h','H'] ,linewidth = 0.7,
+errorbar=None,hue='SMR protocol',style='SMR protocol',markers=['s','o','h','H'] ,linewidth = 1,
 orient='x', markeredgecolor = 'none',alpha = 0.6)
 #alpha 设置透明度
 #mark空心，mark见matlop
@@ -68,12 +68,13 @@ orient='x', markeredgecolor = 'none',alpha = 0.6)
 fig.set_xlim(1,70) 
 fig.set_ylim(3000,9000)
 #设置x,y轴label大小
-# fig.xaxis.label.set_size(15)
-#科学计数法
-# plt.yscale('log')
-plt.setp(fig.get_legend().get_texts(), fontsize='5') # for legend text
-
-plt.setp(fig.get_legend().get_title(), fontsize='5') # for legend title
+fig.xaxis.label.set_size(12)
+fig.yaxis.label.set_size(12)
+#设zhi刻度大小
+plt.xticks(fontsize=13, rotation=0)
+plt.yticks(fontsize=13, rotation=0)
+plt.setp(fig.get_legend().get_texts(), fontsize='10') # for legend text
+plt.setp(fig.get_legend().get_title(), fontsize='10') # for legend title
 lineplot_figure = fig.get_figure()
 lineplot_figure.savefig(fig_path, dpi = 400)
 plt.show()

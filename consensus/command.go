@@ -12,8 +12,8 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			// n.startConsensusTimerWithEquivocation()
 			//n.startConsensusTimerWithWithhold()
 			// n.startConsensusTimerWithMaliciousPropsoal()
-			// n.startConsensusTimer()
-			n.startConsensusTimerWithMaliciousVote()
+			n.startConsensusTimer()
+			//n.startConsensusTimerWithMaliciousVote()
 			n.gcallFuncFinish = false
 		}
 		//16
@@ -23,8 +23,8 @@ func (n *SyncHS) addCmdsAndStartTimerIfSufficientCommands(cmd []byte) {
 			// time.Sleep(time.Second * 2)
 			// n.startConsensusTimerWithEquivocation()
 			// n.startConsensusTimerWithMaliciousPropsoal()
-			n.startConsensusTimerWithMaliciousVote()
-			//n.startConsensusTimer()
+			//n.startConsensusTimerWithMaliciousVote()
+			n.startConsensusTimer()
 			//n.startConsensusTimerWithWithhold()
 		}
 	}

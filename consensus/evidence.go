@@ -9,8 +9,8 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-//TODO chenge it to handler version!!!
-
+// TODO chenge it to handler version!!!
+// 发送歧义化提议证据给所有节点
 func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) {
 	log.Warn("sending an Equivocation proposal evidence to all nodes")
 	eqEvidence := &msg.EquivocationEvidence{}
@@ -21,7 +21,8 @@ func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) 
 	eqEvidence.Evidence.EvOrigin = shs.GetID()
 	eqEvidence.E1 = prop1
 	eqEvidence.E2 = propo2
-	data, err := pb.Marshal(eqEvidence.Evidence.EvidenceData) // signature should include overall content
+	//序列化证据信息
+	data, err := pb.Marshal(eqEvidence.Evidence.EvidenceData)
 	if err != nil {
 		log.Errorln("Error marshalling eqEvidence", err)
 		return
@@ -34,8 +35,9 @@ func (shs *SyncHS) sendEqProEvidence(prop1 *msg.Proposal, propo2 *msg.Proposal) 
 	eqprEvMsg.Msg = &msg.SyncHSMsg_Eqevidence{Eqevidence: eqEvidence}
 
 	go func() {
+		//广播证据
 		shs.Broadcast(eqprEvMsg)
-		//handle myself evidence
+		//处理节点自身产生的证据
 		shs.eqEvidenceChannel <- eqEvidence
 	}()
 }

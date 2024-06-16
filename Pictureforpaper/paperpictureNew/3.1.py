@@ -13,9 +13,10 @@
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator, FixedFormatter
 # Load an example datase
-filepath = '/root/github.com/Reputation-based-state-machine-replication-/paperpictureNew'
-fig_name = 'scatterplot3.1.png'
+filepath = '/root/Reputation-based-state-machine-replication-/Pictureforpaper/paperpictureNew'
+fig_name = 'latencynodenum.svg'
 fig_path = filepath + '/' + fig_name
 # Create a visualization
 # 加载数据
@@ -59,17 +60,29 @@ sns.despine(fig=None, ax=None,
   offset=None, trim=False)
 palette = sns.color_palette("bright")
 sns.set_palette(palette)
-fig = sns.lineplot(data=flights,x='Nodes',y='Latency(ms)',dashes=False,sort=True,
-errorbar=None,hue='SMR protocol',style='SMR protocol',markers=['^'] ,linewidth = 1,
-orient='x', markeredgecolor = 'none',alpha = 0.6)
+fig = sns.lineplot(data=flights,x='路侧单元数量',y='共识时延/ms',dashes=False,sort=True,
+errorbar=None,hue='共识协议',style='共识协议',markers=['^','D','v'] ,linewidth = 1.5,
+orient='x', markeredgecolor = 'none',alpha = 0.8)
+plt.rcParams['font.sans-serif'] = ['SimHei']
 #alpha 设置透明度
 #mark空心，mark见matlop
 #markerfacecolor='none'
-fig.set_xlim(1,34) 
-fig.set_ylim(4000,8500)
+# fig.set_xlim(5,35) 
+# fig.set_ylim(756,2200)
+fig.set_xlim(left=5, right=35)  # 确保x轴从0开始
+fig.set_ylim(bottom=600, top=2200)  # 确保y轴从980开始
+# plt.scatter([5], [700], color='black')  # 在(0, 980)处添加一个红色的点标记
+# plt.text(5, 700, '5, 700', color='black', ha='right')  # 添加文本说明
+# 设定特定的x轴刻度位置
+plt.gca().xaxis.set_major_locator(FixedLocator([5] + list(plt.gca().get_xticks())))
+# 设定特定的y轴刻度位置
+plt.gca().yaxis.set_major_locator(FixedLocator([600] + list(plt.gca().get_yticks())))
+# # 如果需要，也可以同时设置刻度标签
+# plt.gca().xaxis.set_major_formatter(FixedFormatter(["5"] + [str(int(tick)) for tick in plt.gca().get_xticks() if tick != 5]))
+# plt.gca().yaxis.set_major_formatter(FixedFormatter(["700"] + [str(int(tick)) for tick in plt.gca().get_yticks() if tick != 700]))
 #设置x,y轴label大小
-fig.xaxis.label.set_size(18)
-fig.yaxis.label.set_size(18)
+fig.xaxis.label.set_size(14)
+fig.yaxis.label.set_size(14)
 #设zhi刻度大小
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
@@ -80,5 +93,5 @@ plt.yticks(fontsize=15, rotation=0)
 plt.setp(fig.get_legend().get_texts(), fontsize='12') # for legend text
 plt.setp(fig.get_legend().get_title(), fontsize='12') # for legend title
 lineplot_figure = fig.get_figure()
-lineplot_figure.savefig(fig_path, dpi = 700)
+lineplot_figure.savefig(fig_path, dpi = 1000)
 plt.show()

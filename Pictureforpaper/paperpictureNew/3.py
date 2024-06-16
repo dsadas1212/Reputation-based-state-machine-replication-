@@ -14,8 +14,8 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 # Load an example datase
-filepath = '/root/github.com/Reputation-based-state-machine-replication-/paperpictureNew'
-fig_name = 'scatterplot3.png'
+filepath = '/root/Reputation-based-state-machine-replication-/Pictureforpaper/paperpictureNew'
+fig_name = 'shardnumtpsnew.svg'
 fig_path = filepath + '/' + fig_name
 # Create a visualization
 # 加载数据
@@ -59,26 +59,26 @@ sns.despine(fig=None, ax=None,
   offset=None, trim=False)
 palette = sns.color_palette("bright")
 sns.set_palette(palette)
-fig = sns.lineplot(data=flights,x='Nodes',y='Throughput(Ops/s)',dashes=False,sort=True,
-errorbar=None,hue='SMR protocol',style='SMR protocol',markers=['h'] ,linewidth = 1,
-orient='x', markeredgecolor = 'none',alpha = 0.6)
+fig = sns.lineplot(data=flights,x='分片数量',y='吞吐量/tps',dashes=False,sort=True,
+errorbar=None,hue='共识协议',style='共识协议',markers=['^','D','v'] ,linewidth = 1.5,
+orient='x', markeredgecolor = 'none',alpha = 0.8)
 #alpha 设置透明度
 #mark空心，mark见matlop
 #markerfacecolor='none'
-fig.set_xlim(1,34) 
-fig.set_ylim(1,200)
+plt.rcParams['font.sans-serif'] = ['SimHei']
+fig.set_xlim(0,9) 
+fig.set_ylim(500,3500)
 #设置x,y轴label大小
 # fig.xaxis.label.set_size(15)
 #科学计数法
 # plt.yscale('log')
-fig.xaxis.label.set_size(18)
-fig.yaxis.label.set_size(18)
+fig.xaxis.label.set_size(14)
+fig.yaxis.label.set_size(14)
 #设zhi刻度大小
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
 plt.setp(fig.get_legend().get_texts(), fontsize='12') # for legend text
-
 plt.setp(fig.get_legend().get_title(), fontsize='12') # for legend title
 lineplot_figure = fig.get_figure()
-lineplot_figure.savefig(fig_path, dpi = 700)
+lineplot_figure.savefig(fig_path, dpi = 1000)
 plt.show()

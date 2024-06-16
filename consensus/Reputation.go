@@ -27,38 +27,27 @@ var (
 )
 
 func (n *SyncHS) ReputationCalculateinCurrentRound(nodeID uint64) *big.Float {
-	//first we get the correct proposal/vote from map
-	//get current various proposal/vote number
-	// roundnum := n.view
-	// wg := &sync.WaitGroup{}
-	// wg.Add(1)
-	// go func() {
-	// 	defer wg.Done()
+	//从任意节点的各个Map中计算各种行为的次数（如区块提议次数、歧义化区块次数）
 	n.proposalNumCalculate(nodeID)
 	n.voteNumCalculate(nodeID)
 	n.withholdproposalNumCalculate(nodeID)
 	n.maliproposalNumCalculate(nodeID)
 	n.equivocationproposalNumCalculate(nodeID)
 	n.malivoteNumCalculate(nodeID)
-
-	// }()
-	// wg.Wait()
-	// log.Info("calculate reputation for node", nodeID)
+	//计算机提议行为的总分值
 	proposalsc := new(big.Float).SetUint64(proposalnum)
-	// log.Debug("Node", n.GetID(), "'S prospoalsc is", proposalsc)
 	misProprosalSc := new(big.Float).SetUint64(withpropsoalnum*10 + equiprospoalnum*10 + maliproposalnum*2)
 	proposalscore := n.maxValueCheckNum(new(big.Float).Sub(proposalsc, misProprosalSc))
-	// log.Debug("Node", n.GetID(), "'S prospoal score is", proposalscore)
+	//计算投票行为的总分值
 	votesc := new(big.Float).SetUint64(votenum)
 	misVotesc := new(big.Float).SetUint64(malivotenum * 2)
-	// - float64(malivotenum)*vEpisilonMali
 	votescore := n.maxValueCheckNum(new(big.Float).Sub(votesc, misVotesc))
-	// log.Debug("Node", n.GetID(), "'S vote score is", votescore)
 	calInitialNodescore := new(big.Float).SetFloat64(initialNodescore)
 	calGama := new(big.Float).SetFloat64(gamma)
 	transcriptNum := new(big.Float).Add(votescore, proposalscore)
 	gamaMulTranscript := new(big.Float).Mul(calGama, transcriptNum)
 	fltnum, _ := gamaMulTranscript.Float64()
+	//根据论文中的公式计算行为总分值
 	behaviourSocre := new(big.Float).SetFloat64(math.Tanh(fltnum))
 	baseNodeSocre := new(big.Float).Add(behaviourSocre, calInitialNodescore)
 	nodeScore := n.maxValueCheckScore(baseNodeSocre)

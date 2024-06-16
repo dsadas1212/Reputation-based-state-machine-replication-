@@ -1,8 +1,16 @@
-Nodes,SMR protocol,Throughput(Ops/s)
-3,Reputation-based-SMR-b800,182.433333
-9,Reputation-based-SMR-b800,157.633333
-17,Reputation-based-SMR-b800,116.950000
-33,Reputation-based-SMR-b800,67.750000
+分片数量,共识协议,吞吐量/tps
+1,Sync-HotStuff-b800,922.433333
+3,Sync-HotStuff-b800,1820.533333
+5,Sync-HotStuff-b800,2504.950000
+7,Sync-HotStuff-b800,3266.750000
 
+1,Reputation-based-SMR-b800,728.433333
+3,Reputation-based-SMR-b800,1120.533333
+5,Reputation-based-SMR-b800,1733.950000
+7,Reputation-based-SMR-b800,2439.750000
 
+1,基于声誉的片内共识协议-b800(本文),727.433333
+3,基于声誉的片内共识协议-b800(本文),1750.233333
+5,基于声誉的片内共识协议-b800(本文),2349.33333
+7,基于声誉的片内共识协议-b800(本文),3180.750000
 

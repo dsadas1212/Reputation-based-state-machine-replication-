@@ -22,25 +22,21 @@ func NewCert(certMap map[uint64]*msg.Vote, blockhash crypto.Hash, view uint64) *
 	return bc
 }
 
-// IsCertValid checks if the certificate is valid for the data
+// 检查当前生成的法定人数证数是否有效
 func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 	// log.Debug("Received a block certificate -")
 	h, _ := bc.GetBlockInfo()
-	// Certificate for genesis is always correct
+	// 创世区块的法定人数证数一直有效
 	if h == chain.EmptyHash {
 		return true
 	}
 	exEmptyBlk := n.bc.BlocksByHash[h]
 	ex := exEmptyBlk.ExtHeader.GetExtra()
-
-	//Certificate for emptycmdblock is always correct
+	//空块的法定人数证书一定有效
 	if len(ex) == 1 {
 		return true
 	}
-	// if bc.GetNumSigners() <= n.GetNumberOfFaultyNodes() {
-	// 	log.Error("The certificate has <= f signatures")
-	// 	return false
-	// }
+	//设定法定人数证数评判标准
 	benchmark := n.GetCertBenchMark(n.view - 1)
 	totalRepInCert := new(big.Float).SetFloat64(0)
 	for _, id := range bc.GetSigners() {
@@ -54,12 +50,9 @@ func (n *SyncHS) IsCertValid(bc *msg.BlockCertificate) bool {
 			log.Error("Certificate signature verification error")
 			return false
 		}
-		// if !sigOk {
-		// 	log.Error("Certificate signature is invalid for idx", idx)
-		// 	return false
-		// }
 		totalRepInCert = totalRepInCert.Add(totalRepInCert, n.reputationMap[n.view-1][id])
 	}
+	//检查当前法定证数上的签名所代表的节点们的信誉度是否大于整体信誉度的一半
 	if totalRepInCert.Cmp(benchmark) == -1 || totalRepInCert.Cmp(benchmark) == 0 {
 		log.Error("invalid cert because lacking reputation")
 		return false

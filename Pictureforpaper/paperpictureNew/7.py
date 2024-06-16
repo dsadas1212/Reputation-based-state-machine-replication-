@@ -14,8 +14,8 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 # Load an example datase
-filepath = '/root/github.com/Reputation-based-state-machine-replication-/paperpictureNew'
-fig_name = 'scatterplot7.png'
+filepath = '/root/Reputation-based-state-machine-replication-/Pictureforpaper/paperpictureNew'
+fig_name = 'scatterplot7.pdf'
 fig_path = filepath + '/' + fig_name
 # Create a visualization
 # 加载数据

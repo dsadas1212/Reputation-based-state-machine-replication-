@@ -17,29 +17,25 @@ import (
 
 // swithch the case case1: best-case/case2: withholding block/case3 : equivocating block/case4(5) : maliciousblock(vote)
 // withholding case = normal case
+// 开启扣留区块攻击模式
 func (n *SyncHS) startConsensusTimerWithWithhold() {
 	n.timer.Start()
 	log.Debug(n.GetID(), " start a 4Delta timer ", time.Now(), "IN ROOUND", n.view)
 	go func() {
+		//判断节点是否为领导节点
 		if n.GetID() == n.leader {
-			// if n.GetID()%3 == 0 && n.GetID() != 0
+			// 如果是，设定序号为奇数的节点进行不当行为
 			if n.GetID()%2 != 0 {
 				n.Withholdingpropose()
 				n.withholdingProposalInject = true
 				time.After(time.Second * 0)
 				n.handleWithholdingProposal()
-
 			} else {
 				n.withholdingProposalInject = false
 				n.Propose()
 			}
-
+			//如果不是，节点均进行良性行为
 		} else {
-			//non leader node update its command pool
-			// n.cmdMutex.Lock()
-			// n.pendingCommands = n.pendingCommands[:uint64(len(n.pendingCommands))-n.GetBlockSize()]
-			// n.cmdMutex.Unlock()
-			// if n.leader%3 == 0 && n.leader != 0
 			if n.leader%2 != 0 {
 				n.withholdingProposalInject = true
 				time.After(time.Second * 0)
@@ -52,6 +48,7 @@ func (n *SyncHS) startConsensusTimerWithWithhold() {
 	}()
 }
 
+// 开启歧义化区块攻击模式
 // equivocating case
 func (n *SyncHS) startConsensusTimerWithEquivocation() {
 	n.timer.Start()
